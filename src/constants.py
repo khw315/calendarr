@@ -4,6 +4,8 @@
 Application-wide constants
 """
 
+import random
+
 # ==============================================
 # Calendar & Event Parsing
 # ==============================================
@@ -33,9 +35,35 @@ VALID_EVENT_TYPES = [EVENT_TYPE_TV, EVENT_TYPE_MOVIE]
 # ==============================================
 # User Interface & Formatting
 # ==============================================
-NO_NEW_RELEASES_MSG = "No new releases this week. Maybe this is a good time to take a walk?"
+NO_NEW_RELEASES_MSGS = [
+    "Schedule empty; grass is available for touching.",
+    "Zero drops today; go outside and handshake the grass.",
+    "No new releases; even spoilers have nothing to spoil.",
+    "Zero drops—autoplay just asked for unpaid leave.",
+    "Nothing on deck; eat something that doesn't come with delivery.",
+    "Nothing scheduled; practice buffering by staring at a wall.",
+    "No new content; even the progress bar refuses to move.",
+    "Still empty; write a scathing review of silence.",
+    "No releases; your charging cable looks worried about you.",
+    "Nothing new; your headset wants a social life.",
+]
+
+NO_CONTENT_TODAY_MSGS = [
+    "No content today—touch some grass, get bonus XP.",
+    "No content today—your DVR filed for early retirement.",
+    "Nothing today; even trailers are ghosting us.",
+    "No releases today; the queue said 'don’t wait up'.",
+    "Zero drops today—your notifications are doing yoga.",
+    "No releases today—autoplay is on lunch break.",
+    "No releases today; your headset wants a social life.",
+    "Nothing dropping today—your Wi-Fi is meditating.",
+    "No releases today; clean that one mug you keep moving.",
+    "No content today; cook something that requires an ingredient list.",
+]
+
+NO_NEW_RELEASES_MSG = random.choice(NO_NEW_RELEASES_MSGS)
+NO_CONTENT_TODAY_MSG = random.choice(NO_CONTENT_TODAY_MSGS)
 MENTION_ROLE_ID_MSG = "If you'd like to be notified when new content is available, join this role!"
-NO_CONTENT_TODAY_MSG = "No releases scheduled for this day. Maybe you could call your mom and tell her you love her instead?"
 
 # --- Markdown Styling Constants ---
 # Discord
