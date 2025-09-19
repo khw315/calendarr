@@ -2,7 +2,7 @@ FROM python:3.13.3-slim
 
 WORKDIR /app
 
-LABEL org.opencontainers.image.source=https://github.com/jordanlambrecht/calendarr
+LABEL org.opencontainers.image.source=https://github.com/khw315/calendarr
 LABEL org.opencontainers.image.description="Calendar feeds from Sonarr/Radarr to Discord and Slack"
 LABEL org.opencontainers.image.licenses=GPL-3.0
 
