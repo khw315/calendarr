@@ -65,6 +65,7 @@ docker run -d \
 | `CALENDAR_URLS` *                     | String  | `[]`            | JSON array of calendar URLs and types (e.g., `[{"url":"http://...","type":"tv"}]`)                       |
 | `CRON_SCHEDULE`                       | String  | `None`          | Custom CRON expression (Overrides `SCHEDULE_TYPE`, `SCHEDULE_DAY`, `RUN_TIME`) (Optional)               |
 | `CUSTOM_HEADER`                       | String  | `New Releases`  | Custom header text (Optional)                                                                           |
+| `APP_LANGUAGE`                        | String  | `EN`            | Language for generated messages. Supported values: `EN`, `ID`, `KO` (Optional)                                               |
 | `DEBUG`                               | Boolean | `false`         | Enable debug logging (Optional)                                                                         |
 | `DEDUPLICATE_EVENTS`                  | Boolean | `true`          | Remove duplicate events from multiple sources (Optional)                                                |
 | `DISCORD_HIDE_MENTION_INSTRUCTIONS` | Boolean | `false`         | *Discord only* Hide the instruction text below the role mention (Optional)                              |

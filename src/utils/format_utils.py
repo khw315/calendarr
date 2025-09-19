@@ -3,9 +3,10 @@
 
 # TODO: This file needs more debug logging eventually
 import traceback
-from typing import Dict, Optional
+from typing import Dict, Iterable, Optional
+
 from constants import (
-    NO_NEW_RELEASES_MSG, COLOR_PALETTE, PLATFORM_SLACK, TIMEZONE_NAME_MAP,
+    COLOR_PALETTE, PLATFORM_SLACK, TIMEZONE_NAME_MAP,
     PLATFORM_DISCORD,
     DISCORD_BOLD_START, DISCORD_BOLD_END, SLACK_BOLD_START, SLACK_BOLD_END,
     ITALIC_START, ITALIC_END
@@ -15,24 +16,14 @@ import pytz
 import logging
 
 from utils.date_utils import get_days_order
+from utils.localization import (
+    format_subheader_section,
+    get_random_message,
+    get_timezone_message,
+    join_with_conjunction,
+)
 
 logger = logging.getLogger("format_utils")
-
-def pluralize(word: str, count: int, plural: str = None) -> str:
-    """
-    Return singular or plural form based on count
-    
-    Args:
-        word: Singular form
-        count: Count to determine plurality
-        plural: Optional custom plural form
-        
-    Returns:
-        Appropriate form based on count
-    """
-    if plural is None:
-        plural = word + "s"
-    return word if count == 1 else plural
 
 
 
@@ -129,7 +120,8 @@ def format_header_text(custom_header: str, start_date, end_date,
     return header_text
 
 
-def format_subheader_text(tv_count: int, movie_count: int, premiere_count: int, platform: str) -> str:
+def format_subheader_text(tv_count: int, movie_count: int, premiere_count: int,
+                          platform: str, language: str) -> str:
     """
     Format the subheader text showing counts of content, applying platform-specific bolding.
 
@@ -138,6 +130,7 @@ def format_subheader_text(tv_count: int, movie_count: int, premiere_count: int, 
         movie_count: Number of movie releases
         premiere_count: Number of premieres
         platform: The target platform ('discord' or 'slack')
+        language: ISO language code used for localization
 
     Returns:
         Formatted subheader text with platform-specific bolding (includes trailing newlines)
@@ -147,36 +140,25 @@ def format_subheader_text(tv_count: int, movie_count: int, premiere_count: int, 
 
     # Determine if there are any events at all
     if tv_count == 0 and movie_count == 0:
-        nothing_new = f"{bold_start}{NO_NEW_RELEASES_MSG}{bold_end}\n\n"
-        return nothing_new
+        nothing_new_message = get_random_message(language, "no_new_releases")
+        return f"{bold_start}{nothing_new_message}{bold_end}\n\n"
 
-    subheader_parts = []
+    subheader_sections = []
 
-    # Add TV shows count
     if tv_count > 0:
-        shows_text = pluralize("episode", tv_count)
-        subheader_parts.append(f"{bold_start} 📺  {tv_count} all-new {shows_text}{bold_end}")
+        section_text = format_subheader_section(language, "tv", tv_count)
+        subheader_sections.append(f"{bold_start}{section_text}{bold_end}")
 
-    # Add movies if any
     if movie_count > 0:
-        movies_text = pluralize("movie release", movie_count)
-        subheader_parts.append(f"{bold_start} 🎬  {movie_count} {movies_text}{bold_end}")
+        section_text = format_subheader_section(language, "movie", movie_count)
+        subheader_sections.append(f"{bold_start}{section_text}{bold_end}")
 
-    # Add premieres if any
     if premiere_count > 0:
-        premiere_text = pluralize("premiere", premiere_count)
-        subheader_parts.append(f"{bold_start} 🎉  {premiere_count} season {premiere_text}{bold_end}")
+        section_text = format_subheader_section(language, "premiere", premiere_count)
+        subheader_sections.append(f"{bold_start}{section_text}{bold_end}")
 
-    # Join with appropriate separators (UNBOLDED)
-    if len(subheader_parts) == 1:
-        subheader = subheader_parts[0]
-    elif len(subheader_parts) == 2:
-        subheader = f"{subheader_parts[0]} and {subheader_parts[1]}"
-    else:
-        # d the last with "and"
-        subheader = f"{', '.join(subheader_parts[:-1])}, and {subheader_parts[-1]}"
-
-    return subheader + "\n\n"  # Add line break
+    subheader = join_with_conjunction(language, subheader_sections)
+    return subheader + "\n\n" if subheader else ""
 
 
 def get_day_colors(platform: str, start_week_on_monday: bool = True) -> Dict:
@@ -203,46 +185,51 @@ def get_day_colors(platform: str, start_week_on_monday: bool = True) -> Dict:
     return day_colors
 
 
-def format_timezone_line(timezone_obj: Optional[pytz.BaseTzInfo], platform: str) -> str:
-    """
-    Formats the timezone information line, usi[g custom names or abbreviations.
-
-    Args:
-        timezone_obj: The pytz timezone oom t[    he config.
-        platformoomt platt[    hem ('discord'platformoomteturnsplatt[    hem  Formatted timezonplatformoomteturnsplatt[    hem  own in Central Time_") or empty string.
-    """
+def format_timezone_line(timezone_obj: Optional[pytz.BaseTzInfo], platform: str,
+                         language: str) -> str:
+    """Format a timezone information line using localized text."""
     if not timezone_obj:
         logger.warning("‼️  No timezone object provided to format_timezone_line.")
         return ""
 
     tz_display_name = None
     try:
-        # 1. Check the custom map first
-        tz_identifier = timezone_obj.zone # e.g., "America/Chicago"
+        tz_identifier = timezone_obj.zone  # e.g., "America/Chicago"
         if tz_identifier in TIMEZONE_NAME_MAP:
             tz_display_name = TIMEZONE_NAME_MAP[tz_identifier]
-            logger.debug(f"🍭  Using custom timezone name '{tz_display_name}' for identifier '{tz_identifier}'.")
+            logger.debug(
+                "🍭  Using custom timezone name '%s' for identifier '%s'.",
+                tz_display_name,
+                tz_identifier,
+            )
         else:
-            # 2. Fallback: Get abbreviation for standard time (e.g., Jan 1st)
             standard_time_sample = datetime(datetime.now().year, 1, 1)
             localized_sample = timezone_obj.localize(standard_time_sample)
             tz_abbr = localized_sample.tzname()
             if tz_abbr:
                 tz_display_name = tz_abbr
-                logger.debug(f"Using standard time abbreviation '{tz_display_name}' for identifier '{tz_identifier}'.")
-                # Log if it looks like an offset instead of abbreviation
+                logger.debug(
+                    "Using standard time abbreviation '%s' for identifier '%s'.",
+                    tz_display_name,
+                    tz_identifier,
+                )
                 if "+" in tz_abbr or "-" in tz_abbr or len(tz_abbr) > 5:
-                    logger.warning(f"‼️  Timezone abbreviation '{tz_abbr}' might be an offset or non-standard. Using it anyway.")
+                    logger.warning(
+                        "‼️  Timezone abbreviation '%s' might be an offset or non-standard. Using it anyway.",
+                        tz_abbr,
+                    )
             else:
-                logger.warning(f"⚠️  Could not determine timezone abbreviation for identifier '{tz_identifier}'.")
+                logger.warning(
+                    "⚠️  Could not determine timezone abbreviation for identifier '%s'.",
+                    tz_identifier,
+                )
 
     except Exception as e:
         logger.error(f"☠️  Error determining timezone display name: {e}")
-        logger.debug(traceback.format_exc()) #
-
+        logger.debug(traceback.format_exc())
 
     if tz_display_name:
-        return f"{ITALIC_START}All times shown in {tz_display_name}{ITALIC_END}"
-    else:
-        return ""
+        message = get_timezone_message(language, tz_display_name)
+        return f"{ITALIC_START}{message}{ITALIC_END}"
 
+    return ""
