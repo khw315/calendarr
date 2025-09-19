@@ -1,6 +1,6 @@
-![Docker Pulls](https://img.shields.io/docker/pulls/jordyjordyjordy/calendarr)
-![GitHub Release](https://img.shields.io/github/v/release/jordanlambrecht/calendarr)
-![GitHub last commit](https://img.shields.io/github/last-commit/jordanlambrecht/calendarr)
+![Docker Pulls](https://img.shields.io/docker/pulls/hann315/calendarr)
+![GitHub Release](https://img.shields.io/github/v/release/khw315/calendarr)
+![GitHub last commit](https://img.shields.io/github/last-commit/khw315/calendarr)
 
 # 📆 Calendarr
 
