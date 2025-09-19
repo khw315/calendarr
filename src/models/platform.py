@@ -14,9 +14,12 @@ from utils.format_utils import (
     format_header_text, format_subheader_text, get_day_colors,
     format_timezone_line
 )
+from utils.localization import (
+    get_movies_heading,
+    get_mention_instruction,
+    get_random_message,
+)
 from constants import (
-    MENTION_ROLE_ID_MSG,
-    NO_CONTENT_TODAY_MSG,
     PLATFORM_DISCORD,
     PLATFORM_SLACK,
     EPISODE_PATTERN,
@@ -192,11 +195,16 @@ class  DiscordPlatform(Platform):
                     description += "\n\n" # Blank line between TV and Movies
 
             if movie_formatted:
-                description += f"{DISCORD_BOLD_START}MOVIES{DISCORD_BOLD_END}\n" + "\n".join(movie_formatted)
+                movie_heading = get_movies_heading(self.config.language)
+                description += (
+                    f"{DISCORD_BOLD_START}{movie_heading}{DISCORD_BOLD_END}\n"
+                    + "\n".join(movie_formatted)
+                )
 
             # Ensure description is not empty before returning
             if not description:
-                description = f"{DISCORD_ITALIC_START}{NO_CONTENT_TODAY_MSG}{DISCORD_ITALIC_END}"
+                empty_message = get_random_message(self.config.language, "no_day_content")
+                description = f"{DISCORD_ITALIC_START}{empty_message}{DISCORD_ITALIC_END}"
 
             # --- Assemble Embed ---
             embed_dict = {
@@ -225,13 +233,23 @@ class  DiscordPlatform(Platform):
             logger.debug(f"🖌️  format_header - header_text: '{header_text}'")
 
             # Get subheader text, already bolded for Discord
-            subheader = format_subheader_text(tv_count, movie_count, premiere_count, PLATFORM_DISCORD)
+            subheader = format_subheader_text(
+                tv_count,
+                movie_count,
+                premiere_count,
+                PLATFORM_DISCORD,
+                self.config.language,
+            )
             logger.debug(f"🖌️  format_header - subheader: '{subheader.strip()}'") 
 
             # --- Get Timezone Line if needed ---
             timezone_line = ""
             if self.config.show_timezone_in_subheader:
-                timezone_line = format_timezone_line(self.config.timezone_obj, PLATFORM_DISCORD)
+                timezone_line = format_timezone_line(
+                    self.config.timezone_obj,
+                    PLATFORM_DISCORD,
+                    self.config.language,
+                )
             logger.debug(f"🖌️  format_header - timezone_line: '{timezone_line}'")
 
             # --- Create Mention Text ---
@@ -241,7 +259,9 @@ class  DiscordPlatform(Platform):
             if role_id:
                 mention_text = f"<@&{role_id}>"
                 if not hide_instructions:
-                    mention_text += f"\n{ITALIC_START}{MENTION_ROLE_ID_MSG}{ITALIC_END}"
+                    instruction = get_mention_instruction(self.config.language)
+                    if instruction:
+                        mention_text += f"\n{ITALIC_START}{instruction}{ITALIC_END}"
             logger.debug(f"🖌️  format_header - mention_text: '{mention_text}'")
 
             # --- Combine parts ---
@@ -381,11 +401,13 @@ class SlackPlatform(Platform):
 
         if movie_formatted:
             # Use Slack bold constants for the header
-            text += f"{SLACK_BOLD_START}MOVIES{SLACK_BOLD_END}\n" + "\n".join(movie_formatted)
+            movie_heading = get_movies_heading(self.config.language)
+            text += f"{SLACK_BOLD_START}{movie_heading}{SLACK_BOLD_END}\n" + "\n".join(movie_formatted)
 
         # Ensure text is not empty before returning
         if not text:
-            text = "_No releases scheduled for this day._" # Or some placeholder
+            empty_message = get_random_message(self.config.language, "no_day_content")
+            text = f"_{empty_message}_"
 
         return {
             "color": color,
@@ -416,12 +438,22 @@ class SlackPlatform(Platform):
         header_text = format_header_text(custom_header, start_date, end_date, show_date_range)
 
         # Create subheader text (without timezone)
-        subheader_text = format_subheader_text(tv_count, movie_count, premiere_count, PLATFORM_SLACK).strip()
+        subheader_text = format_subheader_text(
+            tv_count,
+            movie_count,
+            premiere_count,
+            PLATFORM_SLACK,
+            self.config.language,
+        ).strip()
 
         # Get timezone line if needed
         timezone_line = ""
         if self.config.show_timezone_in_subheader:
-            timezone_line = format_timezone_line(self.config.timezone_obj, PLATFORM_SLACK)
+            timezone_line = format_timezone_line(
+                self.config.timezone_obj,
+                PLATFORM_SLACK,
+                self.config.language,
+            )
 
         # Combine subheader and timezone for the section block's text
         section_block_text = ""

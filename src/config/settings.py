@@ -23,6 +23,7 @@ from constants import (
     DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER,
     DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER
 )
+from utils.localization import DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, normalize_language
 
 logger = logging.getLogger("config")
 
@@ -241,6 +242,9 @@ class Config:
     # --- Add Footer Flags ---
     enable_custom_discord_footer: bool = DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER
     enable_custom_slack_footer: bool = DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER
+
+    # Localization
+    language: str = DEFAULT_LANGUAGE
     
     def __post_init__(self):
         try:
@@ -388,7 +392,18 @@ class Config:
             except Exception as e:
                 logger.error(f"Error validating timezone: {e}")
                 errors.append(f"Internal error validating timezone: {str(e)}")
-            
+
+            # Validate language selection
+            try:
+                logger.debug(f"🧪  Validating language setting: {self.language}")
+                if self.language not in SUPPORTED_LANGUAGES:
+                    errors.append(
+                        f"Invalid APP_LANGUAGE value: {self.language}, must be one of {sorted(SUPPORTED_LANGUAGES)}"
+                    )
+            except Exception as e:
+                logger.error(f"Error validating language setting: {e}")
+                errors.append(f"Internal error validating language setting: {str(e)}")
+
             logger.debug(f"🏁  Validation complete. Found {len(errors)} errors")
             return errors
         except Exception as e:
@@ -647,6 +662,17 @@ def load_config_from_env() -> Config:
             show_timezone_in_subheader = DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER
             start_week_on_monday = DEFAULT_START_WEEK_ON_MONDAY
             deduplicate_events = DEFAULT_DEDUPLICATE_EVENTS
+
+        # Load localization settings
+        try:
+            logger.debug("🔍  Loading localization settings")
+            language_env = os.environ.get("APP_LANGUAGE") or os.environ.get("LANGUAGE")
+            language = normalize_language(language_env)
+            logger.debug(f"✅  Loaded language setting: {language}")
+        except Exception as e:
+            logger.error(f"Error loading language settings: {e}")
+            logger.debug(f"❌  Exception details: {traceback.format_exc()}")
+            language = DEFAULT_LANGUAGE
         
         # Load calendar settings
         try:
@@ -711,6 +737,7 @@ def load_config_from_env() -> Config:
                 http_timeout=http_timeout,
                 enable_custom_discord_footer=enable_custom_discord_footer,
                 enable_custom_slack_footer=enable_custom_slack_footer,
+                language=language,
             )
             logger.debug("✅  Successfully created Config object")
         except Exception as e:
