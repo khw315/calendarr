@@ -42,7 +42,7 @@ services:
       CALENDAR_RANGE: "AUTO"   # AUTO, DAY, or WEEK
       CRON_SCHEDULE: ""        # Example: "0 10 * * 1" (10:00 every Monday) - Overrides SCHEDULE_TYPE/DAY/RUN_TIME
       CUSTOM_HEADER: "TV Guide - Shows and Movies airing this week"
-      APP_LANGUAGE: "EN"
+      APP_LANGUAGE: "${APP_LANGUAGE}"  # Language code (e.g., en, ko, id)
       DEBUG: false
       DEDUPLICATE_EVENTS: true
       DISCORD_HIDE_MENTION_INSTRUCTIONS: false

@@ -17,12 +17,26 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         "no_new_releases_messages": [
             "Schedule empty; enjoy some free time.",
             "No new releases today—perfect moment to relax.",
-            "Nothing on the calendar right now."
+            "Nothing on the calendar right now.",
+            "No upcoming releases at the moment.",
+            "The schedule is clear for now; take a break.",
+            "No new content to share at this time.",
+            "Enjoy your day—no releases scheduled.",
+            "The calendar is empty; have a restful time.",
+            "No new shows or movies today; unwind and enjoy.",
+            "Take it easy—no releases planned for now."
         ],
         "no_day_content_messages": [
             "No releases scheduled for this day.",
             "Nothing new is planned for today.",
-            "The schedule is clear for this day."
+            "The schedule is clear for this day.",
+            "No new content available for today.",
+            "Today has no scheduled releases.",
+            "The calendar shows no new releases for today.",
+            "Enjoy your day—no new content scheduled.",
+            "No new shows or movies planned for today.",
+            "Take a break—nothing new is scheduled for today.",
+            "The schedule is empty for today; relax and enjoy."
         ],
         "subheader_templates": {
             "tv": " {count} {label}",
@@ -44,12 +58,26 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         "no_new_releases_messages": [
             "Jadwal kosong; nikmati waktu luang.",
             "Tidak ada rilis baru hari ini—saat yang pas untuk bersantai.",
-            "Belum ada acara di kalender sekarang."
+            "Belum ada acara di kalender sekarang.",
+            "Tidak ada rilis mendatang saat ini.",
+            "Jadwal kosong untuk saat ini; istirahatlah sejenak.",
+            "Tidak ada konten baru untuk dibagikan saat ini.",
+            "Nikmati harimu—tidak ada rilis yang dijadwalkan.",
+            "Kalender kosong; semoga waktu istirahatmu menyenangkan.",
+            "Tidak ada acara atau film baru hari ini; bersantailah dan nikmati.",
+            "Santai saja—tidak ada rilis yang direncanakan untuk saat ini."
         ],
         "no_day_content_messages": [
             "Tidak ada jadwal untuk hari ini.",
             "Hari ini belum ada rilis baru.",
-            "Kalender hari ini masih kosong."
+            "Kalender hari ini masih kosong.",
+            "Tidak ada konten baru untuk hari ini.",
+            "Hari ini tidak ada rilis yang dijadwalkan.",
+            "Kalender menunjukkan tidak ada rilis baru untuk hari ini.",
+            "Nikmati harimu—tidak ada konten baru yang dijadwalkan.",
+            "Tidak ada acara atau film baru yang direncanakan untuk hari ini.",
+            "Istirahatlah—tidak ada yang dijadwalkan untuk hari ini.",
+            "Jadwal hari ini kosong; bersantailah dan nikmati."
         ],
         "subheader_templates": {
             "tv": " 📺  {count} {label}",
@@ -71,12 +99,26 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         "no_new_releases_messages": [
             "새로운 일정이 없습니다. 잠시 쉬어가세요.",
             "이번에는 공개 예정이 없어요. 휴식을 즐겨보세요.",
-            "캘린더가 비어 있습니다."
+            "캘린더가 비어 있습니다.",
+            "현재 예정된 공개가 없습니다.",
+            "지금은 일정이 비어 있으니 잠시 쉬어가세요.",
+            "공유할 새로운 콘텐츠가 없습니다.",
+            "오늘은 예정된 공개가 없습니다. 좋은 하루 보내세요.",
+            "캘린더가 비어 있습니다. 편안한 시간 보내세요.",
+            "오늘은 새로운 프로그램이나 영화가 없습니다. 편안히 즐기세요.",
+            "지금은 예정된 공개가 없으니 여유롭게 쉬어가세요."
         ],
         "no_day_content_messages": [
             "오늘은 예정된 공개가 없습니다.",
             "이 날에는 새로운 일정이 없어요.",
-            "등록된 일정이 없습니다."
+            "등록된 일정이 없습니다.",
+            "오늘은 새로운 콘텐츠가 없습니다.",
+            "오늘은 예정된 공개가 없습니다.",
+            "오늘은 새로운 공개가 없다고 캘린더에 표시되어 있습니다.",
+            "오늘은 예정된 새로운 콘텐츠가 없습니다. 좋은 하루 보내세요.",
+            "오늘은 새로운 프로그램이나 영화가 없습니다.",
+            "오늘은 새로운 일정이 없으니 잠시 쉬어가세요.",
+            "오늘은 일정이 비어 있으니 편안히 즐기세요."
         ],
         "subheader_templates": {
             "tv": " 📺  {label} {count}편",
