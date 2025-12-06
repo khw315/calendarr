@@ -25,9 +25,9 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
             "The schedule is clear for this day."
         ],
         "subheader_templates": {
-            "tv": " 📺  {count} {label}",
-            "movie": " 🎬  {count} {label}",
-            "premiere": " 🎉  {count} {label}"
+            "tv": " {count} {label}",
+            "movie": "{count} {label}",
+            "premiere": "{count} {label}"
         },
         "subheader_labels": {
             "tv": {"singular": "all-new episode", "plural": "all-new episodes"},
