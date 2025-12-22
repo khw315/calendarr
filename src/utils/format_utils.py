@@ -127,18 +127,16 @@ def format_header_text(custom_header: str, start_date, end_date,
             # For now, let's stick to the existing structure but with localized strings: "Monday, Jan 01"
             # Or if Asian: "Month Day (DayName)"?
             
-            if language in ["KO", "JA", "ID"]:
-                # 2024-01-01 (Monday) or 1月 1日 (月曜日)
-                # Let's go with "YYYY-MM-DD (DayName)" as it is unambiguous and safe for these locales if we don't have perfect formats
-                # Or "Month Day (DayName)"
-                # JA: 1月 1日 (月曜日)
-                # ID: 1 Jan (Senin)
-                
-                if language == "ID":
-                     header_text += f" ({day_num} {month_name}, {day_name})"
-                else: 
-                     # JA/KO: 1月 1日 (Month Day)
-                     header_text += f" ({month_name} {day_num}日, {day_name})"
+            if language == "ID":
+                # 1 Jan (Senin)
+                header_text += f" ({day_num} {month_name}, {day_name})"
+            elif language == "KO":
+                # 1월 1일 (월요일)
+                # Correct suffix for Korean day is '일'
+                header_text += f" ({month_name} {day_num}일, {day_name})"
+            elif language == "JA":
+                # 1月 1日 (月曜日)
+                header_text += f" ({month_name} {day_num}日, {day_name})"
             else:
                  header_text += f" ({day_name}, {month_name} {day_num:02d})"
                  
@@ -150,9 +148,13 @@ def format_header_text(custom_header: str, start_date, end_date,
             end_month = get_short_month_name(language, end_date.month)
             end_day = end_date.day
             
-            if language in ["KO", "JA"]:
+            if language == "JA":
                  # 4月 1日 - 4月 7日
                  header_text += f" ({start_month}{start_day}日 - {end_month}{end_day}日)"
+            elif language == "KO":
+                 # 4월 1일 - 4월 7일
+                 # Correct suffix for Korean day is '일'
+                 header_text += f" ({start_month}{start_day}일 - {end_month}{end_day}일)"
             else:
                  # Apr 01 - Apr 07
                  header_text += f" ({start_month} {start_day:02d} - {end_month} {end_day:02d})"
