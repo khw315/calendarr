@@ -12,20 +12,21 @@ from models.event_item import EventItem
 class Day:
     """Represents a day with TV and movie events"""
     
-    name: str  # something like "Monday, Jan 01"
+    name: str  # something like "Monday, Jan 01" or "2024-01-01 (Monday)"
     tv_events: List[EventItem] = field(default_factory=list)
     movie_events: List[EventItem] = field(default_factory=list)
     date: Optional[datetime] = None  # Full datetime object
+    day_name: str = "" # Explicit English day name (Monday, Tuesday...) for logic/colors
     
-    @property
-    def day_name(self) -> str:
-        """
-        Get the name of the day (Monday, Tuesday, etc.)
-        
-        Returns:
-            Name of the day
-        """
-        return self.name.split(',')[0] if ',' in self.name else self.name
+    # @property
+    # def day_name(self) -> str:
+    #     """
+    #     Get the name of the day (Monday, Tuesday, etc.)
+    #     
+    #     Returns:
+    #         Name of the day
+    #     """
+    #     return self.name.split(',')[0] if ',' in self.name else self.name
     
     @property
     def has_events(self) -> bool:

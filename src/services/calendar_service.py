@@ -39,12 +39,29 @@ class CalendarService:
         """
         all_events = []
         
-        for url_info in self.config.calendar_urls:
-            try:
-                events = self._fetch_from_calendar(url_info, start_date, end_date)
-                all_events.extend(events)
-            except Exception as e:
-                logger.error(f"Error fetching from calendar {url_info.url}: {str(e)}")
+        # Determine the number of workers based on the number of calendar URLs
+        # Use a reasonable default max (e.g., 5-10) to avoid overloading system/network
+        max_workers = min(len(self.config.calendar_urls), 10)
+        
+        if max_workers == 0:
+            return []
+
+        import concurrent.futures
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Create a dictionary to map futures to URLs for better error logging
+            future_to_url = {
+                executor.submit(self._fetch_from_calendar, url_info, start_date, end_date): url_info 
+                for url_info in self.config.calendar_urls
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_url):
+                url_info = future_to_url[future]
+                try:
+                    events = future.result()
+                    all_events.extend(events)
+                except Exception as e:
+                    logger.error(f"Error fetching from calendar {url_info.url}: {str(e)}")
         
         # Sort events by start time
         all_events.sort(key=lambda e: e.start_time)

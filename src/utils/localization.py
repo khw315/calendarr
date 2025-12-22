@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from typing import Dict, Iterable, Mapping, Optional
 
-SUPPORTED_LANGUAGES = {"EN", "ID", "KO"}
+SUPPORTED_LANGUAGES = {"EN", "ID", "KO", "JA"}
 DEFAULT_LANGUAGE = "EN"
 
 # Translation data structured to support simple lookups and count-aware labels.
@@ -49,7 +49,13 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
             "premiere": {"singular": "season premiere", "plural": "season premieres"}
         },
         "list_join": {"two": " and ", "last": ", and "},
-        "comma_separator": ", "
+        "comma_separator": ", ",
+        "days": {
+            0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"
+        },
+        "short_days": {
+             0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"
+        }
     },
     "ID": {
         "movies_heading": "FILM",
@@ -90,7 +96,13 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
             "premiere": "penayangan perdana musim"
         },
         "list_join": {"two": " dan ", "last": ", dan "},
-        "comma_separator": ", "
+        "comma_separator": ", ",
+        "days": {
+            0: "Senin", 1: "Selasa", 2: "Rabu", 3: "Kamis", 4: "Jumat", 5: "Sabtu", 6: "Minggu"
+        },
+        "short_days": {
+             0: "Sen", 1: "Sel", 2: "Rab", 3: "Kam", 4: "Jum", 5: "Sab", 6: "Min"
+        }
     },
     "KO": {
         "movies_heading": "영화",
@@ -131,7 +143,60 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
             "premiere": "시즌 첫 방송"
         },
         "list_join": {"two": " 및 ", "last": ", 및 "},
-        "comma_separator": ", "
+        "comma_separator": ", ",
+        "days": {
+            0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"
+        },
+        "short_days": {
+             0: "월", 1: "화", 2: "수", 3: "목", 4: "금", 5: "토", 6: "일"
+        }
+    },
+    "JA": {
+        "movies_heading": "映画",
+        "mention_instruction": "新しいコンテンツの通知を受け取りたい場合は、このロールに参加してください！",
+        "timezone_message": "時間は{timezone}基準で表示されます",
+        "no_new_releases_messages": [
+            "スケジュールは空いています。自由な時間をお楽しみください。",
+            "今日の新しいリリースはありません。リラックスするのに最適な時間です。",
+            "現在カレンダーに予定はありません。",
+            "現在、予定されているリリースはありません。",
+            "スケジュールは今のところ空白です。休憩しましょう。",
+            "現在共有する新しいコンテンツはありません。",
+            "良い一日を — 予定されているリリースはありません。",
+            "カレンダーは空です。安らかな時間をお過ごしください。",
+            "今日は新しい番組や映画はありません。ゆっくりお楽しみください。",
+            "気楽に行きましょう — 今のところリリースの予定はありません。"
+        ],
+        "no_day_content_messages": [
+            "この日のリリースの予定はありません。",
+            "今日は新しい予定はありません。",
+            "この日のスケジュールは空いています。",
+            "今日利用可能な新しいコンテンツはありません。",
+            "今日の予定されているリリースはありません。",
+            "カレンダーには今日の新しいリリースが表示されていません。",
+            "良い一日を — 新しいコンテンツの予定はありません。",
+            "今日予定されている新しい番組や映画はありません。",
+            "休憩しましょう — 今日は何も予定されていません。",
+            "今日のスケジュールは空です。リラックスしてお楽しみください。"
+        ],
+        "subheader_templates": {
+            "tv": " 📺  {label} {count}話",
+            "movie": " 🎬  {label} {count}本",
+            "premiere": " 🎉  {label} {count}回"
+        },
+        "subheader_labels": {
+            "tv": "新エピソード",
+            "movie": "映画リリース",
+            "premiere": "シーズン初回"
+        },
+        "list_join": {"two": " と ", "last": "、そして "},
+        "comma_separator": "、",
+        "days": {
+            0: "月曜日", 1: "火曜日", 2: "水曜日", 3: "木曜日", 4: "金曜日", 5: "土曜日", 6: "日曜日"
+        },
+        "short_days": {
+             0: "月", 1: "火", 2: "水", 3: "木", 4: "金", 5: "土", 6: "日"
+        }
     }
 }
 
@@ -248,3 +313,31 @@ def get_mention_instruction(language: str) -> str:
     if instruction:
         return instruction
     return get_text(DEFAULT_LANGUAGE, "mention_instruction") or ""
+
+
+def get_day_name(language: str, weekday: int) -> str:
+    """
+    Return the localized full day name for a given weekday (0=Monday, 6=Sunday).
+    """
+    translation = _get_translation(language)
+    days = translation.get("days", {})
+    
+    # Fallback to default language if specific day is missing
+    if weekday not in days:
+        days = _get_translation(DEFAULT_LANGUAGE).get("days", {})
+        
+    return days.get(weekday, "")
+
+
+def get_short_day_name(language: str, weekday: int) -> str:
+    """
+    Return the localized short day name for a given weekday (0=Monday, 6=Sunday).
+    """
+    translation = _get_translation(language)
+    short_days = translation.get("short_days", {})
+    
+    # Fallback to default language if specific day is missing
+    if weekday not in short_days:
+        short_days = _get_translation(DEFAULT_LANGUAGE).get("short_days", {})
+        
+    return short_days.get(weekday, "")

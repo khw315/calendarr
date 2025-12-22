@@ -11,7 +11,8 @@ from models.day import Day
 from models.event import Event
 from models.event_item import EventItem
 from config.settings import Config
-from utils.date_utils import get_days_order, get_short_day_name, parse_event_datetime, format_time
+from utils.date_utils import get_days_order, parse_event_datetime, format_time
+from utils.localization import get_day_name, get_short_day_name
 from constants import EVENT_TYPE_TV, EVENT_TYPE_MOVIE
 
 logger = logging.getLogger("formatter_service")
@@ -83,13 +84,39 @@ class FormatterService:
         # Create Day objects
         days = []
         for date_obj, content in sorted(days_data.items()): # Use date_obj to avoid confusion
-            day_name_str = date_obj.strftime('%A, %b %d') # Format the name string
+            # day_name_str = date_obj.strftime('%A, %b %d') # Format the name string
+            
+            # Use localized day name
+            weekday = date_obj.weekday() # 0 = Monday
+            day_name = get_day_name(self.config.language, weekday)
+            
+            # Generic date format "DayName, Mon DD" or similar.
+            # Ideally we'd localize the Month too, but for now we stick to DayName + DD localized
+            # Let's standardize on "DayName, YYYY-MM-DD" or similar if we want fully agnostic,
+            # but usually "Weekday, Month Day" is preferred.
+            # Since we haven't localized Months fully yet (plan mentioned explicit Day names),
+            # let's try to do a localized format: "{DayName}, {MonthName} {Day}"
+            # For Asian languages usually "YYYY/MM/DD (Day)" or similar.
+            
+            if self.config.language in ["KO", "JA", "ID"]:
+                 # Simple YYYY-MM-DD (DayName) style for these
+                 formatted_date = date_obj.strftime('%Y-%m-%d')
+                 day_name_str = f"{formatted_date} ({day_name})"
+            else:
+                 # Default EN style: Monday, Jan 01
+                 day_name_str = f"{day_name}, {date_obj.strftime('%b %d')}"
+
+            # Get English day name for logic/color keys
+            english_day_name = get_day_name("EN", weekday)
+            
             day = Day(
                 name=day_name_str, # Pass the formatted name
                 date=date_obj, # Pass the original date object
                 tv_events=content[EVENT_TYPE_TV],
-                movie_events=content[EVENT_TYPE_MOVIE]
+                movie_events=content[EVENT_TYPE_MOVIE],
+                day_name=english_day_name # Pass English day name for color lookup
             )
+            
             days.append(day)
         
         logger.info(f"📊 Total days processed: {len(days)}")
