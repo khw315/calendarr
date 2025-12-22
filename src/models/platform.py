@@ -229,7 +229,7 @@ class  DiscordPlatform(Platform):
 
         try:
             # Create header text
-            header_text = format_header_text(custom_header, start_date, end_date, show_date_range)
+            header_text = format_header_text(custom_header, start_date, end_date, show_date_range, self.config.language)
             logger.debug(f"🖌️  format_header - header_text: '{header_text}'")
 
             # Get subheader text, already bolded for Discord
@@ -435,7 +435,7 @@ class SlackPlatform(Platform):
             Slack message object with blocks
         """
         # Create header text and date range text
-        header_text = format_header_text(custom_header, start_date, end_date, show_date_range)
+        header_text = format_header_text(custom_header, start_date, end_date, show_date_range, self.config.language)
 
         # Create subheader text (without timezone)
         subheader_text = format_subheader_text(

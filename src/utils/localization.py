@@ -55,6 +55,14 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         },
         "short_days": {
              0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"
+        },
+        "months": {
+            1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
+            7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
+        },
+        "short_months": {
+            1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
+            7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"
         }
     },
     "ID": {
@@ -102,6 +110,14 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         },
         "short_days": {
              0: "Sen", 1: "Sel", 2: "Rab", 3: "Kam", 4: "Jum", 5: "Sab", 6: "Min"
+        },
+        "months": {
+            1: "Januari", 2: "Februari", 3: "Maret", 4: "April", 5: "Mei", 6: "Juni",
+            7: "Juli", 8: "Agustus", 9: "September", 10: "Oktober", 11: "November", 12: "Desember"
+        },
+        "short_months": {
+            1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Mei", 6: "Jun",
+            7: "Jul", 8: "Agu", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Des"
         }
     },
     "KO": {
@@ -149,6 +165,14 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         },
         "short_days": {
              0: "월", 1: "화", 2: "수", 3: "목", 4: "금", 5: "토", 6: "일"
+        },
+        "months": {
+            1: "1월", 2: "2월", 3: "3월", 4: "4월", 5: "5월", 6: "6월",
+            7: "7월", 8: "8월", 9: "9월", 10: "10월", 11: "11월", 12: "12월"
+        },
+        "short_months": {
+            1: "1월", 2: "2월", 3: "3월", 4: "4월", 5: "5월", 6: "6월",
+            7: "7월", 8: "8월", 9: "9월", 10: "10월", 11: "11월", 12: "12월"
         }
     },
     "JA": {
@@ -196,6 +220,14 @@ TRANSLATIONS: Dict[str, Dict[str, object]] = {
         },
         "short_days": {
              0: "月", 1: "火", 2: "水", 3: "木", 4: "金", 5: "土", 6: "日"
+        },
+        "months": {
+            1: "1月", 2: "2月", 3: "3月", 4: "4月", 5: "5月", 6: "6月",
+            7: "7月", 8: "8月", 9: "9月", 10: "10月", 11: "11月", 12: "12月"
+        },
+        "short_months": {
+            1: "1月", 2: "2月", 3: "3月", 4: "4月", 5: "5月", 6: "6月",
+            7: "7月", 8: "8月", 9: "9月", 10: "10月", 11: "11月", 12: "12月"
         }
     }
 }
@@ -341,3 +373,31 @@ def get_short_day_name(language: str, weekday: int) -> str:
         short_days = _get_translation(DEFAULT_LANGUAGE).get("short_days", {})
         
     return short_days.get(weekday, "")
+
+
+def get_month_name(language: str, month: int) -> str:
+    """
+    Return the localized full month name for a given month (1=January, 12=December).
+    """
+    translation = _get_translation(language)
+    months = translation.get("months", {})
+    
+    # Fallback to default language if specific month is missing
+    if month not in months:
+        months = _get_translation(DEFAULT_LANGUAGE).get("months", {})
+        
+    return months.get(month, "")
+
+
+def get_short_month_name(language: str, month: int) -> str:
+    """
+    Return the localized short month name for a given month (1=January, 12=December).
+    """
+    translation = _get_translation(language)
+    short_months = translation.get("short_months", {})
+    
+    # Fallback to default language if specific month is missing
+    if month not in short_months:
+        short_months = _get_translation(DEFAULT_LANGUAGE).get("short_months", {})
+        
+    return short_months.get(month, "")

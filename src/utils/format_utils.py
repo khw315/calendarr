@@ -21,6 +21,8 @@ from utils.localization import (
     get_random_message,
     get_timezone_message,
     join_with_conjunction,
+    get_day_name,
+    get_short_month_name
 )
 
 logger = logging.getLogger("format_utils")
@@ -55,12 +57,12 @@ logger = logging.getLogger("format_utils")
 #     # Add movies if any
 #     if movie_count > 0:
 #         movies_text = pluralize("movie release", movie_count)
-#         parts.append(f"🎬{emoji_spacing}{movie_count} {movies_text}")
+#         parts.append(f"🎬{emoji_spacing}{tv_count} {movies_text}")
     
 #     # Add premieres if any
 #     if premiere_count > 0:
 #         premiere_text = pluralize("premiere", premiere_count)
-#         parts.append(f"🎉{emoji_spacing}{premiere_count} season {premiere_text}")
+#         parts.append(f"🎉{emoji_spacing}{tv_count} season {premiere_text}")
     
 #     return parts
 
@@ -93,7 +95,7 @@ logger = logging.getLogger("format_utils")
 
 
 def format_header_text(custom_header: str, start_date, end_date, 
-                      show_date_range: bool) -> str:
+                      show_date_range: bool, language: str = "EN") -> str:
     """
     Create a formatted header text with optional date range
     
@@ -102,6 +104,7 @@ def format_header_text(custom_header: str, start_date, end_date,
         start_date: Start date
         end_date: End date
         show_date_range: Whether to show date range
+        language: Language code for localization
         
     Returns:
         Formatted header text
@@ -112,10 +115,47 @@ def format_header_text(custom_header: str, start_date, end_date,
         # Check if we're in daily mode (start and end date are the same day)
         if start_date.date() == end_date.date():
             # For daily mode, show just the day name and date
-            header_text += f" ({start_date.strftime('%A, %b %d')})"
+            # day_name = start_date.strftime('%A')
+            day_name = get_day_name(language, start_date.weekday())
+            
+            # month_name = start_date.strftime('%b')
+            month_name = get_short_month_name(language, start_date.month)
+            day_num = start_date.day
+            
+            # Format: DayName, Mon DD
+            # Localization nuance: Asian languages often put Month before Day (MM-DD), Western (Mon DD or DD Mon).
+            # For now, let's stick to the existing structure but with localized strings: "Monday, Jan 01"
+            # Or if Asian: "Month Day (DayName)"?
+            
+            if language in ["KO", "JA", "ID"]:
+                # 2024-01-01 (Monday) or 1月 1日 (月曜日)
+                # Let's go with "YYYY-MM-DD (DayName)" as it is unambiguous and safe for these locales if we don't have perfect formats
+                # Or "Month Day (DayName)"
+                # JA: 1月 1日 (月曜日)
+                # ID: 1 Jan (Senin)
+                
+                if language == "ID":
+                     header_text += f" ({day_num} {month_name}, {day_name})"
+                else: 
+                     # JA/KO: 1月 1日 (Month Day)
+                     header_text += f" ({month_name} {day_num}日, {day_name})"
+            else:
+                 header_text += f" ({day_name}, {month_name} {day_num:02d})"
+                 
         else:
             # For weekly mode, show the range as before
-            header_text += f" ({start_date.strftime('%b %d')} - {end_date.strftime('%b %d')})"
+            # Apr 01 - Apr 07
+            start_month = get_short_month_name(language, start_date.month)
+            start_day = start_date.day
+            end_month = get_short_month_name(language, end_date.month)
+            end_day = end_date.day
+            
+            if language in ["KO", "JA"]:
+                 # 4月 1日 - 4月 7日
+                 header_text += f" ({start_month}{start_day}日 - {end_month}{end_day}日)"
+            else:
+                 # Apr 01 - Apr 07
+                 header_text += f" ({start_month} {start_day:02d} - {end_month} {end_day:02d})"
     
     return header_text
 
