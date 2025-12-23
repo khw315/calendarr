@@ -121,7 +121,7 @@ class FormatterService:
         
         logger.info(f"📊 Total days processed: {len(days)}")
         for day in days:
-            logger.info(f"    ├ {get_short_day_name(day.name)}: {day.total_events} events")
+            logger.info(f"    ├ {get_short_day_name(self.config.language, day.date.weekday())}: {day.total_events} events")
         
         stats = {
             "total_tv": tv_count,
