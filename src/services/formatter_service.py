@@ -88,23 +88,10 @@ class FormatterService:
             
             # Use localized day name
             weekday = date_obj.weekday() # 0 = Monday
-            day_name = get_day_name(self.config.language, weekday)
+            # day_name = get_day_name(self.config.language, weekday)
             
-            # Generic date format "DayName, Mon DD" or similar.
-            # Ideally we'd localize the Month too, but for now we stick to DayName + DD localized
-            # Let's standardize on "DayName, YYYY-MM-DD" or similar if we want fully agnostic,
-            # but usually "Weekday, Month Day" is preferred.
-            # Since we haven't localized Months fully yet (plan mentioned explicit Day names),
-            # let's try to do a localized format: "{DayName}, {MonthName} {Day}"
-            # For Asian languages usually "YYYY/MM/DD (Day)" or similar.
-            
-            if self.config.language in ["KO", "JA", "ID"]:
-                 # Simple YYYY-MM-DD (DayName) style for these
-                 formatted_date = date_obj.strftime('%Y-%m-%d')
-                 day_name_str = f"{formatted_date} ({day_name})"
-            else:
-                 # Default EN style: Monday, Jan 01
-                 day_name_str = f"{day_name}, {date_obj.strftime('%b %d')}"
+            from utils.localization import format_date
+            day_name_str = format_date(date_obj, self.config.language)
 
             # Get English day name for logic/color keys
             english_day_name = get_day_name("EN", weekday)
@@ -236,5 +223,6 @@ class FormatterService:
             time_str=time_str,
             show_name=show_name,
             episode_number=episode_number,
-            episode_title=episode_title
+            episode_title=episode_title,
+            timestamp=int(start.timestamp())
         )

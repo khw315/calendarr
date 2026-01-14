@@ -73,7 +73,7 @@ def run_main_job():
         if not success:
             logger.info(f"⚠️  Job completed with success: {success}")
         else:
-            logger.info("✅  Job completed with success: {success}")
+            logger.info(f"✅  Job completed with success: {success}")
         
         
     except Exception as e:
@@ -112,7 +112,9 @@ def init_scheduler():
         Configured scheduler
     """
     global config
-    scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler(job_defaults={
+        'misfire_grace_time': 3600
+    })
     
     # Add debug ping job if debug is enabled
     if config.logging_settings.debug_mode:

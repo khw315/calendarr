@@ -21,7 +21,9 @@ from constants import (
     DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS,
     DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER,
     DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER,
-    DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER
+    DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER,
+    VALID_DISCORD_TIMESTAMP_STYLES,
+    DISCORD_TIMESTAMP_STYLE_MAP
 )
 from utils.localization import DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, normalize_language
 
@@ -218,6 +220,7 @@ class Config:
     # Discord-specific settings
     discord_mention_role_id: Optional[str] = DEFAULT_DISCORD_MENTION_ROLE_ID
     discord_hide_mention_instructions: bool = DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS
+    discord_timestamp_style: Optional[str] = None
     
     # Calendar settings
     calendar_urls: List[CalendarUrl] = field(default_factory=list)
@@ -346,6 +349,16 @@ class Config:
             except Exception as e:
                 logger.error(f"Error validating webhook config: {e}")
                 errors.append(f"Internal error validating webhook configuration: {str(e)}")
+            
+            # Validate Discord timestamp style
+            try:
+                if self.discord_timestamp_style:
+                    if self.discord_timestamp_style not in VALID_DISCORD_TIMESTAMP_STYLES:
+                        errors.append(f"Invalid DISCORD_TIMESTAMP_STYLE: {self.discord_timestamp_style}. "
+                                    f"Must be one of {VALID_DISCORD_TIMESTAMP_STYLES}")
+            except Exception as e:
+                logger.error(f"Error validating discord timestamp style: {e}")
+                errors.append(f"Internal error validating discord timestamp style: {str(e)}")
             
             # Validate the passed event handling option
             try:
@@ -627,6 +640,15 @@ def load_config_from_env() -> Config:
             # --- End Fallback Logic ---
 
             discord_hide_mention_instructions=get_env_bool("DISCORD_HIDE_MENTION_INSTRUCTIONS", DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS)
+            
+            discord_timestamp_style = os.environ.get("DISCORD_TIMESTAMP_STYLE", "Relative Time")
+            if discord_timestamp_style:
+                # If it's a valid code, use it directly (preserving case for T vs t)
+                if discord_timestamp_style not in VALID_DISCORD_TIMESTAMP_STYLES:
+                     # Try to look up by friendly name
+                    style_lower = discord_timestamp_style.lower()
+                    if style_lower in DISCORD_TIMESTAMP_STYLE_MAP:
+                        discord_timestamp_style = DISCORD_TIMESTAMP_STYLE_MAP[style_lower]
 
             logger.debug(f"📋  Discord enabled: {use_discord}, webhook configured: {'yes' if discord_webhook_url else 'no'}")
             logger.debug(f"📋  Slack enabled: {use_slack}, webhook configured: {'yes' if slack_webhook_url else 'no'}")
@@ -640,6 +662,7 @@ def load_config_from_env() -> Config:
             slack_webhook_url = None
             discord_mention_role_id = DEFAULT_DISCORD_MENTION_ROLE_ID
             discord_hide_mention_instructions = DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS
+            discord_timestamp_style = None
             use_discord = DEFAULT_USE_DISCORD
             use_slack = DEFAULT_USE_SLACK
 
@@ -722,6 +745,7 @@ def load_config_from_env() -> Config:
                 use_slack=use_slack,
                 discord_mention_role_id=discord_mention_role_id,
                 discord_hide_mention_instructions=discord_hide_mention_instructions,
+                discord_timestamp_style=discord_timestamp_style,
                 custom_header=custom_header,
                 show_date_range=show_date_range,
                 show_timezone_in_subheader=show_timezone_in_subheader,

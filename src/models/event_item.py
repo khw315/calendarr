@@ -26,6 +26,7 @@ class EventItem:
     show_name: Optional[str] = None
     episode_number: Optional[str] = None
     episode_title: Optional[str] = None
+    timestamp: Optional[int] = None
     
     @property
     def has_time(self) -> bool:

@@ -136,21 +136,17 @@ JOB_ID_MAIN = 'main_job'
 # ==============================================
 # Timezone Formatting
 # ==============================================
-# Map common pytz identifiers to user-friendly names
-# TODO: Add more mappings
-TIMEZONE_NAME_MAP = {
-    "America/Los_Angeles": "Pacific Time",
-    "America/Vancouver": "Pacific Time",
-    "America/Denver": "Mountain Time",
-    "America/Edmonton": "Mountain Time",
-    "America/Chicago": "Central Time",
-    "America/Toronto": "Eastern Time",
-    "America/New_York": "Eastern Time",
-    "Europe/London": "UK Time",
-    "Europe/Berlin": "Central European Time",
-    "Australia/Sydney": "Australian Eastern Time",
-    "Asia/Tokyo": "Japan Standard Time",
-    "Asia/Kolkata": "Indian Standard Time",
-    "Asia/Hong_Kong": "Hong Kong Time",
-    "UTC": "UTC"
+VALID_DISCORD_TIMESTAMP_STYLES = ['t', 'T', 'd', 'D', 'f', 'F', 'R']
+
+DISCORD_TIMESTAMP_STYLE_MAP = {
+    "t": "t", "short time": "t",
+    "T": "T", "long time": "T",
+    "d": "d", "short date": "d",
+    "D": "D", "long date": "D",
+    "f": "f", "short date/time": "f",
+    "F": "F", "long date/time": "F",
+    "R": "R", "relative time": "R",
 }
+
+# Map common pytz identifiers to user-friendly names
+from utils.timezones import TIMEZONE_NAME_MAP

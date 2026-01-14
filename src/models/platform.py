@@ -177,11 +177,75 @@ class  DiscordPlatform(Platform):
             # Get color for this day
             color = self.day_colors.get(day.day_name, 0)
 
-            # Format TV and movie events
-            tv_formatted = [
-                self.format_tv_event(event, self.config.passed_event_handling)
-                for event in day.tv_events
-            ]
+            # Sort events by time then show name to ensure grouping works
+            # We create a new list to avoid modifying the original day object
+            # Use 0 as default timestamp if None for sorting
+            sorted_tv_events = sorted(day.tv_events, key=lambda x: (x.timestamp or 0, x.show_name or x.summary))
+            
+            tv_formatted = []
+            
+            # --- Bulk Grouping Logic ---
+            if sorted_tv_events:
+                current_group = []
+                last_key = None # (timestamp, show_name)
+                
+                # Helper to format a group
+                def format_group(group: List[EventItem]):
+                    if not group: return
+                    
+                    # Threshold for "bulk" - e.g. a season drop
+                    BULK_THRESHOLD = 4
+                    
+                    # Check if we should use bulk formatting
+                    # Must be >= threshold AND have valid timestamp/show_name
+                    first = group[0]
+                    is_bulk = len(group) >= BULK_THRESHOLD
+                    
+                    if is_bulk:
+                         # Bulk formatting: **Title** — <t:TIMESTAMP:STYLE>
+                         timestamp_suffix = ""
+                         if self.config.discord_timestamp_style and first.timestamp:
+                             timestamp_suffix = f" <t:{first.timestamp}:{self.config.discord_timestamp_style}>"
+                         elif first.time_str:
+                             timestamp_suffix = f" {first.time_str}"
+                         
+                         show_name_to_format = first.show_name if first.show_name else first.summary
+                         
+                         # Check if any event in the group is crossed out (past)
+                         # If ALL are past, strike through. If ANY is premiering (unlikely for bulk?), add party.
+                         all_past = all(e.is_past for e in group)
+                         is_premiere = any(e.is_premiere for e in group)
+                         
+                         line = f"{DISCORD_BOLD_START}{show_name_to_format}{DISCORD_BOLD_END} —{timestamp_suffix}"
+                         
+                         if is_premiere:
+                             line += "  🎉"
+                         
+                         if all_past and self.config.passed_event_handling == "STRIKE":
+                             line = f"{DISCORD_STRIKE_START}{line}{DISCORD_STRIKE_END}"
+                             
+                         tv_formatted.append(line)
+                    else:
+                        # Format individual items
+                        for event in group:
+                            tv_formatted.append(self.format_tv_event(event, self.config.passed_event_handling))
+
+                for event in sorted_tv_events:
+                    # Key by timestamp and show name
+                    key = (event.timestamp, event.show_name or event.summary)
+                    
+                    if key != last_key and current_group:
+                        format_group(current_group)
+                        current_group = []
+                    
+                    current_group.append(event)
+                    last_key = key
+                
+                # Process the final group
+                if current_group:
+                    format_group(current_group)
+            # --- End Bulk Grouping Logic ---
+
             movie_formatted = [
                 self.format_movie_event(event, self.config.passed_event_handling)
                 for event in day.movie_events
@@ -305,7 +369,15 @@ class  DiscordPlatform(Platform):
             event_item: EventItem to format
             passed_event_handling: How to handle passed events (DISPLAY, HIDE, STRIKE)
         """
-        time_prefix = f"{event_item.time_str}: " if event_item.time_str else ""
+        # Time prefix is now only used for static times if no Discord timestamp style is set
+        time_prefix = ""
+        timestamp_suffix = ""
+        
+        if self.config.discord_timestamp_style and event_item.timestamp:
+            timestamp_suffix = f" <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
+        elif event_item.time_str:
+            time_prefix = f"{event_item.time_str}: "
+            
         show_name_to_format = event_item.show_name if event_item.show_name else event_item.summary
 
         formatted_show = f"{DISCORD_BOLD_START}{show_name_to_format}{DISCORD_BOLD_END}"
@@ -329,7 +401,7 @@ class  DiscordPlatform(Platform):
                 # Non-standard number only: Show - *Number*
                 episode_details = f" - {DISCORD_ITALIC_START}{number}{DISCORD_ITALIC_END}"
 
-        formatted = f"{time_prefix}{formatted_show}{episode_details}"
+        formatted = f"{time_prefix}{formatted_show}{episode_details} —{timestamp_suffix}"
         if event_item.is_premiere:
             formatted += "  🎉"
         if event_item.is_past and passed_event_handling == "STRIKE":
@@ -340,8 +412,15 @@ class  DiscordPlatform(Platform):
     def format_movie_event(self, event_item: EventItem, passed_event_handling: str) -> str:
         """Format a movie event for Discord"""
         movie_name_to_format = event_item.show_name if event_item.show_name else event_item.summary
-
-        formatted = f"🎬  {DISCORD_BOLD_START}{movie_name_to_format}{DISCORD_BOLD_END}"
+        
+        time_prefix = ""
+        timestamp_suffix = ""
+        
+        # Check for Discord timestamp style first
+        if self.config.discord_timestamp_style and event_item.timestamp and event_item.has_time:
+             timestamp_suffix = f" <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
+        
+        formatted = f"🎬  {time_prefix}{DISCORD_BOLD_START}{movie_name_to_format}{DISCORD_BOLD_END} —{timestamp_suffix}"
 
         if event_item.is_past and passed_event_handling == "STRIKE":
             formatted = f"{DISCORD_STRIKE_START}{formatted}{DISCORD_STRIKE_END}"

@@ -6,7 +6,7 @@
 
 A simple Docker container that fetches upcoming airings/releases for TV shows and movies from Sonarr and Radarr calendars and posts them to Discord on a schedule.
 
-![Example Discord post](https://github.com/jordanlambrecht/calendarr/blob/main/public/calendarr_example_output_v2.png)
+![Example Discord post](https://i.imgur.com/abGhhg4.png)
 
 ## ✨ Features
 
@@ -70,6 +70,7 @@ docker run -d \
 | `DEDUPLICATE_EVENTS`                  | Boolean | `true`          | Remove duplicate events from multiple sources (Optional)                                                |
 | `DISCORD_HIDE_MENTION_INSTRUCTIONS` | Boolean | `false`         | *Discord only* Hide the instruction text below the role mention (Optional)                              |
 | `DISCORD_MENTION_ROLE_ID`             | String  | `""`            | *Discord only* Role ID to mention (Format: `123456789012345678`. Numbers only.) (Optional)             |
+| `DISCORD_TIMESTAMP_STYLE`             | String  | `Relative Time` | *Discord only* Timestamp style. Options: `Short Time`, `Long Time`, `Short Date`, `Long Date`, `Short Date/Time`, `Long Date/Time`, `Relative Time` (Optional) |
 | `DISCORD_WEBHOOK_URL` **              | String  | `""`            | Discord webhook URL                                                                                     |
 | `DISPLAY_TIME`                        | Boolean | `true`          | Display the release time next to events (Optional)                                                      |
 | `ENABLE_CUSTOM_DISCORD_FOOTER`        | Boolean | `false`         | Enable custom footer for Discord messages (Optional)                                                    |

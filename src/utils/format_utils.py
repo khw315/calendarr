@@ -9,7 +9,8 @@ from constants import (
     COLOR_PALETTE, PLATFORM_SLACK, TIMEZONE_NAME_MAP,
     PLATFORM_DISCORD,
     DISCORD_BOLD_START, DISCORD_BOLD_END, SLACK_BOLD_START, SLACK_BOLD_END,
-    ITALIC_START, ITALIC_END
+    ITALIC_START, ITALIC_END,
+    DEFAULT_HEADER
 )
 from datetime import datetime
 import pytz
@@ -22,7 +23,8 @@ from utils.localization import (
     get_timezone_message,
     join_with_conjunction,
     get_day_name,
-    get_short_month_name
+    get_short_month_name,
+    get_header_text
 )
 
 logger = logging.getLogger("format_utils")
@@ -109,7 +111,11 @@ def format_header_text(custom_header: str, start_date, end_date,
     Returns:
         Formatted header text
     """
-    header_text = f"{custom_header}"
+    # Use localized header if the provided header matches the default
+    if custom_header == DEFAULT_HEADER:
+        header_text = get_header_text(language)
+    else:
+        header_text = f"{custom_header}"
     
     if show_date_range:
         # Check if we're in daily mode (start and end date are the same day)
@@ -133,10 +139,10 @@ def format_header_text(custom_header: str, start_date, end_date,
             elif language == "KO":
                 # 1월 1일 (월요일)
                 # Correct suffix for Korean day is '일'
-                header_text += f" ({month_name} {day_num}일, {day_name})"
+                header_text += f" ({month_name}월 {day_num}일, {day_name})"
             elif language == "JA":
                 # 1月 1日 (月曜日)
-                header_text += f" ({month_name} {day_num}日, {day_name})"
+                header_text += f" ({month_name}月 {day_num}日, {day_name})"
             else:
                  header_text += f" ({day_name}, {month_name} {day_num:02d})"
                  
@@ -150,11 +156,11 @@ def format_header_text(custom_header: str, start_date, end_date,
             
             if language == "JA":
                  # 4月 1日 - 4月 7日
-                 header_text += f" ({start_month}{start_day}日 - {end_month}{end_day}日)"
+                 header_text += f" ({start_month}月 {start_day}日 - {end_month}月 {end_day}日)"
             elif language == "KO":
                  # 4월 1일 - 4월 7일
                  # Correct suffix for Korean day is '일'
-                 header_text += f" ({start_month}{start_day}일 - {end_month}{end_day}일)"
+                 header_text += f" ({start_month}월 {start_day}일 - {end_month}월 {end_day}일)"
             else:
                  # Apr 01 - Apr 07
                  header_text += f" ({start_month} {start_day:02d} - {end_month} {end_day:02d})"
