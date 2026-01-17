@@ -333,7 +333,9 @@ class Config:
             try:
                 logger.debug(f"🧪  Validating messaging platforms: discord={self.use_discord}, slack={self.use_slack}")
                 if not self.use_discord and not self.use_slack:
-                    errors.append("At least one messaging platform must be enabled")
+                    # Changed to warning instead of error to allow Web UI access without platform configuration
+                    logger.warning("No messaging platforms enabled - Discord and Slack are both disabled")
+                    logger.warning("The Web UI will be available but no messages will be sent")
 
                 if self.use_discord:
                     if not self.discord_webhook_url:

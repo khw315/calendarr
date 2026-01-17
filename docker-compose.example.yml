@@ -10,6 +10,8 @@ services:
     image: ghcr.io/khw315/calendarr:latest
     restart: "unless-stopped"
     container_name: calendarr
+    ports:
+      - "5000:5000" # Web UI - Access at http://localhost:5000
     environment:
       # --- Required ---
 

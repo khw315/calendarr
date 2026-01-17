@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendarr - Your Entertainment Calendar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Background Gradients -->
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-circle-1"></div>
+        <div class="gradient-circle gradient-circle-2"></div>
+        <div class="gradient-circle gradient-circle-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="7" width="24" height="20" rx="2" stroke="currentColor" stroke-width="2" />
+                        <line x1="4" y1="12" x2="28" y2="12" stroke="currentColor" stroke-width="2" />
+                        <line x1="10" y1="4" x2="10" y2="7" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                        <line x1="22" y1="4" x2="22" y2="7" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                    <h1>Calendarr</h1>
+                </div>
+                <nav class="nav">
+                    <a href="#dashboard" class="nav-link active">Dashboard</a>
+                    <a href="#events" class="nav-link">Releases</a>
+                    <a href="#past-events" class="nav-link">Past Releases</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon stat-icon-primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="6" width="18" height="15" rx="2" stroke="currentColor" stroke-width="2" />
+                            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label" id="eventsLabel">Upcoming Releases</div>
+                        <div class="stat-value" id="totalEvents">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon stat-icon-success">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                            <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Next Run</div>
+                        <div class="stat-value" id="nextRun">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon stat-icon-info">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Schedule Type</div>
+                        <div class="stat-value" id="scheduleType">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card">
+                    <div class="stat-icon stat-icon-success">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="9" stroke="white" stroke-width="2" />
+                            <path d="M12 7V12L15 15" stroke="white" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Timezone</div>
+                        <div class="stat-value" id="timezone">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card trigger-card">
+                    <button class="trigger-btn" id="triggerBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 3l14 9-14 9V3z" fill="currentColor" />
+                        </svg>
+                        <span>Run Now</span>
+                    </button>
+                    <div class="trigger-status" id="triggerStatus"></div>
+                </div>
+            </div>
+
+            <!-- Events Section -->
+            <section class="section" id="events">
+                <div class="section-header">
+                    <h2>Upcoming Releases</h2>
+                    <div class="section-actions">
+                        <select class="range-selector" id="rangeSelector">
+                            <option value="1">Today</option>
+                            <option value="3">Next 3 Days</option>
+                            <option value="7">Next Week</option>
+                            <option value="14">Next 2 Weeks</option>
+                        </select>
+                        <button class="refresh-btn" id="refreshBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="events-container" id="eventsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading releases...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Past Events Section -->
+            <section class="section" id="past-events">
+                <div class="section-header">
+                    <h2>Past Releases</h2>
+                    <button class="toggle-btn" id="pastToggle">
+                        <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="past-content" id="pastContent" style="display: none;">
+                    <div id="pastEventsContainer" class="events-container">
+                        <div class="loading">Loading past releases...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Calendarr | <a href="https://github.com/khw315/calendarr" target="_blank">GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

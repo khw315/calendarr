@@ -12,6 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source code
 COPY src/ /app/src/
 
+# Copy public directory for web UI
+COPY public/ /app/public/
+
 # Copy the default custom footer templates to a SEPARATE location
 COPY ./calendarr/custom_footers /app/default_footers/
 

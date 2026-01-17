@@ -13,6 +13,7 @@ A simple Docker container that fetches upcoming airings/releases for TV shows an
 
 ## ✨ Features
 
+- **Web UI**: Beautiful dashboard to view upcoming events, trigger manual runs, and view configuration.
 - **Consolidated Feed**: Combines multiple Sonarr and Radarr calendar feeds into one summary.
 - **Smart Grouping**: Groups shows and movies by day of the week for easy reading.
 - **Flexible Scheduling**: Runs on a customizable schedule (Daily or Weekly) or Cron expression.
@@ -20,6 +21,33 @@ A simple Docker container that fetches upcoming airings/releases for TV shows an
 - **Localization**: Native support for English (EN), Korean (KO), Japanese (JA), and Indonesian (ID).
 - **Dynamic Timezones**: Automatically adapts to your configured timezone.
 - **Highly Customizable**: Configure headers, footers, timestamp styles, and more.
+
+## 🌐 Web UI
+
+Calendarr now includes a modern Web UI for easy management and visualization!
+
+### Accessing the Web UI
+
+Once your container is running, access the Web UI at:
+```
+http://localhost:5000
+```
+
+Or if running on a remote server:
+```
+http://YOUR_SERVER_IP:5000
+```
+
+### Web UI Features
+
+- **📊 Dashboard**: View statistics including upcoming events count, next scheduled run, and schedule type
+- **📅 Calendar View**: See all upcoming TV shows and movies grouped by day with color-coding
+- **⚡ Manual Trigger**: Run the calendar job on-demand with a single click
+- **⚙️ Configuration Viewer**: View all current settings and platform configurations
+- **🔄 Auto-Refresh**: Events automatically refresh every 60 seconds
+- **🎨 Modern Design**: Premium UI with glassmorphism effects and smooth animations
+
+![Web UI Screenshot](https://i.imgur.com/Ti3dnya.png)
 
 ## 🚀 Getting Started
 
@@ -36,6 +64,8 @@ services:
     image: ghcr.io/khw315/calendarr:latest
     container_name: calendarr
     restart: unless-stopped
+    ports:
+      - "5000:5000"  # Web UI
     volumes:
       - ./logs:/app/logs:rw
     env_file: .env

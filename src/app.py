@@ -33,6 +33,7 @@ cli.show_server_banner = lambda *_: None
 
 config = None
 logger = None
+scheduler = None
 
 
 def init_app():
@@ -91,13 +92,215 @@ def log_ping():
 # Flask routes
 @app.route('/')
 def index():
-    """Root endpoint"""
-    return {'status': 'running', 'scheduler': 'active'}
+    """Serve the web UI"""
+    from flask import send_from_directory
+    import os
+    public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
+    return send_from_directory(public_dir, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files"""
+    from flask import send_from_directory
+    import os
+    public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
+    return send_from_directory(public_dir, path)
 
 @app.route('/health')
 def health():
     """Health check endpoint for Docker"""
     return {"status": "healthy", "timestamp": datetime.datetime.now().isoformat()}
+
+@app.route('/api/events')
+def get_events():
+    """Get upcoming events"""
+    from flask import jsonify, request
+    try:
+        # Get days parameter from query string (default to 2 for today + tomorrow)
+        days = request.args.get('days', default=2, type=int)
+        
+        # Limit to reasonable range (1-30 days)
+        days = max(1, min(days, 30))
+        
+        # For Web UI, use customizable date range
+        from datetime import datetime, timedelta
+        import pytz
+        
+        tz = config.timezone_obj
+        now = datetime.now(tz)
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = start_date + timedelta(days=days)
+        
+        logger.info(f"Web UI requesting events from {start_date.date()} to {end_date.date()} ({days} days)")
+        
+        # Get events
+        from services.calendar_service import CalendarService
+        from services.formatter_service import FormatterService
+        
+        calendar_service = CalendarService(config)
+        formatter_service = FormatterService(config)
+        
+        events = calendar_service.fetch_events(start_date, end_date)
+        days, events_summary = formatter_service.process_events(
+            events, 
+            start_date, 
+            end_date
+        )
+        
+        # Format response
+        days_data = []
+        for day in days:
+            day_events = []
+            
+            # Combine TV and movie events
+            for event_item in day.tv_events:
+                # Always skip past events in the Web UI
+                if event_item.is_past:
+                    continue
+                    
+                day_events.append({
+                    'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                    'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'type': 'tv'
+                })
+            
+            for event_item in day.movie_events:
+                # Always skip past events in the Web UI
+                if event_item.is_past:
+                    continue
+                    
+                day_events.append({
+                    'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                    'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'type': 'movie'
+                })
+            
+            # Only include days that have events (after filtering)
+            if day_events:
+                days_data.append({
+                    'day_name': day.day_name if day.day_name else day.name.split(',')[0],
+                    'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
+                    'events': day_events
+                })
+        
+        return jsonify({
+            'days': days_data,
+            'total_events': len(events),
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d')
+        })
+    except Exception as e:
+        logger.error(f"Error getting events: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/past-events')
+def get_past_events():
+    """Get today's past events"""
+    from flask import jsonify
+    try:
+        # Get only today's events
+        from datetime import datetime, timedelta
+        import pytz
+        
+        tz = config.timezone_obj
+        now = datetime.now(tz)
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = now  # Up to current time
+        
+        logger.info(f"Web UI requesting past events from {start_date} to {end_date}")
+        
+        # Get events
+        from services.calendar_service import CalendarService
+        from services.formatter_service import FormatterService
+        
+        calendar_service = CalendarService(config)
+        formatter_service = FormatterService(config)
+        
+        events = calendar_service.fetch_events(start_date, end_date)
+        days, events_summary = formatter_service.process_events(
+            events, 
+            start_date, 
+            end_date
+        )
+        
+        # Collect only past events
+        past_events = []
+        for day in days:
+            # Check TV events
+            for event_item in day.tv_events:
+                if event_item.is_past:
+                    past_events.append({
+                        'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                        'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'type': 'tv'
+                    })
+            
+            # Check movie events
+            for event_item in day.movie_events:
+                if event_item.is_past:
+                    past_events.append({
+                        'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                        'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'type': 'movie'
+                    })
+        
+        return jsonify({
+            'events': past_events,
+            'count': len(past_events)
+        })
+    except Exception as e:
+        logger.error(f"Error getting past events: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/schedule')
+def get_schedule():
+    """Get schedule information"""
+    from flask import jsonify
+    try:
+        schedule = config.schedule_settings
+        
+        # Calculate next run time
+        next_run = None
+        if scheduler:
+            job = scheduler.get_job(JOB_ID_MAIN)
+            if job and job.next_run_time:
+                next_run = job.next_run_time.isoformat()
+        
+        return jsonify({
+            'schedule_type': schedule.schedule_type,
+            'run_time': schedule.run_time,
+            'next_run': next_run,
+            'cron_schedule': schedule.cron_schedule,
+            'timezone': config.timezone
+        })
+    except Exception as e:
+        logger.error(f"Error getting schedule: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/trigger', methods=['POST'])
+def trigger_job():
+    """Manually trigger the calendar job"""
+    from flask import jsonify
+    try:
+        logger.info("Manual trigger requested via API")
+        run_main_job()
+        return jsonify({
+            'success': True,
+            'message': 'Job triggered successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error triggering job: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 
 # Initialize/configure the scheduler
@@ -111,7 +314,7 @@ def init_scheduler():
     Returns:
         Configured scheduler
     """
-    global config
+    global config, scheduler
     scheduler = BackgroundScheduler(job_defaults={
         'misfire_grace_time': 3600
     })
