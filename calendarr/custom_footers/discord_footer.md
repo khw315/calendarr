@@ -17,6 +17,6 @@ For general chat formatting, see: https://support.discord.com/hc/en-us/articles/
 
 **That's all folks!**
 
-> _You can support this project by starring it on [Github](https://github.com/jordanlambrecht/calendarr), or, if you're feeling extra generous, [toss me a dollar](https://buymeacoffee.com/jordyjordy)._ 
+> _You can support this project by starring it on [Github](https://github.com/khw315/calendarr), or, if you're feeling extra generous, [toss me a dollar](https://buymeacoffee.com/jordyjordy)._ 
 
 See you next week!

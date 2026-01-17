@@ -7,7 +7,7 @@ name: calendarr
 # ╚══════════════════════════════════════╝
 services:
   calendarr:
-    image: ghcr.io/jordanlambrecht/calendarr:latest
+    image: ghcr.io/khw315/calendarr:latest
     restart: "unless-stopped"
     container_name: calendarr
     environment:

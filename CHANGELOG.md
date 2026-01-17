@@ -55,10 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved formatting of processed event summary log message.
 
 ### Fixed
-- **Discord Embed Size Limit:** Implemented "smart batching" for Discord messages. Embeds are now grouped intelligently to stay under the 6000-character payload limit and 10-embed count limit, preventing failures on large weekly schedules while minimizing message spam. (Fixes [#3](https://github.com/jordanlambrecht/calendarr/issues/3))
-- **Improved TV event formatting (Discord & Slack):** Correctly applies italics to descriptive episode details (like dates, guest names, or non-standard identifiers) while leaving standard `SxxExx` numbers unitalicized. This fixes inconsistent bolding/italics, especially for daily shows. (Fixes [#4](https://github.com/jordanlambrecht/calendarr/issues/4))
+- **Discord Embed Size Limit:** Implemented "smart batching" for Discord messages. Embeds are now grouped intelligently to stay under the 6000-character payload limit and 10-embed count limit, preventing failures on large weekly schedules while minimizing message spam. (Fixes [#3](https://github.com/khw315/calendarr/issues/3))
+- **Improved TV event formatting (Discord & Slack):** Correctly applies italics to descriptive episode details (like dates, guest names, or non-standard identifiers) while leaving standard `SxxExx` numbers unitalicized. This fixes inconsistent bolding/italics, especially for daily shows. (Fixes [#4](https://github.com/khw315/calendarr/issues/4))
 - Correctly generate `Day.name` when creating `Day` objects in `FormatterService`.
-- **Deduplication: Issue with duplicate show entries appearing when using multiple Sonarr instances** (Fixes [#5](https://github.com/jordanlambrecht/calendarr/issues/5))
+- **Deduplication: Issue with duplicate show entries appearing when using multiple Sonarr instances** (Fixes [#5](https://github.com/khw315/calendarr/issues/5))
 - Removed incorrect `end_time` validation from `Event.__post_init__`.
 - Pass `source_type` correctly when creating `Event` objects instead of modifying raw iCal event data.
 - Platform-specific formatting logic that was previously hardcoded
