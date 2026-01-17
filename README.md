@@ -6,6 +6,9 @@
 
 A simple Docker container that fetches upcoming airings/releases for TV shows and movies from Sonarr and Radarr calendars and posts them to Discord on a schedule.
 
+> [!NOTE]
+> This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr).
+
 ![Example Discord post](https://i.imgur.com/abGhhg4.png)
 
 ## ✨ Features
@@ -56,6 +59,11 @@ docker run -d \
   ghcr.io/khw315/calendarr:latest
 ```
 
+### 🏃‍➡️ To Run Offschedule 
+
+1. Start the container via the compose file with `docker compose up -d`
+2. Use the command `docker exec -it calendarr python src/main.py`
+
 ## 🛠️ Configuration
 
 Configure the application using environment variables in your `.env` file or Docker compose.
@@ -65,7 +73,7 @@ Configure the application using environment variables in your `.env` file or Doc
 | `CALENDAR_URLS` * | JSON | `[]` | JSON array of calendar URLs and types. Example: `[{"url":"http://...","type":"tv"}, {"url":"http://...","type":"movie"}]` |
 | `DISCORD_WEBHOOK_URL` ** | String | `""` | Discord webhook URL. |
 | `SLACK_WEBHOOK_URL` *** | String | `""` | Slack webhook URL. |
-| `TZ` | String | `UTC` | Timezone (e.g., `America/New_York`). |
+| `TZ` | String | `UTC` | Timezone (e.g., `Asia/Seoul`). |
 | `APP_LANGUAGE` | String | `EN` | Language for generated messages. Options: `EN`, `KO`, `JA`, `ID`. |
 | `SCHEDULE_TYPE` | String | `WEEKLY` | `DAILY` or `WEEKLY`. |
 | `RUN_TIME` | Time | `09:00` | Time to run the job (HH:MM). |
@@ -128,4 +136,4 @@ Contributions are welcome!
 
 ## 🧑‍⚖️ License
 
-GNU GENERAL PUBLIC LICENSE
+[MIT License](LICENSE)

@@ -12,6 +12,6 @@ For more details on Slack formatting, see: https://api.slack.com/reference/surfa
 <!-- Example: -->
 *That's all folks!* 
 
-_You can support this project by starring it on <https://github.com/khw315/calendarr|Github>, or, if you're feeling extra generous, <https://buymeacoffee.com/jordyjordy|toss me a dollar>._ 
+_You can support this project by starring it on <https://github.com/khw315/calendarr|Github>, or, if you're feeling extra generous._ 
 
 See you next week!
