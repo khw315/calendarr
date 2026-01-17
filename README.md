@@ -74,9 +74,9 @@ services:
 ```
 
 3.  **Run it**:
-    ```bash
-    docker compose up -d
-    ```
+```bash
+docker compose up -d
+```
 
 ### ⌨️ With Docker CLI
 
