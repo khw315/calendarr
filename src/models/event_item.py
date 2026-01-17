@@ -23,10 +23,13 @@ class EventItem:
     is_premiere: bool = False
     is_past: bool = False
     time_str: Optional[str] = None
+    end_time: Optional[str] = None
+    end_time_str: Optional[str] = None
     show_name: Optional[str] = None
     episode_number: Optional[str] = None
     episode_title: Optional[str] = None
     timestamp: Optional[int] = None
+    end_timestamp: Optional[int] = None
     
     @property
     def has_time(self) -> bool:

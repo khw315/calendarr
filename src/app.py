@@ -160,7 +160,10 @@ def get_events():
                     
                 day_events.append({
                     'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                    'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
+                    'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
+                    'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
                     'type': 'tv'
                 })
             
@@ -171,7 +174,10 @@ def get_events():
                     
                 day_events.append({
                     'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                    'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                    'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
+                    'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
+                    'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
                     'type': 'movie'
                 })
             

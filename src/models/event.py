@@ -17,6 +17,7 @@ class Event:
     
     summary: str
     start_time: datetime
+    end_time: datetime
     source_type: str  # "tv" or "movie"
     raw_event: Dict[str, Any] = field(repr=False)  # Incoming raw iCal event
     
@@ -26,9 +27,8 @@ class Event:
             raise ValueError("Event summary cannot be empty")
         if not isinstance(self.start_time, datetime):
             raise TypeError("Event start_time must be a datetime object")
-
-        # if not isinstance(self.end_time, datetime):
-        #     raise TypeError("Event end_time must be a datetime object")
+        if not isinstance(self.end_time, datetime):
+            raise TypeError("Event end_time must be a datetime object")
         
         # Use constant for validation
         if self.source_type not in VALID_EVENT_TYPES:
@@ -57,7 +57,7 @@ class Event:
         now = datetime.now(local_tz)
         
         # Return True if event is in the past
-        return self.start_time < now
+        return self.end_time < now
     
     @property
     def day_key(self) -> str:
@@ -124,33 +124,62 @@ class Event:
         start_dt = event.get('DTSTART')
         if start_dt is None:
             raise ValueError("Event has no start time")
+
+        # Get end time
+        end_dt = event.get('DTEND')
+        if end_dt is None:
+            # Fallback: if no end time, assume 1 hour duration
+            from datetime import timedelta
+            end_dt = start_dt
+            # We'll adjust the datetime value later, just keeping the object structure for now
             
         start = start_dt.dt
+        end = end_dt.dt if end_dt else None
         
         # Get event details
         summary = event.get('SUMMARY', 'Untitled Event')
         
-        # Handle date-only events
+        # Process start time
         if isinstance(start, date) and not isinstance(start, datetime):
             # Convert to datetime at midnight
             from datetime import time
             start = datetime.combine(start, time.min)
-            # Apply timezone
             start = timezone.localize(start)
         elif isinstance(start, datetime):
-            # Ensure datetime is timezone-aware
             if start.tzinfo is None:
                 start = timezone.localize(start)
             else:
                 start = start.astimezone(timezone)
         else:
-            raise TypeError(f"Unexpected datetime type: {type(start)}")
-        
+            raise TypeError(f"Unexpected start datetime type: {type(start)}")
+
+        # Process end time
+        if end is None:
+            # Default to start + 1 hour if absolutely missing
+            from datetime import timedelta
+            end = start + timedelta(hours=1)
+        elif isinstance(end, date) and not isinstance(end, datetime):
+            from datetime import time
+            end = datetime.combine(end, time.max)
+            end = timezone.localize(end)
+        elif isinstance(end, datetime):
+            if end.tzinfo is None:
+                end = timezone.localize(end)
+            else:
+                end = end.astimezone(timezone)
+        else:
+            raise TypeError(f"Unexpected end datetime type: {type(end)}")
+            
+        # Ensure end time is after start time
+        if end <= start:
+             from datetime import timedelta
+             end = start + timedelta(hours=1)
         
         # Create Event object
         return cls(
             summary=summary,
             start_time=start,
+            end_time=end,
             source_type=source_type,
             raw_event=event
         )

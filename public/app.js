@@ -157,19 +157,25 @@ function createEventCard(event) {
     const pastClass = event.is_past ? ' event-past' : '';
     card.className = `event-card glass-card event-${event.type}${pastClass}`;
 
+    // Store precise timestamps for calculations
+    if (event.timestamp) card.dataset.timestamp = event.timestamp;
+    if (event.end_timestamp) card.dataset.endTimestamp = event.end_timestamp;
+
+    const typeLabel = event.type === 'tv' ? 'TV' : 'Movie';
+
     card.innerHTML = `
-        <span class="event-type">${event.type}</span>
+        <span class="event-type">${typeLabel}</span>
         <div class="event-title">${event.title}</div>
-        ${event.time ? `
-            <div class="event-time">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                    <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                ${event.time}
+        ${event.start_time ? `
+            <div class="event-time" data-original-time="${event.start_time}">
+                <span class="time-text">${event.start_time}</span>
             </div>
         ` : ''}
     `;
+
+    // Check initial status
+    checkAiringStatus(card);
+    updateCardCountdown(card);
 
     return card;
 }
@@ -260,6 +266,8 @@ async function loadScheduleInfo() {
         // Update next run time
         const nextRunElement = document.getElementById('nextRun');
         if (data.next_run) {
+            // Store the next run time for live updates
+            nextRunElement.dataset.nextRun = data.next_run;
             nextRunElement.textContent = formatRelativeTime(data.next_run);
         } else {
             nextRunElement.textContent = 'Not scheduled';
@@ -317,13 +325,102 @@ async function handleTrigger() {
     }
 }
 
+// Check if event is currently airing
+function checkAiringStatus(card) {
+    if (!card.dataset.endTimestamp) return;
+
+    const now = new Date();
+    const end = new Date(parseInt(card.dataset.endTimestamp) * 1000);
+    // Use timestamp for start if available
+    let start = null;
+    if (card.dataset.timestamp) {
+        start = new Date(parseInt(card.dataset.timestamp) * 1000);
+    }
+
+    // If we have precise start time, use range checking
+    if (start && now >= start && now <= end) {
+        card.classList.add('airing');
+        if (!card.querySelector('.airing-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'airing-badge';
+            badge.textContent = 'AIRING NOW';
+            card.appendChild(badge);
+        }
+
+        // Replace time text with "AIRING NOW"
+        const timeText = card.querySelector('.time-text');
+        if (timeText) {
+            timeText.textContent = 'AIRING NOW';
+            timeText.classList.remove('countdown-active');
+        }
+    } else {
+        card.classList.remove('airing');
+        const badge = card.querySelector('.airing-badge');
+        if (badge) badge.remove();
+
+        // Restore original time if it was changed
+        const timeText = card.querySelector('.time-text');
+        const originalTime = card.querySelector('.event-time')?.dataset.originalTime;
+        if (timeText && originalTime && timeText.textContent === 'AIRING NOW') {
+            timeText.textContent = originalTime;
+        }
+    }
+}
+
+function updateCardCountdown(card) {
+    if (!card.dataset.timestamp) return;
+
+    // Skip if styling as airing (because airing implies started)
+    if (card.classList.contains('airing')) return;
+
+    const now = new Date();
+    const start = new Date(parseInt(card.dataset.timestamp) * 1000);
+    const diffMs = start - now;
+
+    const timeText = card.querySelector('.time-text');
+    if (!timeText) return;
+
+    // If within 60 minutes
+    if (diffMs > 0 && diffMs <= 60 * 60 * 1000) {
+        const minutes = Math.floor(diffMs / 60000);
+        const seconds = Math.floor((diffMs % 60000) / 1000);
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        timeText.textContent = `Starting in ${timeString}`;
+        timeText.classList.add('countdown-active');
+    } else if (!card.classList.contains('airing')) {
+        // Restore original time if not airing and not in countdown
+        const originalTime = card.querySelector('.event-time').dataset.originalTime;
+        if (originalTime && timeText.textContent !== originalTime) {
+            timeText.textContent = originalTime;
+            timeText.classList.remove('countdown-active');
+        }
+    }
+}
+
 // Auto-refresh functionality
 function startAutoRefresh() {
     // Refresh data every 60 seconds
-    autoRefreshInterval = setInterval(() => {
+    if (window.autoRefreshInterval) clearInterval(window.autoRefreshInterval);
+    window.autoRefreshInterval = setInterval(() => {
         loadEvents();
         loadScheduleInfo();
     }, 60000);
+
+    // Check airing status and countdowns every second
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+    window.countdownInterval = setInterval(() => {
+        document.querySelectorAll('.event-card').forEach(card => {
+            checkAiringStatus(card);
+            updateCardCountdown(card);
+        });
+
+        // Update Next Run time
+        const nextRunElement = document.getElementById('nextRun');
+        if (nextRunElement && nextRunElement.dataset.nextRun) {
+            nextRunElement.textContent = formatRelativeTime(nextRunElement.dataset.nextRun);
+        }
+    }, 1000);
 }
 
 // Utility: Show loading state
@@ -371,11 +468,13 @@ function formatRelativeTime(dateString) {
 
     if (diff < 0) return 'Overdue';
 
-    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (days > 0) return `${days}d ${hours % 24}h`;
-    if (hours > 0) return `${hours}h ${minutes % 60}m`;
-    return `${minutes}m`;
+    if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
 }

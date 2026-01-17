@@ -47,7 +47,8 @@ http://YOUR_SERVER_IP:5000
 - **🔄 Auto-Refresh**: Events automatically refresh every 60 seconds
 - **🎨 Modern Design**: Premium UI with glassmorphism effects and smooth animations
 
-![Web UI Screenshot](https://i.imgur.com/Ti3dnya.png)
+![Web UI Screenshot #1](https://i.imgur.com/Tj1shGM.png)
+![Web UI Screenshot #2](https://i.imgur.com/h2rHYgh.png)
 
 ## 🚀 Getting Started
 

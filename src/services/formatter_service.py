@@ -182,15 +182,26 @@ class FormatterService:
         use_24_hour = self.config.time_settings.use_24_hour
         add_leading_zero = self.config.time_settings.add_leading_zero
         
-        # Parse datetime components
+        # Parse datetime components for start time
         dt_parts = parse_event_datetime(start, self.config.timezone)
         
-        # Format time string if display_time is enabled
+        # Format start time string if display_time is enabled
         time_str = None
         if display_time:
             time_str = format_time(
                 dt_parts["hour"], 
                 dt_parts["minute"], 
+                use_24_hour=use_24_hour,
+                add_leading_zero=add_leading_zero
+            )
+        
+        # Parse and format end time
+        end_time_str = None
+        if display_time:
+            end_dt_parts = parse_event_datetime(event.end_time, self.config.timezone)
+            end_time_str = format_time(
+                end_dt_parts["hour"], 
+                end_dt_parts["minute"], 
                 use_24_hour=use_24_hour,
                 add_leading_zero=add_leading_zero
             )
@@ -221,8 +232,11 @@ class FormatterService:
             is_premiere=is_premiere,
             is_past=event.is_past,
             time_str=time_str,
+            end_time=event.end_time.isoformat(),
+            end_time_str=end_time_str,
             show_name=show_name,
             episode_number=episode_number,
             episode_title=episode_title,
-            timestamp=int(start.timestamp())
+            timestamp=int(start.timestamp()),
+            end_timestamp=int(event.end_time.timestamp())
         )

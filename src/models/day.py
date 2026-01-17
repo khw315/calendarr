@@ -89,7 +89,10 @@ class Day:
             "source_type": event_item.source_type,
             "is_premiere": event_item.is_premiere,
             "is_past": event_item.is_past,
-            "time_str": event_item.time_str,
+            "start_time": event_item.time_str,
+            "timestamp": event_item.timestamp,
+            "end_time": event_item.end_time_str,
+            "end_timestamp": event_item.end_timestamp,
             "show_name": event_item.show_name,
             "episode_number": event_item.episode_number,
             "episode_title": event_item.episode_title
