@@ -13,12 +13,18 @@ DEFAULT_LANGUAGE = "EN"
 import json
 from pathlib import Path
 
-# Load translations from JSON file
+# Load translations from per-language JSON files
 def _load_translations() -> Dict[str, Dict[str, object]]:
     try:
-        data_path = Path(__file__).parent.parent / "data" / "locales.json"
-        with open(data_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        locales_dir = Path(__file__).parent.parent / "data" / "locales"
+        translations = {}
+        for file_path in locales_dir.glob("*.json"):
+            if file_path.stem == "template":
+                continue
+            lang_code = file_path.stem.upper()
+            with open(file_path, "r", encoding="utf-8") as f:
+                translations[lang_code] = json.load(f)
+        return translations
     except Exception as e:
         print(f"Error loading translations: {e}")
         return {}

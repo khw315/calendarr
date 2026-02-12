@@ -1,0 +1,103 @@
+{
+    "movies_heading": "FILM",
+    "header_text": "Rilis Baru",
+    "date_header": "{day_name}, {short_month_name} {day}",
+    "mention_instruction": "Jika ingin diberi tahu saat ada konten baru, bergabunglah dengan role ini!",
+    "timezone_message": "Semua waktu ditampilkan dalam {timezone}",
+    "no_new_releases_messages": [
+        "Jadwal kosong; nikmati waktu luang.",
+        "Tidak ada rilis baru hari ini — waktu yang tepat untuk bersantai.",
+        "Belum ada acara di kalender saat ini.",
+        "Tidak ada rilis mendatang saat ini.",
+        "Jadwal kosong untuk saat ini; silakan beristirahat.",
+        "Tidak ada konten baru untuk dibagikan saat ini.",
+        "Nikmati harimu — tidak ada rilis yang dijadwalkan.",
+        "Kalender kosong; semoga waktu istirahatmu menyenangkan.",
+        "Tidak ada acara atau film baru hari ini; bersantailah dan nikmati.",
+        "Tidak ada rilis yang dijadwalkan saat ini.",
+        "Server ingin beristirahat."
+    ],
+    "no_day_content_messages": [
+        "Tidak ada rilis yang dijadwalkan untuk hari ini.",
+        "Hari ini belum ada rilis baru.",
+        "Kalender hari ini masih kosong.",
+        "Tidak ada konten baru untuk hari ini.",
+        "Hari ini tidak ada rilis yang dijadwalkan.",
+        "Kalender menunjukkan tidak ada rilis baru untuk hari ini.",
+        "Nikmati harimu — tidak ada konten baru yang dijadwalkan.",
+        "Silakan beristirahat — tidak ada yang dijadwalkan untuk hari ini.",
+        "Jadwal hari ini kosong; bersantailah dan nikmati.",
+        "Tidak ada rilis yang dijadwalkan saat ini.",
+        "Server ingin beristirahat."
+    ],
+    "subheader_templates": {
+        "tv": "{count} {label}",
+        "movie": "{count} {label}",
+        "premiere": "{count} {label}"
+    },
+    "subheader_labels": {
+        "tv": {
+            "singular": "episode terbaru",
+            "plural": "episode terbaru"
+        },
+        "movie": {
+            "singular": "rilis film",
+            "plural": "rilis film"
+        },
+        "premiere": {
+            "singular": "penayangan perdana musim",
+            "plural": "penayangan perdana musim"
+        }
+    },
+    "list_join": {
+        "two": " dan ",
+        "last": ", dan "
+    },
+    "comma_separator": ", ",
+    "days": {
+        "0": "Senin",
+        "1": "Selasa",
+        "2": "Rabu",
+        "3": "Kamis",
+        "4": "Jumat",
+        "5": "Sabtu",
+        "6": "Minggu"
+    },
+    "short_days": {
+        "0": "Sen",
+        "1": "Sel",
+        "2": "Rab",
+        "3": "Kam",
+        "4": "Jum",
+        "5": "Sab",
+        "6": "Min"
+    },
+    "months": {
+        "1": "Januari",
+        "2": "Februari",
+        "3": "Maret",
+        "4": "April",
+        "5": "Mei",
+        "6": "Juni",
+        "7": "Juli",
+        "8": "Agustus",
+        "9": "September",
+        "10": "Oktober",
+        "11": "November",
+        "12": "Desember"
+    },
+    "short_months": {
+        "1": "Jan",
+        "2": "Feb",
+        "3": "Mar",
+        "4": "Apr",
+        "5": "Mei",
+        "6": "Jun",
+        "7": "Jul",
+        "8": "Agu",
+        "9": "Sep",
+        "10": "Okt",
+        "11": "Nov",
+        "12": "Des"
+    }
+}

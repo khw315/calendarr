@@ -1,0 +1,106 @@
+{
+    "_comment": "Translation template based on English (en.json). Replace all TODO values with your translations. Save as <language_code>.json (e.g. fr.json, de.json).",
+    "movies_heading": "TODO: MOVIES",
+    "header_text": "TODO: New Releases",
+    "date_header": "TODO (e.g. {day_name}, {short_month_name} {day}) - must include {day_name}, {short_month_name}, {day} placeholders",
+    "mention_instruction": "TODO: If you'd like to be notified when new content is available, join this role!",
+    "timezone_message": "TODO: All times shown in {timezone} - must include {timezone} placeholder",
+    "no_new_releases_messages": [
+        "YOU CAN ADD YOUR OWN MESSAGES HERE",
+        "TODO: The schedule is empty; enjoy some free time.",
+        "TODO: No new releases today — perfect time to relax.",
+        "TODO: Nothing on the calendar right now.",
+        "TODO: No upcoming releases at the moment.",
+        "TODO: The schedule is clear for now; take a break.",
+        "TODO: No new content to share at this time.",
+        "TODO: Enjoy your day — no releases scheduled.",
+        "TODO: The calendar is empty; have a restful time.",
+        "TODO: No new shows or movies today; unwind and enjoy.",
+        "TODO: Take it easy — no releases planned for now.",
+        "TODO: No scheduled releases at this time."
+    ],
+    "no_day_content_messages": [
+        "YOU CAN ADD YOUR OWN MESSAGES HERE",
+        "TODO: No releases scheduled for this day.",
+        "TODO: Nothing new is planned for today.",
+        "TODO: The schedule is clear for this day.",
+        "TODO: No new content available for today.",
+        "TODO: Today has no scheduled releases.",
+        "TODO: The calendar shows no new releases for today.",
+        "TODO: Enjoy your day — no new content scheduled.",
+        "TODO: No new shows or movies planned for today.",
+        "TODO: Take a break — nothing new is scheduled for today.",
+        "TODO: The schedule is empty for today; relax and enjoy.",
+        "TODO: No scheduled releases at this time."
+    ],
+    "subheader_templates": {
+        "tv": "{count} {label}",
+        "movie": "{count} {label}",
+        "premiere": "{count} {label}"
+    },
+    "subheader_labels": {
+        "tv": {
+            "singular": "TODO (e.g. all-new episode)",
+            "plural": "TODO (e.g. all-new episodes)"
+        },
+        "movie": {
+            "singular": "TODO (e.g. movie release)",
+            "plural": "TODO (e.g. movie releases)"
+        },
+        "premiere": {
+            "singular": "TODO (e.g. season premiere)",
+            "plural": "TODO (e.g. season premieres)"
+        }
+    },
+    "list_join": {
+        "two": "TODO (e.g. ' and ')",
+        "last": "TODO (e.g. ', and ')"
+    },
+    "comma_separator": "TODO (e.g. ', ')",
+    "days": {
+        "0": "TODO (Monday)",
+        "1": "TODO (Tuesday)",
+        "2": "TODO (Wednesday)",
+        "3": "TODO (Thursday)",
+        "4": "TODO (Friday)",
+        "5": "TODO (Saturday)",
+        "6": "TODO (Sunday)"
+    },
+    "short_days": {
+        "0": "TODO (Mon)",
+        "1": "TODO (Tue)",
+        "2": "TODO (Wed)",
+        "3": "TODO (Thu)",
+        "4": "TODO (Fri)",
+        "5": "TODO (Sat)",
+        "6": "TODO (Sun)"
+    },
+    "months": {
+        "1": "TODO (January)",
+        "2": "TODO (February)",
+        "3": "TODO (March)",
+        "4": "TODO (April)",
+        "5": "TODO (May)",
+        "6": "TODO (June)",
+        "7": "TODO (July)",
+        "8": "TODO (August)",
+        "9": "TODO (September)",
+        "10": "TODO (October)",
+        "11": "TODO (November)",
+        "12": "TODO (December)"
+    },
+    "short_months": {
+        "1": "TODO (Jan)",
+        "2": "TODO (Feb)",
+        "3": "TODO (Mar)",
+        "4": "TODO (Apr)",
+        "5": "TODO (May)",
+        "6": "TODO (Jun)",
+        "7": "TODO (Jul)",
+        "8": "TODO (Aug)",
+        "9": "TODO (Sep)",
+        "10": "TODO (Oct)",
+        "11": "TODO (Nov)",
+        "12": "TODO (Dec)"
+    }
+}

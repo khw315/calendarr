@@ -1,0 +1,105 @@
+{
+    "movies_heading": "MOVIES",
+    "header_text": "New Releases",
+    "date_header": "{day_name}, {short_month_name} {day}",
+    "mention_instruction": "If you'd like to be notified when new content is available, join this role!",
+    "timezone_message": "All times shown in {timezone}",
+    "no_new_releases_messages": [
+        "The schedule is empty; enjoy some free time.",
+        "No new releases today — perfect time to relax.",
+        "Nothing on the calendar right now.",
+        "No upcoming releases at the moment.",
+        "The schedule is clear for now; take a break.",
+        "No new content to share at this time.",
+        "Enjoy your day — no releases scheduled.",
+        "The calendar is empty; have a restful time.",
+        "No new shows or movies today; unwind and enjoy.",
+        "Take it easy — no releases planned for now.",
+        "No scheduled releases at this time.",
+        "Server is taking a break."
+    ],
+    "no_day_content_messages": [
+        "No releases scheduled for this day.",
+        "Nothing new is planned for today.",
+        "The schedule is clear for this day.",
+        "No new content available for today.",
+        "Today has no scheduled releases.",
+        "The calendar shows no new releases for today.",
+        "Enjoy your day — no new content scheduled.",
+        "No new shows or movies planned for today.",
+        "Take a break — nothing new is scheduled for today.",
+        "The schedule is empty for today; relax and enjoy.",
+        "No scheduled releases at this time.",
+        "Server is taking a break."
+    ],
+    "subheader_templates": {
+        "tv": "{count} {label}",
+        "movie": "{count} {label}",
+        "premiere": "{count} {label}"
+    },
+    "subheader_labels": {
+        "tv": {
+            "singular": "all-new episode",
+            "plural": "all-new episodes"
+        },
+        "movie": {
+            "singular": "movie release",
+            "plural": "movie releases"
+        },
+        "premiere": {
+            "singular": "season premiere",
+            "plural": "season premieres"
+        }
+    },
+    "list_join": {
+        "two": " and ",
+        "last": ", and "
+    },
+    "comma_separator": ", ",
+    "days": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+    },
+    "short_days": {
+        "0": "Mon",
+        "1": "Tue",
+        "2": "Wed",
+        "3": "Thu",
+        "4": "Fri",
+        "5": "Sat",
+        "6": "Sun"
+    },
+    "months": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+    },
+    "short_months": {
+        "1": "Jan",
+        "2": "Feb",
+        "3": "Mar",
+        "4": "Apr",
+        "5": "May",
+        "6": "Jun",
+        "7": "Jul",
+        "8": "Aug",
+        "9": "Sep",
+        "10": "Oct",
+        "11": "Nov",
+        "12": "Dec"
+    }
+}
