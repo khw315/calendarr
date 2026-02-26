@@ -650,6 +650,221 @@ body {
     padding: 0 4px;
 }
 
+/* Modals */
+/* Removed Modal Styles as Settings is now a page view */
+
+/* Settings Forms */
+.settings-group {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-md);
+    border: 2px solid var(--color-border);
+    background: #fff;
+    box-shadow: 4px 4px 0 #000;
+}
+
+.settings-group h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--color-border);
+    display: inline-block;
+    padding-bottom: 2px;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.brutal-input,
+.brutal-select {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--color-border);
+    font-family: inherit;
+    font-size: 1rem;
+    box-shadow: 2px 2px 0 #000;
+    transition: all var(--transition-fast);
+}
+
+.brutal-input:focus,
+.brutal-select:focus {
+    outline: none;
+    border-color: var(--color-info);
+    box-shadow: 2px 2px 0 var(--color-info);
+}
+
+.brutal-select {
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border);
+    appearance: none;
+    cursor: pointer;
+    box-shadow: 1px 1px 0 #000;
+    position: relative;
+    background: #fff;
+}
+
+.checkbox-group input[type="checkbox"]:checked {
+    background: var(--color-success);
+}
+
+.checkbox-group input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #000;
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.brutal-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--color-border);
+    background: #fff;
+    color: var(--color-text);
+    font-family: inherit;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #000;
+    transition: all var(--transition-fast);
+}
+
+.brutal-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 #000;
+}
+
+.brutal-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 #000;
+}
+
+.brutal-btn-primary {
+    background: var(--color-success);
+}
+
+.brutal-btn-danger {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+/* Calendar URLs Editor */
+.calendar-url-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.calendar-url-item {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+    background: #f9f9f9;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--color-border);
+}
+
+.calendar-url-inputs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.calendar-url-item .remove-url-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Utilities */
+.mt-none {
+    margin-top: 0;
+}
+
+.mt-lg {
+    margin-top: var(--spacing-lg);
+}
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--color-surface);
+    border: 3px solid var(--color-border);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: 4px 4px 0 #000;
+    font-weight: 700;
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast.success {
+    background-color: var(--color-success);
+}
+
+.toast.error {
+    background-color: var(--color-danger);
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     :root {

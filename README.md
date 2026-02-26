@@ -55,8 +55,7 @@ Available via `ghcr.io/khw315/calendarr:latest`.
 
 ### 🐳 With Docker Compose (Recommended)
 
-1.  **Create a `.env` file** with your configuration (see [Configuration](#-configuration) below).
-2.  **Create a `docker-compose.yml`**:
+1.  **Create a `docker-compose.yml`**:
 
 ```yaml
 services:
@@ -65,27 +64,29 @@ services:
     container_name: calendarr
     restart: unless-stopped
     ports:
-      - "5000:5000"  # Web UI
+      - "5000:5000"  # Web UI - Access at http://localhost:5000
     volumes:
-      - ./logs:/app/logs:rw
-    env_file: .env
-    environment:
-      - TZ=Asia/Seoul
+      # Mount config directory to save settings from Web UI
+      - ./calendarr/config:/app/config:rw
+      # Mount logs directory (optional but recommended)
+      - ./calendarr/logs:/app/logs:rw
 ```
 
-3.  **Run it**:
+2.  **Run it**:
 ```bash
 docker compose up -d
 ```
+
+3.  **Configure it**: Open `http://localhost:5000` to access the Web UI and set up your webhooks, schedules, and calendars!
 
 ### ⌨️ With Docker CLI
 
 ```bash
 docker run -d \
   --name calendarr \
-  -e DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..." \
-  -e CALENDAR_URLS='[{"url":"https://sonarr.example.com/feed/calendar/api.ics","type":"tv"},{"url":"https://radarr.example.com/feed/calendar/api.ics","type":"movie"}]' \
-  -e TZ="Asia/Seoul" \
+  -p 5000:5000 \
+  -v ./calendarr/config:/app/config:rw \
+  -v ./calendarr/logs:/app/logs:rw \
   ghcr.io/khw315/calendarr:latest
 ```
 
@@ -96,34 +97,20 @@ docker run -d \
 
 ## 🛠️ Configuration
 
-Configure the application using environment variables in your `.env` file or Docker compose.
+Configure the application directly from the **Web UI**! All changes apply instantly without requiring container restarts and are saved persistently to your mapped `/app/config` volume. 
 
-| Variable | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `CALENDAR_URLS` * | JSON | `[]` | JSON array of calendar URLs and types. Example: `[{"url":"http://...","type":"tv"}, {"url":"http://...","type":"movie"}]` |
-| `DISCORD_WEBHOOK_URL` ** | String | `""` | Discord webhook URL. |
-| `SLACK_WEBHOOK_URL` *** | String | `""` | Slack webhook URL. |
-| `TZ` | String | `UTC` | Timezone (e.g., `Asia/Seoul`). |
-| `APP_LANGUAGE` | String | `EN` | Language for generated messages. Options: `EN`, `KO`, `JA`, `ID`. |
-| `SCHEDULE_TYPE` | String | `WEEKLY` | `DAILY` or `WEEKLY`. |
-| `RUN_TIME` | Time | `09:00` | Time to run the job (HH:MM). |
-| `DISCORD_TIMESTAMP_STYLE` | String | `Relative Time` | *Discord only* Style for timestamps. Options: `Short Time`, `Long Time`, `Short Date`, `Long Date`, `Short/Long Date/Time`, `Relative Time`. |
-| `CUSTOM_HEADER` | String | `New Releases` | Custom header text for the notification. |
-| `DISPLAY_TIME` | Boolean | `true` | Display the release time next to events. |
-| `SHOW_DATE_RANGE` | Boolean | `true` | Show the date range in the header. |
-| `SHOW_TIMEZONE_IN_SUBHEADER`| Boolean | `false`| Show the configured timezone in the subheader. |
-| `USE_24_HOUR` | Boolean | `true` | Use 24-hour time format. |
-| `ADD_LEADING_ZERO` | Boolean | `true` | Add leading zero to single-digit hours. |
-| `DEDUPLICATE_EVENTS` | Boolean | `true` | Remove duplicate events from multiple sources. |
-| `PASSED_EVENT_HANDLING` | String | `DISPLAY`| How to handle past events: `DISPLAY`, `HIDE`, `STRIKE`. |
-| `CRON_SCHEDULE` | Cron | `None` | Custom CRON expression (Overrides simple scheduling). |
-| `ENABLE_CUSTOM_DISCORD_FOOTER`| Boolean| `false`| Enable custom footer for Discord messages. |
-| `ENABLE_CUSTOM_SLACK_FOOTER` | Boolean | `false`| Enable custom footer for Slack messages. |
-| `DEBUG` | Boolean | `false` | Enable debug logging. |
+The following settings are available in the Settings tab:
 
-\* Required.
-\** Required if `USE_DISCORD` is `true` (default).
-\*** Required if `USE_SLACK` is `true`.
+| Setting Group | Settings Available |
+| :--- | :--- |
+| **Calendars** | Add multiple Sonarr/Radarr calendar iCal URLs and define their media type (`tv` or `movie`). |
+| **Integrations** | Enable Discord or Slack notifications, input your Webhook URLs, and configure mention instructions/styles. |
+| **Format** | Customize language, headers, and footer toggles. |
+| **Event Display** | Define how past/duplicate events are handled, toggle 24-hour time, and timezone display options. |
+| **Schedule** | Set the timezone, Daily/Weekly schedule, specific Run Time, or provide a raw Cron expression. |
+| **Advanced** | Toggle system debug logging, max log sizes, and HTTP timeouts. |
+
+*(Note: Advanced users can optionally pre-seed configurations via environment variables, but the Web UI is recommended for all typical modifications.)*
 
 ## 🤝 Obtaining Calendar URLs
 

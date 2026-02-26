@@ -307,6 +307,130 @@ def trigger_job():
             'error': str(e)
         }), 500
 
+@app.route('/api/config', methods=['GET', 'POST'])
+def handle_config():
+    """Get or save configuration"""
+    global config, scheduler
+    from flask import jsonify, request
+    from config.settings import load_config_from_file, save_config_to_file
+    
+    if request.method == 'GET':
+        try:
+            # We want to return the current active configuration, not just what's in the file
+            # But the file config overrides env vars, so returning what the app is currently using is best
+            # First, read what is explicitly set in the file
+            saved_config = load_config_from_file()
+            
+            # Then merge it with what the app is currently using (for fields that might be env variables)
+            # This ensures we display the actual configuration in the UI
+            current_config = {
+                # General
+                'DEBUG': config.logging_settings.debug_mode,
+                'CUSTOM_HEADER': config.custom_header,
+                
+                # Platforms
+                'USE_DISCORD': config.use_discord,
+                'DISCORD_WEBHOOK_URL': config.discord_webhook_url or "",
+                'DISCORD_MENTION_ROLE_ID': config.discord_mention_role_id or "",
+                'DISCORD_HIDE_MENTION_INSTRUCTIONS': config.discord_hide_mention_instructions,
+                'DISCORD_TIMESTAMP_STYLE': config.discord_timestamp_style or "Relative Time",
+                'ENABLE_CUSTOM_DISCORD_FOOTER': config.enable_custom_discord_footer,
+                
+                'USE_SLACK': config.use_slack,
+                'SLACK_WEBHOOK_URL': config.slack_webhook_url or "",
+                'ENABLE_CUSTOM_SLACK_FOOTER': config.enable_custom_slack_footer,
+                
+                # Calendar
+                'CALENDAR_URLS': [url.to_dict() for url in config.calendar_urls],
+                'CALENDAR_RANGE': config.calendar_range,
+                'PASSED_EVENT_HANDLING': config.passed_event_handling,
+                'START_WEEK_ON_MONDAY': config.start_week_on_monday,
+                'DEDUPLICATE_EVENTS': config.deduplicate_events,
+                
+                # Time
+                'USE_24_HOUR': config.time_settings.use_24_hour,
+                'ADD_LEADING_ZERO': config.time_settings.add_leading_zero,
+                'DISPLAY_TIME': config.time_settings.display_time,
+                'SHOW_DATE_RANGE': config.show_date_range,
+                'SHOW_TIMEZONE_IN_SUBHEADER': config.show_timezone_in_subheader,
+                'TZ': config.timezone,
+                
+                # Schedule
+                'SCHEDULE_TYPE': config.schedule_settings.schedule_type,
+                'SCHEDULE_DAY': config.schedule_settings.schedule_day,
+                'RUN_TIME': config.schedule_settings.run_time,
+                'CRON_SCHEDULE': config.schedule_settings.cron_schedule or "",
+                'RUN_ON_STARTUP': config.schedule_settings.run_on_startup,
+
+                # Localization
+                'APP_LANGUAGE': config.language.upper(),
+
+                # System
+                'HTTP_TIMEOUT': config.http_timeout,
+                'LOG_MAX_SIZE_MB': config.logging_settings.max_size_mb,
+                'LOG_BACKUP_COUNT': config.logging_settings.backup_count,
+            }
+            
+            # Overlay any explicitly saved preferences
+            for k, v in saved_config.items():
+                current_config[k] = v
+                
+            return jsonify(current_config)
+        except Exception as e:
+            logger.error(f"Error getting config: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return jsonify({'error': str(e)}), 500
+            
+    elif request.method == 'POST':
+        try:
+            new_config = request.json
+            if not new_config:
+                return jsonify({'error': 'No configuration data provided'}), 400
+                
+            # We should preserve things that aren't sent if we are partially updating?
+            # Normally frontend will send the full config.
+            existing_config = load_config_from_file()
+            
+            # Merge existing with new
+            for k, v in new_config.items():
+                existing_config[k] = v
+                
+            # Save to file
+            if save_config_to_file(existing_config):
+                # Reload global config
+                logger.info("Configuration updated via API, reloading...")
+                
+                # Re-initialize the app configuration
+                from config.settings import load_config_from_env
+                config = load_config_from_env()
+                
+                # Restart the scheduler with the new configuration
+                if scheduler:
+                    scheduler.shutdown(wait=False)
+                
+                # Re-init scheduler
+                scheduler = init_scheduler()
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Configuration saved successfully'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to save configuration to file'
+                }), 500
+                
+        except Exception as e:
+            logger.error(f"Error saving config: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
 
 
 # Initialize/configure the scheduler

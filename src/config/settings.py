@@ -23,7 +23,8 @@ from constants import (
     DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER,
     DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER,
     VALID_DISCORD_TIMESTAMP_STYLES,
-    DISCORD_TIMESTAMP_STYLE_MAP
+    DISCORD_TIMESTAMP_STYLE_MAP,
+    CONFIG_FILE_PATH
 )
 from utils.localization import DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, normalize_language
 
@@ -151,7 +152,7 @@ class ScheduleSettings:
                 logger.debug(f"⚠️  Using default time: hour={self.hour}, minute={self.minute}")
                 
             # Validate cron schedule if provided
-            if self.cron_schedule:
+            if self.cron_schedule is not None and isinstance(self.cron_schedule, str) and self.cron_schedule.strip():
                 logger.debug(f"🧪  Cron schedule provided: {self.cron_schedule}")
                 # Simple validation - just check if it has about like 5-6 components
                 cron_parts = self.cron_schedule.split()
@@ -552,7 +553,7 @@ def get_env_int(name: str, default: int) -> int:
 
 def load_config_from_env() -> Config:
     """
-    Load configuration from environment variables
+    Load configuration from environment variables and JSON file
     
     Returns:
         Config object
@@ -560,12 +561,36 @@ def load_config_from_env() -> Config:
     try:
         logger.debug("🏁  Loading configuration from environment variables")
         
+        # Load file config first to merge with environment
+        file_config = load_config_from_file()
+        
+        # Helper to get value preferring file over env
+        def get_merged(key: str, env_val):
+            if key in file_config:
+                return file_config[key]
+            return env_val
+        
         # Load calendar URLs
         try:
             logger.debug("🔍  Loading calendar URLs")
             calendar_urls_str = os.environ.get("CALENDAR_URLS", "[]")
-            logger.debug(f"📋  CALENDAR_URLS env var value: {calendar_urls_str}")
-            calendar_urls = load_calendar_urls(calendar_urls_str)
+            
+            # Prefer file config if present and is list
+            if "CALENDAR_URLS" in file_config and isinstance(file_config["CALENDAR_URLS"], list):
+                logger.debug(f"📋  CALENDAR_URLS loaded from file: {file_config['CALENDAR_URLS']}")
+                calendar_urls = []
+                for url_data in file_config["CALENDAR_URLS"]:
+                    url = CalendarUrl.from_dict(url_data)
+                    if url.url:
+                        calendar_urls.append(url)
+            else:
+                logger.debug(f"📋  CALENDAR_URLS env var value: {calendar_urls_str}")
+                # Check if it contains the unresolved docker-compose template variable
+                if "${ICS_URL_SONARR_1}" in calendar_urls_str:
+                    logger.debug("📋  Unresolved template found in CALENDAR_URLS, defaulting to empty list.")
+                    calendar_urls_str = "[]"
+                    
+                calendar_urls = load_calendar_urls(calendar_urls_str)
             logger.debug(f"✅  Loaded {len(calendar_urls)} calendar URLs")
         except Exception as e:
             logger.error(f"Error loading calendar URLs: {e}")
@@ -576,9 +601,9 @@ def load_config_from_env() -> Config:
         try:
             logger.debug("🔍  Loading time settings")
             time_settings = TimeSettings(
-                use_24_hour=get_env_bool("USE_24_HOUR", DEFAULT_USE_24_HOUR),
-                add_leading_zero=get_env_bool("ADD_LEADING_ZERO", DEFAULT_ADD_LEADING_ZERO),
-                display_time=get_env_bool("DISPLAY_TIME", DEFAULT_DISPLAY_TIME)
+                use_24_hour=get_merged("USE_24_HOUR", get_env_bool("USE_24_HOUR", DEFAULT_USE_24_HOUR)),
+                add_leading_zero=get_merged("ADD_LEADING_ZERO", get_env_bool("ADD_LEADING_ZERO", DEFAULT_ADD_LEADING_ZERO)),
+                display_time=get_merged("DISPLAY_TIME", get_env_bool("DISPLAY_TIME", DEFAULT_DISPLAY_TIME))
             )
             logger.debug(f"✅  Loaded time settings: {time_settings}")
         except Exception as e:
@@ -590,11 +615,11 @@ def load_config_from_env() -> Config:
         try:
             logger.debug("🔍  Loading scheduling settings")
             schedule_settings = ScheduleSettings(
-                schedule_type=os.environ.get("SCHEDULE_TYPE", DEFAULT_SCHEDULE_TYPE).upper(),
-                run_time=os.environ.get("RUN_TIME", DEFAULT_RUN_TIME),
-                schedule_day=os.environ.get("SCHEDULE_DAY", DEFAULT_SCHEDULE_DAY),
-                cron_schedule=os.environ.get("CRON_SCHEDULE"),
-                run_on_startup=get_env_bool("RUN_ON_STARTUP", DEFAULT_RUN_ON_STARTUP)
+                schedule_type=get_merged("SCHEDULE_TYPE", os.environ.get("SCHEDULE_TYPE", DEFAULT_SCHEDULE_TYPE)).upper(),
+                run_time=get_merged("RUN_TIME", os.environ.get("RUN_TIME", DEFAULT_RUN_TIME)),
+                schedule_day=get_merged("SCHEDULE_DAY", os.environ.get("SCHEDULE_DAY", DEFAULT_SCHEDULE_DAY)),
+                cron_schedule=get_merged("CRON_SCHEDULE", os.environ.get("CRON_SCHEDULE")),
+                run_on_startup=get_merged("RUN_ON_STARTUP", get_env_bool("RUN_ON_STARTUP", DEFAULT_RUN_ON_STARTUP))
             )
             logger.debug(f"✅  Loaded schedule settings: type={schedule_settings.schedule_type}, "
                          f"time={schedule_settings.run_time}, day={schedule_settings.schedule_day}")
@@ -607,11 +632,11 @@ def load_config_from_env() -> Config:
         try:
             logger.debug("🔍  Loading logging settings")
             logging_settings = LoggingSettings(
-                log_dir=os.environ.get("LOG_DIR", DEFAULT_LOG_DIR),
-                log_file=os.environ.get("LOG_FILE", DEFAULT_LOG_FILE),
-                backup_count=get_env_int("LOG_BACKUP_COUNT", DEFAULT_LOG_BACKUP_COUNT),
-                max_size_mb=get_env_int("MAX_LOG_SIZE", DEFAULT_LOG_MAX_SIZE_MB),
-                debug_mode=get_env_bool("DEBUG", DEFAULT_DEBUG_MODE)
+                log_dir=DEFAULT_LOG_DIR,
+                log_file=DEFAULT_LOG_FILE,
+                backup_count=int(get_merged("LOG_BACKUP_COUNT", get_env_int("LOG_BACKUP_COUNT", DEFAULT_LOG_BACKUP_COUNT))),
+                max_size_mb=int(get_merged("LOG_MAX_SIZE_MB", get_env_int("MAX_LOG_SIZE", DEFAULT_LOG_MAX_SIZE_MB))),
+                debug_mode=get_merged("DEBUG", get_env_bool("DEBUG", DEFAULT_DEBUG_MODE))
             )
             logger.debug(f"✅  Loaded logging settings: dir={logging_settings.log_dir}, "
                          f"file={logging_settings.log_file}, debug={logging_settings.debug_mode}")
@@ -623,14 +648,14 @@ def load_config_from_env() -> Config:
         # Load webhook URLs and platform settings
         try:
             logger.debug("🔍  Loading webhook URLs and platform settings")
-            discord_webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
-            slack_webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
-            use_discord = get_env_bool("USE_DISCORD", DEFAULT_USE_DISCORD)
-            use_slack = get_env_bool("USE_SLACK", DEFAULT_USE_SLACK)
+            discord_webhook_url = get_merged("DISCORD_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL"))
+            slack_webhook_url = get_merged("SLACK_WEBHOOK_URL", os.environ.get("SLACK_WEBHOOK_URL"))
+            use_discord = get_merged("USE_DISCORD", get_env_bool("USE_DISCORD", DEFAULT_USE_DISCORD))
+            use_slack = get_merged("USE_SLACK", get_env_bool("USE_SLACK", DEFAULT_USE_SLACK))
 
             # --- Add Fallback Logic for Role ID ---
             # THIS WILL EVENTUALLY BE REMOVED IN FUTURE RELEASES. IT'S JUST A TEMPORARY FIX 
-            discord_mention_role_id = os.environ.get("DISCORD_MENTION_ROLE_ID")
+            discord_mention_role_id = get_merged("DISCORD_MENTION_ROLE_ID", os.environ.get("DISCORD_MENTION_ROLE_ID"))
             role_id_source = "DISCORD_MENTION_ROLE_ID"
             if not discord_mention_role_id:
                 # If new variable is not set, try the old one
@@ -641,9 +666,9 @@ def load_config_from_env() -> Config:
                     role_id_source = "Default" # If neither new nor old is set
             # --- End Fallback Logic ---
 
-            discord_hide_mention_instructions=get_env_bool("DISCORD_HIDE_MENTION_INSTRUCTIONS", DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS)
+            discord_hide_mention_instructions=get_merged("DISCORD_HIDE_MENTION_INSTRUCTIONS", get_env_bool("DISCORD_HIDE_MENTION_INSTRUCTIONS", DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS))
             
-            discord_timestamp_style = os.environ.get("DISCORD_TIMESTAMP_STYLE", "Relative Time")
+            discord_timestamp_style = get_merged("DISCORD_TIMESTAMP_STYLE", os.environ.get("DISCORD_TIMESTAMP_STYLE", "Relative Time"))
             if discord_timestamp_style:
                 # If it's a valid code, use it directly (preserving case for T vs t)
                 if discord_timestamp_style not in VALID_DISCORD_TIMESTAMP_STYLES:
@@ -671,11 +696,11 @@ def load_config_from_env() -> Config:
         # Load display settings
         try:
             logger.debug("🔍  Loading display settings")
-            custom_header = os.environ.get("CUSTOM_HEADER", DEFAULT_HEADER)
-            show_date_range = get_env_bool("SHOW_DATE_RANGE", DEFAULT_SHOW_DATE_RANGE)
-            show_timezone_in_subheader = get_env_bool("SHOW_TIMEZONE_IN_SUBHEADER", DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER)
-            start_week_on_monday = get_env_bool("START_WEEK_ON_MONDAY", DEFAULT_START_WEEK_ON_MONDAY)
-            deduplicate_events = get_env_bool("DEDUPLICATE_EVENTS", DEFAULT_DEDUPLICATE_EVENTS)
+            custom_header = get_merged("CUSTOM_HEADER", os.environ.get("CUSTOM_HEADER", DEFAULT_HEADER))
+            show_date_range = get_merged("SHOW_DATE_RANGE", get_env_bool("SHOW_DATE_RANGE", DEFAULT_SHOW_DATE_RANGE))
+            show_timezone_in_subheader = get_merged("SHOW_TIMEZONE_IN_SUBHEADER", get_env_bool("SHOW_TIMEZONE_IN_SUBHEADER", DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER))
+            start_week_on_monday = get_merged("START_WEEK_ON_MONDAY", get_env_bool("START_WEEK_ON_MONDAY", DEFAULT_START_WEEK_ON_MONDAY))
+            deduplicate_events = get_merged("DEDUPLICATE_EVENTS", get_env_bool("DEDUPLICATE_EVENTS", DEFAULT_DEDUPLICATE_EVENTS))
             logger.debug(f"✅  Loaded display settings: header='{custom_header}', "
                      f"show_date_range={show_date_range}, start_on_monday={start_week_on_monday}, "
                      f"show_timezone={show_timezone_in_subheader}")
@@ -691,7 +716,7 @@ def load_config_from_env() -> Config:
         # Load localization settings
         try:
             logger.debug("🔍  Loading localization settings")
-            language_env = os.environ.get("APP_LANGUAGE") or os.environ.get("LANGUAGE")
+            language_env = get_merged("APP_LANGUAGE", os.environ.get("APP_LANGUAGE") or os.environ.get("LANGUAGE"))
             language = normalize_language(language_env)
             logger.debug(f"✅  Loaded language setting: {language}")
         except Exception as e:
@@ -702,8 +727,8 @@ def load_config_from_env() -> Config:
         # Load calendar settings
         try:
             logger.debug("🔍  Loading calendar settings")
-            passed_event_handling = os.environ.get("PASSED_EVENT_HANDLING", DEFAULT_PASSED_EVENT_HANDLING).upper()
-            calendar_range = os.environ.get("CALENDAR_RANGE", DEFAULT_CALENDAR_RANGE).upper()
+            passed_event_handling = get_merged("PASSED_EVENT_HANDLING", os.environ.get("PASSED_EVENT_HANDLING", DEFAULT_PASSED_EVENT_HANDLING)).upper()
+            calendar_range = get_merged("CALENDAR_RANGE", os.environ.get("CALENDAR_RANGE", DEFAULT_CALENDAR_RANGE)).upper()
             logger.debug(f"✅  Loaded calendar settings: passed_event_handling={passed_event_handling}, "
                         f"calendar_range={calendar_range}")
         except Exception as e:
@@ -715,8 +740,8 @@ def load_config_from_env() -> Config:
         # Load timezone and HTTP settings
         try:
             logger.debug("🔍  Loading timezone and HTTP settings")
-            timezone = os.environ.get("TZ", "UTC")
-            http_timeout = get_env_int("HTTP_TIMEOUT", DEFAULT_HTTP_TIMEOUT)
+            timezone = get_merged("TZ", os.environ.get("TZ", "UTC"))
+            http_timeout = int(get_merged("HTTP_TIMEOUT", get_env_int("HTTP_TIMEOUT", DEFAULT_HTTP_TIMEOUT)))
             logger.debug(f"✅  Loaded timezone={timezone}, http_timeout={http_timeout}")
         except Exception as e:
             logger.error(f"Error loading timezone and HTTP settings: {e}")
@@ -727,8 +752,8 @@ def load_config_from_env() -> Config:
         # Load Footer Settings
         try:
             logger.debug("🔍  Loading custom footer settings")
-            enable_custom_discord_footer = get_env_bool("ENABLE_CUSTOM_DISCORD_FOOTER", DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER)
-            enable_custom_slack_footer = get_env_bool("ENABLE_CUSTOM_SLACK_FOOTER", DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER)
+            enable_custom_discord_footer = get_merged("ENABLE_CUSTOM_DISCORD_FOOTER", get_env_bool("ENABLE_CUSTOM_DISCORD_FOOTER", DEFAULT_ENABLE_CUSTOM_DISCORD_FOOTER))
+            enable_custom_slack_footer = get_merged("ENABLE_CUSTOM_SLACK_FOOTER", get_env_bool("ENABLE_CUSTOM_SLACK_FOOTER", DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER))
             logger.debug(f"📋  Enable custom Discord footer: {enable_custom_discord_footer}")
             logger.debug(f"📋  Enable custom Slack footer: {enable_custom_slack_footer}")
         except Exception as e:
@@ -823,3 +848,49 @@ def load_config_from_env() -> Config:
         logger.error(f"Unexpected error loading configuration: {e}")
         logger.debug(f"❌  Exception details: {traceback.format_exc()}")
         raise ValueError(f"Failed to load configuration: {str(e)}")
+
+def save_config_to_file(config_data: dict) -> bool:
+    """
+    Save configuration to JSON file.
+    
+    Args:
+        config_data: Dictionary containing configuration to save
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Ensure directory exists
+        config_dir = os.path.dirname(CONFIG_FILE_PATH)
+        if config_dir and not os.path.exists(config_dir):
+            os.makedirs(config_dir, exist_ok=True)
+            
+        with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2)
+            
+        logger.info(f"💾  Configuration successfully saved to {CONFIG_FILE_PATH}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to save configuration: {e}")
+        logger.debug(f"❌  Exception details: {traceback.format_exc()}")
+        return False
+        
+def load_config_from_file() -> dict:
+    """
+    Load configuration from JSON file.
+    
+    Returns:
+        dict: Configuration dictionary or empty dict if not found/invalid
+    """
+    if not os.path.exists(CONFIG_FILE_PATH):
+        logger.debug(f"ℹ️  No JSON configuration file found at {CONFIG_FILE_PATH}")
+        return {}
+        
+    try:
+        with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            logger.info(f"📂  Loaded configuration from {CONFIG_FILE_PATH}")
+            return data
+    except Exception as e:
+        logger.error(f"Failed to load configuration from {CONFIG_FILE_PATH}: {e}")
+        return {}
