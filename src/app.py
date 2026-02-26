@@ -475,7 +475,7 @@ def init_scheduler():
         try:
             scheduler.add_job(
                 run_main_job,
-                CronTrigger.from_crontab(schedule.cron_schedule),
+                CronTrigger.from_crontab(schedule.cron_schedule, timezone=config.timezone),
                 id=JOB_ID_MAIN
             )
         except Exception as e:
@@ -492,7 +492,7 @@ def init_scheduler():
             logger.info(f"📅  Scheduling DAILY job at {schedule.hour}:{schedule.minute}")
             scheduler.add_job(
                 run_main_job, 
-                CronTrigger(hour=schedule.hour, minute=schedule.minute),
+                CronTrigger(hour=schedule.hour, minute=schedule.minute, timezone=config.timezone),
                 id=JOB_ID_MAIN
             )
         else:
@@ -504,7 +504,8 @@ def init_scheduler():
                 CronTrigger(
                     day_of_week=schedule.schedule_day, 
                     hour=schedule.hour, 
-                    minute=schedule.minute
+                    minute=schedule.minute,
+                    timezone=config.timezone
                 ),
                 id=JOB_ID_MAIN
             )
