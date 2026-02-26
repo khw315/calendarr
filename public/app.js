@@ -155,7 +155,7 @@ function renderEvents(container, days) {
 function createEventCard(event) {
     const card = document.createElement('div');
     const pastClass = event.is_past ? ' event-past' : '';
-    card.className = `event-card glass-card event-${event.type}${pastClass}`;
+    card.className = `event-card brutal-card event-${event.type}${pastClass}`;
 
     // Store precise timestamps for calculations
     if (event.timestamp) card.dataset.timestamp = event.timestamp;
