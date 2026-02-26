@@ -45,7 +45,7 @@ http://YOUR_SERVER_IP:5000
 - **⚡ Manual Trigger**: Run the calendar job on-demand with a single click
 - **⚙️ Configuration Viewer**: View all current settings and platform configurations
 - **🔄 Auto-Refresh**: Events automatically refresh every 60 seconds
-- **🎨 Modern Design**: Premium UI with glassmorphism effects and smooth animations
+- **🎨 Modern Design**: Bold Neobrutalist UI with high contrast, vibrant colors, and sharp shadows
 
 ![Web UI Screenshot](public/preview.png)
 
