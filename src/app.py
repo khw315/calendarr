@@ -350,9 +350,7 @@ def handle_config():
                 
                 # Calendar
                 'CALENDAR_URLS': [url.to_dict() for url in config.calendar_urls],
-                'CALENDAR_RANGE': config.calendar_range,
                 'PASSED_EVENT_HANDLING': config.passed_event_handling,
-                'START_WEEK_ON_MONDAY': config.start_week_on_monday,
                 'DEDUPLICATE_EVENTS': config.deduplicate_events,
                 
                 # Time

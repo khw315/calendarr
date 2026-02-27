@@ -26,7 +26,7 @@ def main():
         # Calculate date range
         logger.debug(f"🔍  Loading date ranges from config")
         start_date, end_date = calculate_date_range(
-            config.calendar_range,
+            config.schedule_settings.schedule_type,
             config.start_week_on_monday,
             config.timezone
         )

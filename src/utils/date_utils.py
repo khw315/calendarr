@@ -9,12 +9,12 @@ import logging
 logger = logging.getLogger("utils_date")
 
 
-def calculate_date_range(calendar_range: str, start_week_on_monday: bool, timezone_str: str = "UTC"):
+def calculate_date_range(schedule_type: str, start_week_on_monday: bool, timezone_str: str = "UTC"):
     """
-    Calculate start and end dates based on the calendar range setting.
+    Calculate start and end dates based on the schedule type.
     
     Args:
-        calendar_range: "DAY" or "WEEK" or "AUTO"
+        schedule_type: "DAILY" or "WEEKLY"
         start_week_on_monday: Whether weeks start on Monday (True) or Sunday (False)
         timezone_str: Timezone string
         
@@ -25,7 +25,7 @@ def calculate_date_range(calendar_range: str, start_week_on_monday: bool, timezo
     import pytz
     
     logger = logging.getLogger("calendar")
-    logger.debug(f"🔍  Calculating date range with: range={calendar_range}, start_on_monday={start_week_on_monday}, tz={timezone_str}")
+    logger.debug(f"🔍  Calculating date range with: schedule_type={schedule_type}, start_on_monday={start_week_on_monday}, tz={timezone_str}")
     
     try:
         timezone = pytz.timezone(timezone_str)
@@ -38,12 +38,12 @@ def calculate_date_range(calendar_range: str, start_week_on_monday: bool, timezo
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     logger.debug(f"📅  Current date in {timezone_str}: {today}")
     
-    # For "DAY" mode, simply use today
-    if calendar_range == "DAY":
-        logger.debug(f"📅  Using DAY mode: {today} to {today + datetime.timedelta(days=1)}")
+    # For "DAILY" mode, simply use today
+    if schedule_type.upper() == "DAILY":
+        logger.debug(f"📅  Using DAILY mode: {today} to {today + datetime.timedelta(days=1)}")
         return today, today + datetime.timedelta(days=1)
     
-    # For "WEEK" mode, calculate start and end of the current week
+    # For "WEEKLY" (or defaults), calculate start and end of the current week
     # Get the current weekday (0=Monday in Python's datetime by default)
     weekday = today.weekday()
     

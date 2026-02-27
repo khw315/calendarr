@@ -359,9 +359,7 @@ body {
     padding-right: 32px;
 }
 
-.range-selector:hover {
-    /* removed background color override */
-}
+
 
 .range-selector:focus {
     outline: none;
@@ -661,6 +659,32 @@ body {
     box-shadow: 4px 4px 0 #000;
 }
 
+details.settings-group summary {
+    cursor: pointer;
+    list-style: none;
+    /* Hide default arrow in some browsers */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+details.settings-group summary::-webkit-details-marker {
+    display: none;
+    /* Hide default arrow in Safari */
+}
+
+details.settings-group summary .details-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 1.2rem;
+    font-weight: 800;
+    user-select: none;
+}
+
+details.settings-group[open] summary .details-arrow {
+    transform: rotate(180deg);
+}
+
 .settings-group h3 {
     font-size: 1.2rem;
     font-weight: 800;
@@ -901,6 +925,7 @@ body {
     .section-actions {
         width: 100%;
         justify-content: space-between;
+        flex-wrap: wrap;
     }
 
     .range-selector {

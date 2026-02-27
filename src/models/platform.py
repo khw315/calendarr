@@ -204,10 +204,10 @@ class  DiscordPlatform(Platform):
                     if is_bulk:
                          # Bulk formatting: **Title** — <t:TIMESTAMP:STYLE>
                          timestamp_suffix = ""
-                         if self.config.discord_timestamp_style and first.timestamp:
-                             timestamp_suffix = f" <t:{first.timestamp}:{self.config.discord_timestamp_style}>"
+                         if self.config.discord_timestamp_style and first.timestamp and first.has_time:
+                             timestamp_suffix = f" — <t:{first.timestamp}:{self.config.discord_timestamp_style}>"
                          elif first.time_str:
-                             timestamp_suffix = f" {first.time_str}"
+                             timestamp_suffix = f" — {first.time_str}"
                          
                          show_name_to_format = first.show_name if first.show_name else first.summary
                          
@@ -216,7 +216,7 @@ class  DiscordPlatform(Platform):
                          all_past = all(e.is_past for e in group)
                          is_premiere = any(e.is_premiere for e in group)
                          
-                         line = f"{DISCORD_BOLD_START}{show_name_to_format}{DISCORD_BOLD_END} —{timestamp_suffix}"
+                         line = f"{DISCORD_BOLD_START}{show_name_to_format}{DISCORD_BOLD_END}{timestamp_suffix}"
                          
                          if is_premiere:
                              line += "  🎉"
@@ -373,8 +373,8 @@ class  DiscordPlatform(Platform):
         time_prefix = ""
         timestamp_suffix = ""
         
-        if self.config.discord_timestamp_style and event_item.timestamp:
-            timestamp_suffix = f" <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
+        if self.config.discord_timestamp_style and event_item.timestamp and event_item.has_time:
+            timestamp_suffix = f" — <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
         elif event_item.time_str:
             time_prefix = f"{event_item.time_str}: "
             
@@ -401,7 +401,7 @@ class  DiscordPlatform(Platform):
                 # Non-standard number only: Show - *Number*
                 episode_details = f" - {DISCORD_ITALIC_START}{number}{DISCORD_ITALIC_END}"
 
-        formatted = f"{time_prefix}{formatted_show}{episode_details} —{timestamp_suffix}"
+        formatted = f"{time_prefix}{formatted_show}{episode_details}{timestamp_suffix}"
         if event_item.is_premiere:
             formatted += "  🎉"
         if event_item.is_past and passed_event_handling == "STRIKE":
@@ -418,9 +418,9 @@ class  DiscordPlatform(Platform):
         
         # Check for Discord timestamp style first
         if self.config.discord_timestamp_style and event_item.timestamp and event_item.has_time:
-             timestamp_suffix = f" <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
+             timestamp_suffix = f" — <t:{event_item.timestamp}:{self.config.discord_timestamp_style}>"
         
-        formatted = f"🎬  {time_prefix}{DISCORD_BOLD_START}{movie_name_to_format}{DISCORD_BOLD_END} —{timestamp_suffix}"
+        formatted = f"🎬  {time_prefix}{DISCORD_BOLD_START}{movie_name_to_format}{DISCORD_BOLD_END}{timestamp_suffix}"
 
         if event_item.is_past and passed_event_handling == "STRIKE":
             formatted = f"{DISCORD_STRIKE_START}{formatted}{DISCORD_STRIKE_END}"

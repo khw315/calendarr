@@ -11,10 +11,10 @@ import pytz
 
 from constants import (
     DEFAULT_ADD_LEADING_ZERO, DEFAULT_DEBUG_MODE, DEFAULT_DEDUPLICATE_EVENTS,
-    DEFAULT_HTTP_TIMEOUT, DEFAULT_CALENDAR_RANGE, DEFAULT_PASSED_EVENT_HANDLING,
-    DEFAULT_RUN_ON_STARTUP, DEFAULT_SHOW_DATE_RANGE, DEFAULT_START_WEEK_ON_MONDAY,
+    DEFAULT_HTTP_TIMEOUT, DEFAULT_PASSED_EVENT_HANDLING,
+    DEFAULT_RUN_ON_STARTUP, DEFAULT_SHOW_DATE_RANGE,
     DEFAULT_DISPLAY_TIME, DEFAULT_USE_24_HOUR, VALID_PASSED_EVENT_HANDLING,
-    VALID_CALENDAR_RANGE, DEFAULT_SCHEDULE_TYPE, DEFAULT_RUN_TIME,
+    DEFAULT_SCHEDULE_TYPE, DEFAULT_RUN_TIME,
     DEFAULT_SCHEDULE_DAY, DEFAULT_LOG_DIR, DEFAULT_LOG_FILE, DEFAULT_LOG_BACKUP_COUNT, DEFAULT_DISCORD_MENTION_ROLE_ID,
     DEFAULT_LOG_MAX_SIZE_MB, DEFAULT_USE_SLACK, DEFAULT_USE_DISCORD,
     EVENT_TYPE_TV, EVENT_TYPE_MOVIE, VALID_EVENT_TYPES,
@@ -211,10 +211,8 @@ class Config:
     use_discord: bool = DEFAULT_USE_DISCORD
     use_slack: bool = DEFAULT_USE_SLACK
     
-    # Display settings
     show_date_range: bool = DEFAULT_SHOW_DATE_RANGE
     show_timezone_in_subheader: bool = DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER
-    start_week_on_monday: bool = DEFAULT_START_WEEK_ON_MONDAY
     deduplicate_events: bool = DEFAULT_DEDUPLICATE_EVENTS
     
     # Discord-specific settings
@@ -225,7 +223,6 @@ class Config:
     # Calendar settings
     calendar_urls: List[CalendarUrl] = field(default_factory=list)
     passed_event_handling: str = DEFAULT_PASSED_EVENT_HANDLING
-    calendar_range: str = DEFAULT_CALENDAR_RANGE
     
     # Time settings
     time_settings: TimeSettings = field(default_factory=TimeSettings)
@@ -257,10 +254,6 @@ class Config:
                 if self.passed_event_handling:
                     self.passed_event_handling = self.passed_event_handling.upper()
                     logger.debug(f"🔄  Normalized passed_event_handling to {self.passed_event_handling}")
-                
-                if self.calendar_range:
-                    self.calendar_range = self.calendar_range.upper()
-                    logger.debug(f"🔄  Normalized calendar_range to {self.calendar_range}")
             except (AttributeError, TypeError) as e:
                 logger.warning(f"❌  Error normalizing string settings: {e}")
                 
@@ -295,6 +288,21 @@ class Config:
             logger.debug(f"❌  Exception details: {traceback.format_exc()}")
             return pytz.UTC
     
+    @property
+    def start_week_on_monday(self) -> bool:
+        """
+        Determine if the week should start on Monday based on the schedule setting.
+        Weekly schedules defaulting to Monday (1) start the week on Monday.
+        Weekly schedules explicitly set to Sunday (0) start the week on Sunday.
+        """
+        try:
+            # Check schedule day; if user sets run day to Sunday (0), we start on Sunday
+            # Otherwise, we default to Monday for all other inputs.
+            return self.schedule_settings.schedule_day != "0"
+        except Exception as e:
+            logger.error(f"Error determining start_week_on_monday: {e}")
+            return True
+            
     @property
     def enabled_platforms(self) -> List[str]:
         """
@@ -371,16 +379,6 @@ class Config:
             except Exception as e:
                 logger.error(f"Error validating passed event handling: {e}")
                 errors.append(f"Internal error validating event handling: {str(e)}")
-            
-            # Validate calendar range
-            try:
-                logger.debug(f"🧪  Validating calendar_range: {self.calendar_range}")
-                if self.calendar_range not in VALID_CALENDAR_RANGE:
-                    errors.append(f"Invalid CALENDAR_RANGE value: {self.calendar_range}, "
-                                f"must be one of {VALID_CALENDAR_RANGE}")
-            except Exception as e:
-                logger.error(f"Error validating calendar range: {e}")
-                errors.append(f"Internal error validating calendar range: {str(e)}")
                 
             # Validate calendar URLs
             try:
@@ -696,17 +694,15 @@ def load_config_from_env() -> Config:
             logger.debug("🔍  Loading display settings")
             show_date_range = get_merged("SHOW_DATE_RANGE", get_env_bool("SHOW_DATE_RANGE", DEFAULT_SHOW_DATE_RANGE))
             show_timezone_in_subheader = get_merged("SHOW_TIMEZONE_IN_SUBHEADER", get_env_bool("SHOW_TIMEZONE_IN_SUBHEADER", DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER))
-            start_week_on_monday = get_merged("START_WEEK_ON_MONDAY", get_env_bool("START_WEEK_ON_MONDAY", DEFAULT_START_WEEK_ON_MONDAY))
             deduplicate_events = get_merged("DEDUPLICATE_EVENTS", get_env_bool("DEDUPLICATE_EVENTS", DEFAULT_DEDUPLICATE_EVENTS))
             logger.debug(f"✅  Loaded display settings: "
-                     f"show_date_range={show_date_range}, start_on_monday={start_week_on_monday}, "
+                     f"show_date_range={show_date_range}, "
                      f"show_timezone={show_timezone_in_subheader}")
         except Exception as e:
             logger.error(f"Error loading display settings: {e}")
             logger.debug(f"❌  Exception details: {traceback.format_exc()}")
             show_date_range = DEFAULT_SHOW_DATE_RANGE
             show_timezone_in_subheader = DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER
-            start_week_on_monday = DEFAULT_START_WEEK_ON_MONDAY
             deduplicate_events = DEFAULT_DEDUPLICATE_EVENTS
 
         # Load localization settings
@@ -724,14 +720,11 @@ def load_config_from_env() -> Config:
         try:
             logger.debug("🔍  Loading calendar settings")
             passed_event_handling = get_merged("PASSED_EVENT_HANDLING", os.environ.get("PASSED_EVENT_HANDLING", DEFAULT_PASSED_EVENT_HANDLING)).upper()
-            calendar_range = get_merged("CALENDAR_RANGE", os.environ.get("CALENDAR_RANGE", DEFAULT_CALENDAR_RANGE)).upper()
-            logger.debug(f"✅  Loaded calendar settings: passed_event_handling={passed_event_handling}, "
-                        f"calendar_range={calendar_range}")
+            logger.debug(f"✅  Loaded calendar settings: passed_event_handling={passed_event_handling}")
         except Exception as e:
             logger.error(f"Error loading calendar settings: {e}")
             logger.debug(f"❌  Exception details: {traceback.format_exc()}")
             passed_event_handling = DEFAULT_PASSED_EVENT_HANDLING
-            calendar_range = DEFAULT_CALENDAR_RANGE
         
         # Load timezone and HTTP settings
         try:
@@ -771,10 +764,8 @@ def load_config_from_env() -> Config:
                 discord_timestamp_style=discord_timestamp_style,
                 show_date_range=show_date_range,
                 show_timezone_in_subheader=show_timezone_in_subheader,
-                start_week_on_monday=start_week_on_monday,
                 calendar_urls=calendar_urls,
                 passed_event_handling=passed_event_handling,
-                calendar_range=calendar_range,
                 time_settings=time_settings,
                 deduplicate_events=deduplicate_events,
                 schedule_settings=schedule_settings,
@@ -791,21 +782,6 @@ def load_config_from_env() -> Config:
             logger.debug(f"❌  Exception details: {traceback.format_exc()}")
             # Create a default config as fallback
             config = Config()
-        
-        # Handle AUTO setting - convert to DAY or WEEK based on SCHEDULE_TYPE
-        try:
-            if config.calendar_range == "AUTO":
-                logger.debug("⚙️  Handling AUTO calendar range")
-                if config.schedule_settings.schedule_type == "DAILY":
-                    logger.debug("🔄  Converting AUTO calendar range to DAY based on DAILY schedule")
-                    config.calendar_range = "DAY"
-                else:
-                    logger.debug("🔄  Converting AUTO calendar range to WEEK based on non-DAILY schedule")
-                    config.calendar_range = "WEEK"
-        except Exception as e:
-            logger.error(f"Error handling AUTO calendar range: {e}")
-            logger.debug(f"❌  Exception details: {traceback.format_exc()}")
-            config.calendar_range = DEFAULT_CALENDAR_RANGE
         
         # Validate the passed event handling option
         try:

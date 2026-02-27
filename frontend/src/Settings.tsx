@@ -16,9 +16,7 @@ export default function Settings() {
         SLACK_WEBHOOK_URL: "",
         ENABLE_CUSTOM_SLACK_FOOTER: false,
         CALENDAR_URLS: [],
-        CALENDAR_RANGE: "AUTO",
         PASSED_EVENT_HANDLING: "DISPLAY",
-        START_WEEK_ON_MONDAY: false,
         DEDUPLICATE_EVENTS: false,
         USE_24_HOUR: false,
         ADD_LEADING_ZERO: false,
@@ -248,8 +246,11 @@ export default function Settings() {
                     <div className="section">
                         <form id="settingsForm" onSubmit={handleSave}>
                             {/* 1. Source Configuration */}
-                            <div className="settings-group">
-                                <h3>Source Configuration</h3>
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Source Configuration</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
                                 <div className="form-group">
                                     <label>Calendar URLs (<span id="calendarUrlCount">{(config.CALENDAR_URLS || []).length}</span>)</label>
                                     <div className="calendar-url-container">
@@ -283,83 +284,14 @@ export default function Settings() {
                                     </div>
                                     <button type="button" className="brutal-btn mt-none" onClick={handleAddCalendarUrl} style={{ marginTop: '0' }}>+ Add Calendar</button>
                                 </div>
-                            </div>
+                            </details>
 
-                            {/* 2. Display & Formatting */}
-                            <div className="settings-group">
-                                <h3>Display & Formatting</h3>
-                                <div className="form-group">
-                                    <label htmlFor="set_APP_LANGUAGE">Language</label>
-                                    <select id="set_APP_LANGUAGE" name="APP_LANGUAGE" className="brutal-select" value={config.APP_LANGUAGE || 'EN'} onChange={handleChange}>
-                                        {languages.length > 0 ? languages.map(lang => (
-                                            <option key={lang.code} value={lang.code}>{lang.name}</option>
-                                        )) : (
-                                            <option value="EN">English</option>
-                                        )}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_TZ">Timezone</label>
-                                    <select id="set_TZ" name="TZ" className="brutal-select" value={config.TZ || 'UTC'} onChange={handleChange}>
-                                        {timezones.map(tz => {
-                                            const isDefault = tz === Intl.DateTimeFormat().resolvedOptions().timeZone;
-                                            return (
-                                                <option key={tz} value={tz}>
-                                                    {isDefault ? `${tz} (System Default)` : tz}
-                                                </option>
-                                            )
-                                        })}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_CALENDAR_RANGE">Calendar Range</label>
-                                    <select id="set_CALENDAR_RANGE" name="CALENDAR_RANGE" className="brutal-select" value={config.CALENDAR_RANGE || 'AUTO'} onChange={handleChange}>
-                                        <option value="AUTO">AUTO</option>
-                                        <option value="DAY">DAY</option>
-                                        <option value="WEEK">WEEK</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_PASSED_EVENT_HANDLING">Passed Event Handling</label>
-                                    <select id="set_PASSED_EVENT_HANDLING" name="PASSED_EVENT_HANDLING" className="brutal-select" value={config.PASSED_EVENT_HANDLING || 'DISPLAY'} onChange={handleChange}>
-                                        <option value="DISPLAY">Display</option>
-                                        <option value="HIDE">Hide</option>
-                                        <option value="STRIKE">Strike</option>
-                                    </select>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_START_WEEK_ON_MONDAY" name="START_WEEK_ON_MONDAY" checked={!!config.START_WEEK_ON_MONDAY} onChange={handleChange} />
-                                    <label htmlFor="set_START_WEEK_ON_MONDAY">Start Week on Monday</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_DEDUPLICATE_EVENTS" name="DEDUPLICATE_EVENTS" checked={!!config.DEDUPLICATE_EVENTS} onChange={handleChange} />
-                                    <label htmlFor="set_DEDUPLICATE_EVENTS">Deduplicate Events</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_USE_24_HOUR" name="USE_24_HOUR" checked={!!config.USE_24_HOUR} onChange={handleChange} />
-                                    <label htmlFor="set_USE_24_HOUR">Use 24-Hour Time</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_ADD_LEADING_ZERO" name="ADD_LEADING_ZERO" checked={!!config.ADD_LEADING_ZERO} onChange={handleChange} />
-                                    <label htmlFor="set_ADD_LEADING_ZERO">Add Leading Zero</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_DISPLAY_TIME" name="DISPLAY_TIME" checked={!!config.DISPLAY_TIME} onChange={handleChange} />
-                                    <label htmlFor="set_DISPLAY_TIME">Display Release Time</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_SHOW_DATE_RANGE" name="SHOW_DATE_RANGE" checked={!!config.SHOW_DATE_RANGE} onChange={handleChange} />
-                                    <label htmlFor="set_SHOW_DATE_RANGE">Show Date Range</label>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_SHOW_TIMEZONE_IN_SUBHEADER" name="SHOW_TIMEZONE_IN_SUBHEADER" checked={!!config.SHOW_TIMEZONE_IN_SUBHEADER} onChange={handleChange} />
-                                    <label htmlFor="set_SHOW_TIMEZONE_IN_SUBHEADER">Show Timezone in Subheader</label>
-                                </div>
-                            </div>
-
-                            {/* 3. Discord Integration */}
-                            <div className="settings-group">
-                                <h3>Discord Integration</h3>
+                            {/* 2. Discord Integration */}
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Discord Integration</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
                                 <div className="form-group checkbox-group">
                                     <input type="checkbox" id="set_USE_DISCORD" name="USE_DISCORD" checked={!!config.USE_DISCORD} onChange={handleChange} />
                                     <label htmlFor="set_USE_DISCORD">Enable Discord Support</label>
@@ -389,7 +321,7 @@ export default function Settings() {
                                                 <option value="F">Long Date/Time</option>
                                                 <option value="R">Relative Time</option>
                                             </select>
-                                            <div className="timestamp-preview mt-sm" style={{ fontFamily: 'monospace', background: 'var(--color-surface-hover)', padding: 'var(--spacing-sm)', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.9em', marginTop: 'var(--spacing-sm)' }}>
+                                            <div className="timestamp-preview mt-sm" style={{ fontFamily: 'monospace', background: 'var(--color-surface-hover)', padding: '2px 4px', borderRadius: '3px', border: '1px solid var(--color-border)', fontSize: '0.9em', marginTop: 'var(--spacing-sm)' }}>
                                                 <strong>Example:</strong> <span style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '3px' }}>{getDiscordTimestampExample(config.DISCORD_TIMESTAMP_STYLE || 'R')}</span>
                                             </div>
                                         </div>
@@ -399,11 +331,14 @@ export default function Settings() {
                                         </div>
                                     </>
                                 )}
-                            </div>
+                            </details>
 
-                            {/* 4. Slack Integration */}
-                            <div className="settings-group">
-                                <h3>Slack Integration</h3>
+                            {/* 3. Slack Integration */}
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Slack Integration</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
                                 <div className="form-group checkbox-group">
                                     <input type="checkbox" id="set_USE_SLACK" name="USE_SLACK" checked={!!config.USE_SLACK} onChange={handleChange} />
                                     <label htmlFor="set_USE_SLACK">Enable Slack Support</label>
@@ -420,11 +355,78 @@ export default function Settings() {
                                         </div>
                                     </>
                                 )}
-                            </div>
+                            </details>
+
+                            {/* 4. Display & Formatting */}
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Display & Formatting</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
+                                <div className="form-group">
+                                    <label htmlFor="set_APP_LANGUAGE">Language</label>
+                                    <select id="set_APP_LANGUAGE" name="APP_LANGUAGE" className="brutal-select" value={config.APP_LANGUAGE || 'EN'} onChange={handleChange}>
+                                        {languages.length > 0 ? languages.map(lang => (
+                                            <option key={lang.code} value={lang.code}>{lang.name}</option>
+                                        )) : (
+                                            <option value="EN">English</option>
+                                        )}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="set_TZ">Timezone</label>
+                                    <select id="set_TZ" name="TZ" className="brutal-select" value={config.TZ || 'UTC'} onChange={handleChange}>
+                                        {timezones.map(tz => {
+                                            const isDefault = tz === Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                            return (
+                                                <option key={tz} value={tz}>
+                                                    {isDefault ? `${tz} (System Default)` : tz}
+                                                </option>
+                                            )
+                                        })}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="set_PASSED_EVENT_HANDLING">Passed Event Handling</label>
+                                    <select id="set_PASSED_EVENT_HANDLING" name="PASSED_EVENT_HANDLING" className="brutal-select" value={config.PASSED_EVENT_HANDLING || 'DISPLAY'} onChange={handleChange}>
+                                        <option value="DISPLAY">Display</option>
+                                        <option value="HIDE">Hide</option>
+                                        <option value="STRIKE">Strike</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_DEDUPLICATE_EVENTS" name="DEDUPLICATE_EVENTS" checked={!!config.DEDUPLICATE_EVENTS} onChange={handleChange} />
+                                    <label htmlFor="set_DEDUPLICATE_EVENTS">Deduplicate Events</label>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_USE_24_HOUR" name="USE_24_HOUR" checked={!!config.USE_24_HOUR} onChange={handleChange} />
+                                    <label htmlFor="set_USE_24_HOUR">Use 24-Hour Time</label>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_ADD_LEADING_ZERO" name="ADD_LEADING_ZERO" checked={!!config.ADD_LEADING_ZERO} onChange={handleChange} />
+                                    <label htmlFor="set_ADD_LEADING_ZERO">Add Leading Zero</label>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_DISPLAY_TIME" name="DISPLAY_TIME" checked={!!config.DISPLAY_TIME} onChange={handleChange} />
+                                    <label htmlFor="set_DISPLAY_TIME">Display Release Time</label>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_SHOW_DATE_RANGE" name="SHOW_DATE_RANGE" checked={!!config.SHOW_DATE_RANGE} onChange={handleChange} />
+                                    <label htmlFor="set_SHOW_DATE_RANGE">Show Date Range</label>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_SHOW_TIMEZONE_IN_SUBHEADER" name="SHOW_TIMEZONE_IN_SUBHEADER" checked={!!config.SHOW_TIMEZONE_IN_SUBHEADER} onChange={handleChange} />
+                                    <label htmlFor="set_SHOW_TIMEZONE_IN_SUBHEADER">Show Timezone in Subheader</label>
+                                </div>
+                            </details>
 
                             {/* 5. Scheduling */}
-                            <div className="settings-group">
-                                <h3>Scheduling</h3>
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Scheduling</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
                                 <div className="form-group">
                                     <label htmlFor="set_SCHEDULE_TYPE">Schedule Type</label>
                                     <select id="set_SCHEDULE_TYPE" name="SCHEDULE_TYPE" className="brutal-select" value={config.SCHEDULE_TYPE || 'DAILY'} onChange={handleChange}>
@@ -432,18 +434,20 @@ export default function Settings() {
                                         <option value="WEEKLY">Weekly</option>
                                     </select>
                                 </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_SCHEDULE_DAY">Schedule Day</label>
-                                    <select id="set_SCHEDULE_DAY" name="SCHEDULE_DAY" className="brutal-select" value={config.SCHEDULE_DAY || '0'} onChange={handleChange}>
-                                        <option value="0">Sunday</option>
-                                        <option value="1">Monday</option>
-                                        <option value="2">Tuesday</option>
-                                        <option value="3">Wednesday</option>
-                                        <option value="4">Thursday</option>
-                                        <option value="5">Friday</option>
-                                        <option value="6">Saturday</option>
-                                    </select>
-                                </div>
+                                {config.SCHEDULE_TYPE === 'WEEKLY' && (
+                                    <div className="form-group">
+                                        <label htmlFor="set_SCHEDULE_DAY">Schedule Day</label>
+                                        <select id="set_SCHEDULE_DAY" name="SCHEDULE_DAY" className="brutal-select" value={config.SCHEDULE_DAY || '0'} onChange={handleChange}>
+                                            <option value="0">Sunday</option>
+                                            <option value="1">Monday</option>
+                                            <option value="2">Tuesday</option>
+                                            <option value="3">Wednesday</option>
+                                            <option value="4">Thursday</option>
+                                            <option value="5">Friday</option>
+                                            <option value="6">Saturday</option>
+                                        </select>
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label htmlFor="set_RUN_TIME">Run Time (HH:MM)</label>
                                     <input type="time" id="set_RUN_TIME" name="RUN_TIME" className="brutal-input" value={config.RUN_TIME || ''} onChange={handleChange} />
@@ -456,11 +460,14 @@ export default function Settings() {
                                     <input type="checkbox" id="set_RUN_ON_STARTUP" name="RUN_ON_STARTUP" checked={!!config.RUN_ON_STARTUP} onChange={handleChange} />
                                     <label htmlFor="set_RUN_ON_STARTUP">Run on Startup</label>
                                 </div>
-                            </div>
+                            </details>
 
                             {/* 6. Advanced Settings */}
-                            <div className="settings-group">
-                                <h3>Advanced Settings</h3>
+                            <details className="settings-group">
+                                <summary>
+                                    <h3>Advanced Settings</h3>
+                                    <span className="details-arrow">▼</span>
+                                </summary>
                                 <div className="form-group checkbox-group">
                                     <input type="checkbox" id="set_DEBUG" name="DEBUG" checked={!!config.DEBUG} onChange={handleChange} />
                                     <label htmlFor="set_DEBUG">Enable Debug Logging</label>
@@ -477,7 +484,7 @@ export default function Settings() {
                                     <label htmlFor="set_LOG_BACKUP_COUNT">Log Backup Count</label>
                                     <input type="number" id="set_LOG_BACKUP_COUNT" name="LOG_BACKUP_COUNT" min="1" className="brutal-input" value={config.LOG_BACKUP_COUNT || 5} onChange={handleChange} />
                                 </div>
-                            </div>
+                            </details>
 
                             <div className="settings-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-lg)' }}>
                                 <button type="button" className="brutal-btn brutal-btn-outline" onClick={handleDiscard}>Discard Changes</button>

@@ -90,9 +90,7 @@ DEFAULT_DISCORD_MENTION_ROLE_ID = ""
 DEFAULT_DISCORD_HIDE_MENTION_INSTRUCTIONS = True
 
 # --- Calendar & Events ---
-DEFAULT_CALENDAR_RANGE = "AUTO"
 DEFAULT_PASSED_EVENT_HANDLING = "DISPLAY"
-DEFAULT_START_WEEK_ON_MONDAY = True
 DEFAULT_DEDUPLICATE_EVENTS = False
 
 # --- Scheduling ---
@@ -126,7 +124,6 @@ DEFAULT_ENABLE_CUSTOM_SLACK_FOOTER = False
 # Valid Config Options
 # ==============================================
 VALID_PASSED_EVENT_HANDLING = ["DISPLAY", "HIDE", "STRIKE"]
-VALID_CALENDAR_RANGE = ["DAY", "WEEK", "AUTO"]
 
 # ==============================================
 # Scheduler Job IDs
