@@ -15,9 +15,9 @@ from models.day import Day
 from services.webhook_service import WebhookService
 from config.settings import Config
 from constants import (
-    MAX_DISCORD_EMBEDS_PER_REQUEST, PLATFORM_DISCORD, PLATFORM_SLACK, DISCORD_SUCCESS_CODES, SLACK_SUCCESS_CODES,DISCORD_EMBED_PAYLOAD_THRESHOLD,
-    DISCORD_FOOTER_FILE, SLACK_FOOTER_FILE
+    MAX_DISCORD_EMBEDS_PER_REQUEST, PLATFORM_DISCORD, PLATFORM_SLACK, DISCORD_SUCCESS_CODES, SLACK_SUCCESS_CODES,DISCORD_EMBED_PAYLOAD_THRESHOLD
 )
+from utils.localization import get_footer_text
 
 logger = logging.getLogger("platform_service")
 
@@ -100,19 +100,18 @@ class PlatformService:
         overall_success = True
         logger.info(f"📤  Sending to {type(platform).__name__}")
 
-        # --- Read Footer Files (if enabled) ---
+        # --- Read Footers from Localization (if enabled) ---
         discord_footer_content = None
         slack_footer_content = None
         if isinstance(platform, DiscordPlatform) and self.config.enable_custom_discord_footer:
-            discord_footer_content = self._read_footer_file(DISCORD_FOOTER_FILE)
+            discord_footer_content = get_footer_text(self.config.language, PLATFORM_DISCORD)
         elif isinstance(platform, SlackPlatform) and self.config.enable_custom_slack_footer:
-            slack_footer_content = self._read_footer_file(SLACK_FOOTER_FILE)
+            slack_footer_content = get_footer_text(self.config.language, PLATFORM_SLACK)
         # --- End Footer Reading ---
 
         try:
             # 1. Format Header (Payload generated but not sent immediately)
             header_payload = platform.format_header(
-                custom_header=self.config.custom_header,
                 start_date=start_date,
                 end_date=end_date,
                 show_date_range=self.config.show_date_range,
@@ -303,29 +302,3 @@ class PlatformService:
             logger.error(f"☠️  Unhandled error during send to {platform.__class__.__name__}: {e}")
             logger.debug(traceback.format_exc())
             return False
-
-    def _read_footer_file(self, file_path: str) -> Optional[str]:
-        """Reads content from a footer file if it exists, stripping HTML comments."""
-        try:
-            logger.debug(f"Attempting to read footer file: {file_path}")
-            if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    raw_content = f.read()
-                content_no_comments = re.sub(r'<!--.*?-->', '', raw_content, flags=re.DOTALL)
-                content = content_no_comments.strip()
-                if content:
-                    logger.info(f"📄  Loaded and processed custom footer from {file_path}")
-                    # --- ADD LOGGING ---
-                    logger.debug(f"✂️  Stripped footer content:\n'''\n{content}\n'''")
-                    # --- END LOGGING ---
-                    return content
-                else:
-                    logger.warning(f"⚠️  Custom footer file {file_path} is empty after stripping comments.")
-                    return None
-            else:
-                logger.warning(f"⚠️  Custom footer file not found at configured path: {file_path}")
-                return None
-        except Exception as e:
-            logger.error(f"☠️  Error reading footer file {file_path}: {e}")
-            logger.debug(traceback.format_exc())
-            return None

@@ -5,7 +5,6 @@ const API_BASE = ''
 // Reuse common type
 export default function Settings() {
     const [config, setConfig] = useState<any>({
-        CUSTOM_HEADER: "",
         APP_LANGUAGE: "EN",
         USE_DISCORD: false,
         DISCORD_WEBHOOK_URL: "",
@@ -45,9 +44,11 @@ export default function Settings() {
     // Custom Toast State (replacing showToast)
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
     const [timezones, setTimezones] = useState<string[]>([])
+    const [languages, setLanguages] = useState<{ code: string, name: string }[]>([])
 
     useEffect(() => {
         fetchConfig()
+        fetchLanguages()
         try {
             const tzs = Intl.supportedValuesOf('timeZone')
             setTimezones(tzs)
@@ -70,6 +71,18 @@ export default function Settings() {
             console.error(e)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchLanguages = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/languages`)
+            if (res.ok) {
+                const data = await res.json()
+                setLanguages(data)
+            }
+        } catch (e) {
+            console.error(e)
         }
     }
 
@@ -234,80 +247,9 @@ export default function Settings() {
 
                     <div className="section">
                         <form id="settingsForm" onSubmit={handleSave}>
-                            {/* General Settings */}
+                            {/* 1. Source Configuration */}
                             <div className="settings-group">
-                                <h3>General</h3>
-                                <div className="form-group">
-                                    <label htmlFor="set_CUSTOM_HEADER">Custom Header</label>
-                                    <input type="text" id="set_CUSTOM_HEADER" name="CUSTOM_HEADER" className="brutal-input" value={config.CUSTOM_HEADER || ''} onChange={handleChange} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_APP_LANGUAGE">Language</label>
-                                    <select id="set_APP_LANGUAGE" name="APP_LANGUAGE" className="brutal-select" value={config.APP_LANGUAGE || 'EN'} onChange={handleChange}>
-                                        <option value="EN">English</option>
-                                        <option value="KO">Korean</option>
-                                        <option value="JA">Japanese</option>
-                                        <option value="ID">Indonesian</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Platform Settings */}
-                            <div className="settings-group">
-                                <h3>Platforms</h3>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_USE_DISCORD" name="USE_DISCORD" checked={!!config.USE_DISCORD} onChange={handleChange} />
-                                    <label htmlFor="set_USE_DISCORD">Enable Discord Support</label>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_DISCORD_WEBHOOK_URL">Discord Webhook URL</label>
-                                    <input type="password" id="set_DISCORD_WEBHOOK_URL" name="DISCORD_WEBHOOK_URL" className="brutal-input" value={config.DISCORD_WEBHOOK_URL || ''} onChange={handleChange} />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_DISCORD_MENTION_ROLE_ID">Discord Mention Role ID</label>
-                                    <input type="text" id="set_DISCORD_MENTION_ROLE_ID" name="DISCORD_MENTION_ROLE_ID" className="brutal-input" value={config.DISCORD_MENTION_ROLE_ID || ''} onChange={handleChange} />
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_DISCORD_HIDE_MENTION_INSTRUCTIONS" name="DISCORD_HIDE_MENTION_INSTRUCTIONS" checked={!!config.DISCORD_HIDE_MENTION_INSTRUCTIONS} onChange={handleChange} />
-                                    <label htmlFor="set_DISCORD_HIDE_MENTION_INSTRUCTIONS">Hide Discord Mention Instructions</label>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_DISCORD_TIMESTAMP_STYLE">Discord Timestamp Style</label>
-                                    <select id="set_DISCORD_TIMESTAMP_STYLE" name="DISCORD_TIMESTAMP_STYLE" className="brutal-select" value={config.DISCORD_TIMESTAMP_STYLE || 'R'} onChange={handleChange}>
-                                        <option value="t">Short Time</option>
-                                        <option value="T">Long Time</option>
-                                        <option value="d">Short Date</option>
-                                        <option value="D">Long Date</option>
-                                        <option value="f">Short Date/Time</option>
-                                        <option value="F">Long Date/Time</option>
-                                        <option value="R">Relative Time</option>
-                                    </select>
-                                    <div className="timestamp-preview mt-sm" style={{ fontFamily: 'monospace', background: 'var(--color-surface-hover)', padding: 'var(--spacing-sm)', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.9em', marginTop: 'var(--spacing-sm)' }}>
-                                        <strong>Example:</strong> <span style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '3px' }}>{getDiscordTimestampExample(config.DISCORD_TIMESTAMP_STYLE || 'R')}</span>
-                                    </div>
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_ENABLE_CUSTOM_DISCORD_FOOTER" name="ENABLE_CUSTOM_DISCORD_FOOTER" checked={!!config.ENABLE_CUSTOM_DISCORD_FOOTER} onChange={handleChange} />
-                                    <label htmlFor="set_ENABLE_CUSTOM_DISCORD_FOOTER">Enable Custom Discord Footer</label>
-                                </div>
-
-                                <div className="form-group checkbox-group" style={{ marginTop: 'var(--spacing-lg)' }}>
-                                    <input type="checkbox" id="set_USE_SLACK" name="USE_SLACK" checked={!!config.USE_SLACK} onChange={handleChange} />
-                                    <label htmlFor="set_USE_SLACK">Enable Slack Support</label>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_SLACK_WEBHOOK_URL">Slack Webhook URL</label>
-                                    <input type="password" id="set_SLACK_WEBHOOK_URL" name="SLACK_WEBHOOK_URL" className="brutal-input" value={config.SLACK_WEBHOOK_URL || ''} onChange={handleChange} />
-                                </div>
-                                <div className="form-group checkbox-group">
-                                    <input type="checkbox" id="set_ENABLE_CUSTOM_SLACK_FOOTER" name="ENABLE_CUSTOM_SLACK_FOOTER" checked={!!config.ENABLE_CUSTOM_SLACK_FOOTER} onChange={handleChange} />
-                                    <label htmlFor="set_ENABLE_CUSTOM_SLACK_FOOTER">Enable Custom Slack Footer</label>
-                                </div>
-                            </div>
-
-                            {/* Calendar & Events Settings */}
-                            <div className="settings-group">
-                                <h3>Calendar & Events</h3>
+                                <h3>Source Configuration</h3>
                                 <div className="form-group">
                                     <label>Calendar URLs (<span id="calendarUrlCount">{(config.CALENDAR_URLS || []).length}</span>)</label>
                                     <div className="calendar-url-container">
@@ -341,7 +283,34 @@ export default function Settings() {
                                     </div>
                                     <button type="button" className="brutal-btn mt-none" onClick={handleAddCalendarUrl} style={{ marginTop: '0' }}>+ Add Calendar</button>
                                 </div>
+                            </div>
 
+                            {/* 2. Display & Formatting */}
+                            <div className="settings-group">
+                                <h3>Display & Formatting</h3>
+                                <div className="form-group">
+                                    <label htmlFor="set_APP_LANGUAGE">Language</label>
+                                    <select id="set_APP_LANGUAGE" name="APP_LANGUAGE" className="brutal-select" value={config.APP_LANGUAGE || 'EN'} onChange={handleChange}>
+                                        {languages.length > 0 ? languages.map(lang => (
+                                            <option key={lang.code} value={lang.code}>{lang.name}</option>
+                                        )) : (
+                                            <option value="EN">English</option>
+                                        )}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="set_TZ">Timezone</label>
+                                    <select id="set_TZ" name="TZ" className="brutal-select" value={config.TZ || 'UTC'} onChange={handleChange}>
+                                        {timezones.map(tz => {
+                                            const isDefault = tz === Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                            return (
+                                                <option key={tz} value={tz}>
+                                                    {isDefault ? `${tz} (System Default)` : tz}
+                                                </option>
+                                            )
+                                        })}
+                                    </select>
+                                </div>
                                 <div className="form-group">
                                     <label htmlFor="set_CALENDAR_RANGE">Calendar Range</label>
                                     <select id="set_CALENDAR_RANGE" name="CALENDAR_RANGE" className="brutal-select" value={config.CALENDAR_RANGE || 'AUTO'} onChange={handleChange}>
@@ -366,11 +335,6 @@ export default function Settings() {
                                     <input type="checkbox" id="set_DEDUPLICATE_EVENTS" name="DEDUPLICATE_EVENTS" checked={!!config.DEDUPLICATE_EVENTS} onChange={handleChange} />
                                     <label htmlFor="set_DEDUPLICATE_EVENTS">Deduplicate Events</label>
                                 </div>
-                            </div>
-
-                            {/* Time & Display Settings */}
-                            <div className="settings-group">
-                                <h3>Time & Display</h3>
                                 <div className="form-group checkbox-group">
                                     <input type="checkbox" id="set_USE_24_HOUR" name="USE_24_HOUR" checked={!!config.USE_24_HOUR} onChange={handleChange} />
                                     <label htmlFor="set_USE_24_HOUR">Use 24-Hour Time</label>
@@ -391,24 +355,76 @@ export default function Settings() {
                                     <input type="checkbox" id="set_SHOW_TIMEZONE_IN_SUBHEADER" name="SHOW_TIMEZONE_IN_SUBHEADER" checked={!!config.SHOW_TIMEZONE_IN_SUBHEADER} onChange={handleChange} />
                                     <label htmlFor="set_SHOW_TIMEZONE_IN_SUBHEADER">Show Timezone in Subheader</label>
                                 </div>
-                                <div className="form-group">
-                                    <label htmlFor="set_TZ">Timezone</label>
-                                    <select id="set_TZ" name="TZ" className="brutal-select" value={config.TZ || 'UTC'} onChange={handleChange}>
-                                        {timezones.map(tz => {
-                                            const isDefault = tz === Intl.DateTimeFormat().resolvedOptions().timeZone;
-                                            return (
-                                                <option key={tz} value={tz}>
-                                                    {isDefault ? `${tz} (System Default)` : tz}
-                                                </option>
-                                            )
-                                        })}
-                                    </select>
-                                </div>
                             </div>
 
-                            {/* Schedule Settings */}
+                            {/* 3. Discord Integration */}
                             <div className="settings-group">
-                                <h3>Schedule</h3>
+                                <h3>Discord Integration</h3>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_USE_DISCORD" name="USE_DISCORD" checked={!!config.USE_DISCORD} onChange={handleChange} />
+                                    <label htmlFor="set_USE_DISCORD">Enable Discord Support</label>
+                                </div>
+                                {config.USE_DISCORD && (
+                                    <>
+                                        <div className="form-group">
+                                            <label htmlFor="set_DISCORD_WEBHOOK_URL">Discord Webhook URL</label>
+                                            <input type="password" id="set_DISCORD_WEBHOOK_URL" name="DISCORD_WEBHOOK_URL" className="brutal-input" value={config.DISCORD_WEBHOOK_URL || ''} onChange={handleChange} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="set_DISCORD_MENTION_ROLE_ID">Discord Mention Role ID</label>
+                                            <input type="text" id="set_DISCORD_MENTION_ROLE_ID" name="DISCORD_MENTION_ROLE_ID" className="brutal-input" value={config.DISCORD_MENTION_ROLE_ID || ''} onChange={handleChange} />
+                                        </div>
+                                        <div className="form-group checkbox-group">
+                                            <input type="checkbox" id="set_DISCORD_HIDE_MENTION_INSTRUCTIONS" name="DISCORD_HIDE_MENTION_INSTRUCTIONS" checked={!!config.DISCORD_HIDE_MENTION_INSTRUCTIONS} onChange={handleChange} />
+                                            <label htmlFor="set_DISCORD_HIDE_MENTION_INSTRUCTIONS">Hide Discord Mention Instructions</label>
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="set_DISCORD_TIMESTAMP_STYLE">Discord Timestamp Style</label>
+                                            <select id="set_DISCORD_TIMESTAMP_STYLE" name="DISCORD_TIMESTAMP_STYLE" className="brutal-select" value={config.DISCORD_TIMESTAMP_STYLE || 'R'} onChange={handleChange}>
+                                                <option value="t">Short Time</option>
+                                                <option value="T">Long Time</option>
+                                                <option value="d">Short Date</option>
+                                                <option value="D">Long Date</option>
+                                                <option value="f">Short Date/Time</option>
+                                                <option value="F">Long Date/Time</option>
+                                                <option value="R">Relative Time</option>
+                                            </select>
+                                            <div className="timestamp-preview mt-sm" style={{ fontFamily: 'monospace', background: 'var(--color-surface-hover)', padding: 'var(--spacing-sm)', borderRadius: '4px', border: '1px solid var(--color-border)', fontSize: '0.9em', marginTop: 'var(--spacing-sm)' }}>
+                                                <strong>Example:</strong> <span style={{ background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '3px' }}>{getDiscordTimestampExample(config.DISCORD_TIMESTAMP_STYLE || 'R')}</span>
+                                            </div>
+                                        </div>
+                                        <div className="form-group checkbox-group">
+                                            <input type="checkbox" id="set_ENABLE_CUSTOM_DISCORD_FOOTER" name="ENABLE_CUSTOM_DISCORD_FOOTER" checked={!!config.ENABLE_CUSTOM_DISCORD_FOOTER} onChange={handleChange} />
+                                            <label htmlFor="set_ENABLE_CUSTOM_DISCORD_FOOTER">Enable Custom Discord Footer</label>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* 4. Slack Integration */}
+                            <div className="settings-group">
+                                <h3>Slack Integration</h3>
+                                <div className="form-group checkbox-group">
+                                    <input type="checkbox" id="set_USE_SLACK" name="USE_SLACK" checked={!!config.USE_SLACK} onChange={handleChange} />
+                                    <label htmlFor="set_USE_SLACK">Enable Slack Support</label>
+                                </div>
+                                {config.USE_SLACK && (
+                                    <>
+                                        <div className="form-group">
+                                            <label htmlFor="set_SLACK_WEBHOOK_URL">Slack Webhook URL</label>
+                                            <input type="password" id="set_SLACK_WEBHOOK_URL" name="SLACK_WEBHOOK_URL" className="brutal-input" value={config.SLACK_WEBHOOK_URL || ''} onChange={handleChange} />
+                                        </div>
+                                        <div className="form-group checkbox-group">
+                                            <input type="checkbox" id="set_ENABLE_CUSTOM_SLACK_FOOTER" name="ENABLE_CUSTOM_SLACK_FOOTER" checked={!!config.ENABLE_CUSTOM_SLACK_FOOTER} onChange={handleChange} />
+                                            <label htmlFor="set_ENABLE_CUSTOM_SLACK_FOOTER">Enable Custom Slack Footer</label>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* 5. Scheduling */}
+                            <div className="settings-group">
+                                <h3>Scheduling</h3>
                                 <div className="form-group">
                                     <label htmlFor="set_SCHEDULE_TYPE">Schedule Type</label>
                                     <select id="set_SCHEDULE_TYPE" name="SCHEDULE_TYPE" className="brutal-select" value={config.SCHEDULE_TYPE || 'DAILY'} onChange={handleChange}>
@@ -442,9 +458,9 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {/* Advanced Settings */}
+                            {/* 6. Advanced Settings */}
                             <div className="settings-group">
-                                <h3>Advanced</h3>
+                                <h3>Advanced Settings</h3>
                                 <div className="form-group checkbox-group">
                                     <input type="checkbox" id="set_DEBUG" name="DEBUG" checked={!!config.DEBUG} onChange={handleChange} />
                                     <label htmlFor="set_DEBUG">Enable Debug Logging</label>

@@ -24,9 +24,6 @@ COPY src/ /app/src/
 # Copy public directory for web UI from frontend builder
 COPY --from=frontend-builder /app/public/ /app/public/
 
-# Copy the default custom footer templates to a SEPARATE location
-COPY ./calendarr/custom_footers /app/default_footers/
-
 # Copy and set up the entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

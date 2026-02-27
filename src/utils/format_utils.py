@@ -9,8 +9,7 @@ from constants import (
     COLOR_PALETTE, PLATFORM_SLACK, TIMEZONE_NAME_MAP,
     PLATFORM_DISCORD,
     DISCORD_BOLD_START, DISCORD_BOLD_END, SLACK_BOLD_START, SLACK_BOLD_END,
-    ITALIC_START, ITALIC_END,
-    DEFAULT_HEADER
+    ITALIC_START, ITALIC_END
 )
 from datetime import datetime
 import pytz
@@ -96,13 +95,12 @@ logger = logging.getLogger("format_utils")
 #         return f"{bold_start}{', '.join(parts[:-1])}, and {parts[-1]}{bold_end}"
 
 
-def format_header_text(custom_header: str, start_date, end_date, 
+def format_header_text(start_date, end_date, 
                       show_date_range: bool, language: str = "EN") -> str:
     """
     Create a formatted header text with optional date range
     
     Args:
-        custom_header: Header text
         start_date: Start date
         end_date: End date
         show_date_range: Whether to show date range
@@ -111,11 +109,7 @@ def format_header_text(custom_header: str, start_date, end_date,
     Returns:
         Formatted header text
     """
-    # Use localized header if the provided header matches the default
-    if custom_header == DEFAULT_HEADER:
-        header_text = get_header_text(language)
-    else:
-        header_text = f"{custom_header}"
+    header_text = get_header_text(language)
     
     if show_date_range:
         # Check if we're in daily mode (start and end date are the same day)

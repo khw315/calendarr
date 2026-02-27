@@ -1,4 +1,5 @@
 {
+    "language_name": "Bahasa Indonesia",
     "movies_heading": "FILM",
     "header_text": "Rilis Baru",
     "date_header": "{day_name}, {short_month_name} {day}",
@@ -99,5 +100,9 @@
         "10": "Okt",
         "11": "Nov",
         "12": "Des"
+    },
+    "footers": {
+        "discord": "Didukung oleh Calendarr",
+        "slack": "Didukung oleh Calendarr"
     }
 }

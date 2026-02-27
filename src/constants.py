@@ -82,7 +82,6 @@ SLACK_FOOTER_FILE = "/app/custom_footers/slack_footer.md"
 
 # --- General ---
 DEFAULT_DEBUG_MODE = False
-DEFAULT_HEADER = "New Releases"
 
 # --- Platforms ---
 DEFAULT_USE_DISCORD = False

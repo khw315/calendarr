@@ -1,5 +1,6 @@
 {
     "_comment": "Translation template based on English (en.json). Replace all TODO values with your translations. Save as <language_code>.json (e.g. fr.json, de.json).",
+    "language_name": "TODO: Localized Language Name (e.g. Français, Deutsch)",
     "movies_heading": "TODO: MOVIES",
     "header_text": "TODO: New Releases",
     "date_header": "TODO (e.g. {day_name}, {short_month_name} {day}) - must include {day_name}, {short_month_name}, {day} placeholders",
@@ -102,5 +103,9 @@
         "10": "TODO (Oct)",
         "11": "TODO (Nov)",
         "12": "TODO (Dec)"
+    },
+    "footers": {
+        "discord": "Powered by Calendarr",
+        "slack": "Powered by Calendarr"
     }
 }

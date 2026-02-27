@@ -14,7 +14,7 @@ from constants import (
     DEFAULT_HTTP_TIMEOUT, DEFAULT_CALENDAR_RANGE, DEFAULT_PASSED_EVENT_HANDLING,
     DEFAULT_RUN_ON_STARTUP, DEFAULT_SHOW_DATE_RANGE, DEFAULT_START_WEEK_ON_MONDAY,
     DEFAULT_DISPLAY_TIME, DEFAULT_USE_24_HOUR, VALID_PASSED_EVENT_HANDLING,
-    VALID_CALENDAR_RANGE, DEFAULT_HEADER, DEFAULT_SCHEDULE_TYPE, DEFAULT_RUN_TIME,
+    VALID_CALENDAR_RANGE, DEFAULT_SCHEDULE_TYPE, DEFAULT_RUN_TIME,
     DEFAULT_SCHEDULE_DAY, DEFAULT_LOG_DIR, DEFAULT_LOG_FILE, DEFAULT_LOG_BACKUP_COUNT, DEFAULT_DISCORD_MENTION_ROLE_ID,
     DEFAULT_LOG_MAX_SIZE_MB, DEFAULT_USE_SLACK, DEFAULT_USE_DISCORD,
     EVENT_TYPE_TV, EVENT_TYPE_MOVIE, VALID_EVENT_TYPES,
@@ -212,7 +212,6 @@ class Config:
     use_slack: bool = DEFAULT_USE_SLACK
     
     # Display settings
-    custom_header: str = DEFAULT_HEADER
     show_date_range: bool = DEFAULT_SHOW_DATE_RANGE
     show_timezone_in_subheader: bool = DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER
     start_week_on_monday: bool = DEFAULT_START_WEEK_ON_MONDAY
@@ -693,21 +692,18 @@ def load_config_from_env() -> Config:
             use_discord = DEFAULT_USE_DISCORD
             use_slack = DEFAULT_USE_SLACK
 
-        # Load display settings
         try:
             logger.debug("🔍  Loading display settings")
-            custom_header = get_merged("CUSTOM_HEADER", os.environ.get("CUSTOM_HEADER", DEFAULT_HEADER))
             show_date_range = get_merged("SHOW_DATE_RANGE", get_env_bool("SHOW_DATE_RANGE", DEFAULT_SHOW_DATE_RANGE))
             show_timezone_in_subheader = get_merged("SHOW_TIMEZONE_IN_SUBHEADER", get_env_bool("SHOW_TIMEZONE_IN_SUBHEADER", DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER))
             start_week_on_monday = get_merged("START_WEEK_ON_MONDAY", get_env_bool("START_WEEK_ON_MONDAY", DEFAULT_START_WEEK_ON_MONDAY))
             deduplicate_events = get_merged("DEDUPLICATE_EVENTS", get_env_bool("DEDUPLICATE_EVENTS", DEFAULT_DEDUPLICATE_EVENTS))
-            logger.debug(f"✅  Loaded display settings: header='{custom_header}', "
+            logger.debug(f"✅  Loaded display settings: "
                      f"show_date_range={show_date_range}, start_on_monday={start_week_on_monday}, "
                      f"show_timezone={show_timezone_in_subheader}")
         except Exception as e:
             logger.error(f"Error loading display settings: {e}")
             logger.debug(f"❌  Exception details: {traceback.format_exc()}")
-            custom_header = DEFAULT_HEADER
             show_date_range = DEFAULT_SHOW_DATE_RANGE
             show_timezone_in_subheader = DEFAULT_SHOW_TIMEZONE_IN_SUBHEADER
             start_week_on_monday = DEFAULT_START_WEEK_ON_MONDAY
@@ -773,7 +769,6 @@ def load_config_from_env() -> Config:
                 discord_mention_role_id=discord_mention_role_id,
                 discord_hide_mention_instructions=discord_hide_mention_instructions,
                 discord_timestamp_style=discord_timestamp_style,
-                custom_header=custom_header,
                 show_date_range=show_date_range,
                 show_timezone_in_subheader=show_timezone_in_subheader,
                 start_week_on_monday=start_week_on_monday,

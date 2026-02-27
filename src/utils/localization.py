@@ -6,7 +6,6 @@ import random
 from datetime import date, datetime
 from typing import Dict, Iterable, Mapping, Optional
 
-SUPPORTED_LANGUAGES = {"EN", "ID", "KO", "JA"}
 DEFAULT_LANGUAGE = "EN"
 
 # Translation data structured to support simple lookups and count-aware labels.
@@ -30,6 +29,18 @@ def _load_translations() -> Dict[str, Dict[str, object]]:
         return {}
 
 TRANSLATIONS: Dict[str, Dict[str, object]] = _load_translations()
+
+SUPPORTED_LANGUAGES = set(TRANSLATIONS.keys())
+if not SUPPORTED_LANGUAGES:
+    SUPPORTED_LANGUAGES = {DEFAULT_LANGUAGE}
+
+def get_supported_languages() -> list[dict[str, str]]:
+    """Return a list of supported languages with their code and native name."""
+    languages = []
+    for code, data in TRANSLATIONS.items():
+        name = data.get("language_name", code)
+        languages.append({"code": code, "name": str(name)})
+    return sorted(languages, key=lambda x: x["code"])
 
 
 def normalize_language(language: Optional[str]) -> str:
@@ -128,6 +139,15 @@ def get_timezone_message(language: str, timezone_name: str) -> str:
     if not template:
         template = get_text(DEFAULT_LANGUAGE, "timezone_message") or "All times shown in {timezone}"
     return template.format(timezone=timezone_name)
+
+def get_footer_text(language: str, platform: str) -> Optional[str]:
+    """
+    Return the localized footer string for the specified platform.
+    Returns None if no footer is defined.
+    """
+    translation = _get_translation(language)
+    footers = translation.get("footers", {})
+    return footers.get(platform)
 
 
 def get_movies_heading(language: str) -> str:

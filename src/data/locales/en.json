@@ -1,4 +1,5 @@
 {
+    "language_name": "English",
     "movies_heading": "MOVIES",
     "header_text": "New Releases",
     "date_header": "{day_name}, {short_month_name} {day}",
@@ -101,5 +102,9 @@
         "10": "Oct",
         "11": "Nov",
         "12": "Dec"
+    },
+    "footers": {
+        "discord": "Powered by Calendarr",
+        "slack": "Powered by Calendarr"
     }
 }

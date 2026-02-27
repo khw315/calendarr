@@ -335,7 +335,6 @@ def handle_config():
             current_config = {
                 # General
                 'DEBUG': config.logging_settings.debug_mode,
-                'CUSTOM_HEADER': config.custom_header,
                 
                 # Platforms
                 'USE_DISCORD': config.use_discord,
@@ -440,6 +439,17 @@ def handle_config():
                 'error': str(e)
             }), 500
 
+
+@app.route('/api/languages', methods=['GET'])
+def get_languages():
+    """Get available languages dynamically"""
+    from flask import jsonify
+    from utils.localization import get_supported_languages
+    try:
+        return jsonify(get_supported_languages())
+    except Exception as e:
+        logger.error(f"Error getting languages: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 # Initialize/configure the scheduler

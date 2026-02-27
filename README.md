@@ -124,15 +124,10 @@ The following settings are available in the Settings tab:
 
 ## ✍️ Custom Footers
 
-You can inject custom markdown into the footer of your messages.
+You can inject text into the footer of your messages.
 
 1.  Set `ENABLE_CUSTOM_DISCORD_FOOTER=true` (or Slack equivalent).
-2.  Mount a volume to `/app/custom_footers`:
-    ```yaml
-    volumes:
-      - ./custom_footers:/app/custom_footers:rw
-    ```
-3.  Edit the generated `discord_footer.md` or `slack_footer.md` in that directory.
+2.  Footers are now controlled entirely via the language translation engine. Edit the `footers` block within your chosen `src/data/locales/*.json` language file to use your desired markdown text.
 
 ## 🚧 Development
 

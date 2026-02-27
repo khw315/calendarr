@@ -80,7 +80,7 @@ class Platform(ABC):
         pass
     
     @abstractmethod
-    def format_header(self, custom_header: str, start_date: datetime, 
+    def format_header(self, start_date: datetime, 
                      end_date: datetime, show_date_range: bool,
                      tv_count: int, movie_count: int, premiere_count: int) -> Dict[str, Any]:
         """
@@ -284,7 +284,7 @@ class  DiscordPlatform(Platform):
             logger.debug(traceback.format_exc())
             return None # Return None if formatting fails
     
-    def format_header(self, custom_header: str, start_date: datetime,
+    def format_header(self, start_date: datetime,
                      end_date: datetime, show_date_range: bool,
                      tv_count: int, movie_count: int, premiere_count: int) -> Dict[str, Any]:
 
@@ -293,7 +293,7 @@ class  DiscordPlatform(Platform):
 
         try:
             # Create header text
-            header_text = format_header_text(custom_header, start_date, end_date, show_date_range, self.config.language)
+            header_text = format_header_text(start_date, end_date, show_date_range, self.config.language)
             logger.debug(f"🖌️  format_header - header_text: '{header_text}'")
 
             # Get subheader text, already bolded for Discord
@@ -495,14 +495,13 @@ class SlackPlatform(Platform):
             "mrkdwn_in": ["text"]
         }
     
-    def format_header(self, custom_header: str, start_date: datetime,
+    def format_header(self, start_date: datetime,
                      end_date: datetime, show_date_range: bool,
                      tv_count: int, movie_count: int, premiere_count: int) -> Dict[str, Any]:
         """
         Format Slack header message
         
         Args:
-            custom_header: Header text
             start_date: Start date
             end_date: End date
             show_date_range: Whether to show date range
@@ -514,7 +513,7 @@ class SlackPlatform(Platform):
             Slack message object with blocks
         """
         # Create header text and date range text
-        header_text = format_header_text(custom_header, start_date, end_date, show_date_range, self.config.language)
+        header_text = format_header_text(start_date, end_date, show_date_range, self.config.language)
 
         # Create subheader text (without timezone)
         subheader_text = format_subheader_text(
