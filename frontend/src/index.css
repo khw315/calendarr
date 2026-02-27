@@ -360,13 +360,12 @@ body {
 }
 
 .range-selector:hover {
-    background: var(--color-primary);
+    /* removed background color override */
 }
 
 .range-selector:focus {
     outline: none;
     border-color: var(--color-secondary);
-    background: var(--color-secondary);
 }
 
 .refresh-btn,
@@ -689,7 +688,7 @@ body {
     border: 2px solid var(--color-border);
     font-family: inherit;
     font-size: 1rem;
-    box-shadow: 2px 2px 0 #000;
+    box-shadow: 4px 4px 0 #000;
     transition: all var(--transition-fast);
 }
 
@@ -697,11 +696,12 @@ body {
 .brutal-select:focus {
     outline: none;
     border-color: var(--color-info);
-    box-shadow: 2px 2px 0 var(--color-info);
+    box-shadow: 4px 4px 0 var(--color-info);
 }
 
 .brutal-select {
     appearance: none;
+    background-color: #fff;
     background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
     background-repeat: no-repeat;
     background-position: right 8px center;

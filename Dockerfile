@@ -1,3 +1,12 @@
+# Build frontend
+FROM node:20-slim AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci || npm install
+COPY frontend/ ./
+RUN npm run build
+
+# Build backend
 FROM python:3.14.2-slim
 
 WORKDIR /app
@@ -12,8 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source code
 COPY src/ /app/src/
 
-# Copy public directory for web UI
-COPY public/ /app/public/
+# Copy public directory for web UI from frontend builder
+COPY --from=frontend-builder /app/public/ /app/public/
 
 # Copy the default custom footer templates to a SEPARATE location
 COPY ./calendarr/custom_footers /app/default_footers/

@@ -9,7 +9,7 @@ A simple Docker container that fetches upcoming airings/releases for TV shows an
 > [!NOTE]
 > This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr).
 
-![Example Discord post](https://i.imgur.com/abGhhg4.png)
+![Example Discord post](screenshots/discord.png)
 
 ## ✨ Features
 
@@ -47,7 +47,7 @@ http://YOUR_SERVER_IP:5000
 - **🔄 Auto-Refresh**: Events automatically refresh every 60 seconds
 - **🎨 Modern Design**: Bold Neobrutalist UI with high contrast, vibrant colors, and sharp shadows
 
-![Web UI Screenshot](public/preview.png)
+![Web UI Screenshot](screenshots/preview.png)
 
 ## 🚀 Getting Started
 
