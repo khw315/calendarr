@@ -208,13 +208,13 @@ def get_past_events():
     """Get today's past events"""
     from flask import jsonify
     try:
-        # Get only today's events
+        # Get last 7 days of events
         from datetime import datetime, timedelta
         import pytz
         
         tz = config.timezone_obj
         now = datetime.now(tz)
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
         end_date = now  # Up to current time
         
         logger.info(f"Web UI requesting past events from {start_date} to {end_date}")
@@ -241,7 +241,8 @@ def get_past_events():
                 if event_item.is_past:
                     past_events.append({
                         'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                        'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                         'type': 'tv'
                     })
             
@@ -250,7 +251,8 @@ def get_past_events():
                 if event_item.is_past:
                     past_events.append({
                         'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                        'time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                         'type': 'movie'
                     })
         

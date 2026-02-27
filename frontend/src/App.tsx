@@ -7,6 +7,9 @@ interface EventItem {
   title: string
   type: 'tv' | 'movie'
   start_time?: string
+  date?: string
+  timestamp?: number
+  end_timestamp?: number
 }
 
 interface DayGroup {
@@ -26,6 +29,14 @@ export default function App() {
   const [triggering, setTriggering] = useState(false)
   const [triggerStatus, setTriggerStatus] = useState<string | null>(null)
   const [showPast, setShowPast] = useState(false)
+  const [currentTime, setCurrentTime] = useState(Math.floor(Date.now() / 1000))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Math.floor(Date.now() / 1000))
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   const fetchData = async () => {
     setLoading(true)
@@ -72,8 +83,6 @@ export default function App() {
 
   useEffect(() => {
     fetchData()
-    const intv = setInterval(fetchData, 60000)
-    return () => clearInterval(intv)
   }, [range])
 
   const handleTrigger = async () => {
@@ -243,17 +252,32 @@ export default function App() {
                       <span className="day-date">{day.date}</span>
                     </div>
                     <div className="events-list">
-                      {day.events.map((ev, j) => (
-                        <div key={j} className={`event-card brutal-card event-${ev.type}`}>
-                          <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
-                          <div className="event-title">{ev.title}</div>
-                          {ev.start_time && (
-                            <div className="event-time" data-original-time={ev.start_time}>
-                              <span className="time-text">{ev.start_time}</span>
+                      {day.events.map((ev, j) => {
+                        const isAiring = ev.timestamp && ev.end_timestamp && currentTime >= ev.timestamp && currentTime < ev.end_timestamp;
+                        const startsIn = ev.timestamp ? ev.timestamp - currentTime : -1;
+                        const isStartingSoon = startsIn > 0 && startsIn <= 3600;
+
+                        return (
+                          <div key={j} className={`event-card brutal-card event-${ev.type} ${isAiring ? 'airing' : ''}`}>
+                            {isAiring && <span className="airing-badge">ON AIR</span>}
+                            <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
+                            <div className="event-title">
+                              {ev.title}
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            {ev.start_time && (
+                              <div className="event-time" data-original-time={ev.start_time}>
+                                {isStartingSoon ? (
+                                  <span className="time-text countdown-active">
+                                    Starts in {Math.ceil(startsIn / 60)}m
+                                  </span>
+                                ) : (
+                                  <span className="time-text">{ev.start_time}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))
@@ -280,7 +304,7 @@ export default function App() {
                         <rect x="3" y="6" width="18" height="15" rx="2" stroke="currentColor" strokeWidth="2" />
                         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2" />
                       </svg>
-                      <p>No past events today</p>
+                      <p>No past events in the last 7 days</p>
                     </div>
                   ) : (
                     <div className="day-group">
@@ -288,10 +312,13 @@ export default function App() {
                         {pastEvents.map((ev, j) => (
                           <div key={j} className={`event-card brutal-card event-${ev.type} event-past`}>
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
-                            <div className="event-title">{ev.title}</div>
-                            {ev.start_time && (
+                            <div className="event-title">
+                              {ev.title}
+                            </div>
+                            {(ev.start_time || ev.date) && (
                               <div className="event-time">
-                                <span className="time-text">{ev.start_time}</span>
+                                {ev.date && <span className="time-text" style={{ marginRight: '8px' }}>{ev.date}</span>}
+                                {ev.start_time && <span className="time-text">{ev.start_time}</span>}
                               </div>
                             )}
                           </div>
