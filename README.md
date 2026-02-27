@@ -1,13 +1,12 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/hann315/calendarr)
-![GitHub Release](https://img.shields.io/github/v/release/khw315/calendarr)
 ![GitHub last commit](https://img.shields.io/github/last-commit/khw315/calendarr)
+
+> [!NOTE]
+> This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr)
 
 # 📆 Calendarr
 
 A simple Docker container that fetches upcoming airings/releases for TV shows and movies from Sonarr and Radarr calendars and posts them to Discord on a schedule.
-
-> [!NOTE]
-> This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr).
 
 ![Example Discord post](screenshots/discord.png)
 

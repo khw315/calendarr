@@ -111,9 +111,9 @@ def health():
     """Health check endpoint for Docker"""
     return {"status": "healthy", "timestamp": datetime.datetime.now().isoformat()}
 
-@app.route('/api/events')
+@app.route('/api/releases')
 def get_events():
-    """Get upcoming events"""
+    """Get upcoming releases"""
     from flask import jsonify, request
     try:
         # Get days parameter from query string (default to 2 for today + tomorrow)
@@ -203,18 +203,23 @@ def get_events():
 
 
 
-@app.route('/api/past-events')
+@app.route('/api/past-releases')
 def get_past_events():
-    """Get today's past events"""
-    from flask import jsonify
+    """Get past releases"""
+    from flask import jsonify, request
     try:
         # Get last 7 days of events
         from datetime import datetime, timedelta
         import pytz
         
+        
+        # Get days parameter from query string (default to 7)
+        days = request.args.get('days', default=7, type=int)
+        days = max(1, min(days, 30))
+        
         tz = config.timezone_obj
         now = datetime.now(tz)
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days)
         end_date = now  # Up to current time
         
         logger.info(f"Web UI requesting past events from {start_date} to {end_date}")
@@ -243,7 +248,8 @@ def get_past_events():
                         'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
                         'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
                         'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
-                        'type': 'tv'
+                        'type': 'tv',
+                        'timestamp': getattr(event_item, 'timestamp', None)
                     })
             
             # Check movie events
@@ -253,7 +259,8 @@ def get_past_events():
                         'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
                         'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
                         'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
-                        'type': 'movie'
+                        'type': 'movie',
+                        'timestamp': getattr(event_item, 'timestamp', None)
                     })
         
         return jsonify({

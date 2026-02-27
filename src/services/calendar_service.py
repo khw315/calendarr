@@ -82,6 +82,13 @@ class CalendarService:
             List of Event objects
         """
         url = calendar_url.url
+        
+        # Ensure we request enough historical and future data from Sonarr/Radarr
+        if "pastDays=" not in url:
+            url += "&pastDays=30" if "?" in url else "?pastDays=30"
+        if "futureDays=" not in url:
+            url += "&futureDays=30" if "?" in url else "?futureDays=30"
+            
         source_type = calendar_url.type
         
         logger.info(f"⏳  Fetching events for {source_type} between "
