@@ -8,6 +8,7 @@ interface EventItem {
   title: string
   type: 'tv' | 'movie'
   start_time?: string
+  end_time?: string
   date?: string
   timestamp?: number
   end_timestamp?: number
@@ -315,6 +316,8 @@ export default function App() {
                                   <span className="time-text countdown-active">
                                     Starts in {Math.ceil(startsIn / 60)}m
                                   </span>
+                                ) : isAiring && ev.end_time ? (
+                                  <span className="time-text">{ev.end_time}</span>
                                 ) : (
                                   <span className="time-text">{ev.start_time}</span>
                                 )}
