@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
 authors = [
-  { name = "Jordan Lambrecht", email = "me@jordanlambrecht.com" },
+  { name = "Faisal Rahman", email = "fafr.dev@gmail.com" },
 ]
 maintainers = [
-  { name = "Jordan Lambrecht", email = "me@jordanlambrecht.com" },
+  { name = "Faisal Rahman", email = "fafr.dev@gmail.com" },
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

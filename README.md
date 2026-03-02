@@ -131,11 +131,37 @@ You can inject text into the footer of your messages.
 
 ## 🚧 Development
 
-To build the container locally:
+### Local Setup (Backend + Frontend)
+
+This project uses Python for the backend and React/Vite for the Web UI. We recommend using [`uv`](https://github.com/astral-sh/uv) for Python package management.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/khw315/calendarr.git
+    cd calendarr
+    ```
+
+2.  **Start the Backend:**
+    Open a terminal in the root directory and run:
+    ```bash
+    uv run src/app.py
+    ```
+    This will install dependencies and start the backend server on `http://localhost:5000`.
+
+3.  **Start the Frontend:**
+    Open a new terminal, navigate to the `frontend` directory, and start the Vite dev server:
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+    Access the Web UI development server at `http://localhost:5173`. Any changes to the frontend code will hot-reload automatically.
+
+### Docker Build
+
+To build the container locally instead:
 
 ```bash
-git clone https://github.com/khw315/calendarr.git
-cd calendarr
 docker build -t calendarr .
 ```
 
