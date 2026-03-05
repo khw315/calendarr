@@ -13,6 +13,8 @@ interface EventItem {
   date?: string
   timestamp?: number
   end_timestamp?: number
+  is_bulk?: boolean
+  episode_count?: number
 }
 
 interface DayGroup {
@@ -29,7 +31,7 @@ export default function App() {
   const [schedule, setSchedule] = useState({ type: '-', nextRun: '-', timezone: '-' })
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState('1')
-  const [pastRange, setPastRange] = useState('7')
+  const [pastRange, setPastRange] = useState('3')
   const [pastSort, setPastSort] = useState('newest')
   const [triggering, setTriggering] = useState(false)
   const [triggerStatus, setTriggerStatus] = useState<string | null>(null)
@@ -83,7 +85,7 @@ export default function App() {
         let movieCount = 0;
         (eventsData.days || []).forEach((d: any) => {
           (d.events || []).forEach((e: any) => {
-            if (e.type === 'tv') tvCount++;
+            if (e.type === 'tv') tvCount += (e.episode_count || 1);
             if (e.type === 'movie') movieCount++;
           })
         })
@@ -278,7 +280,7 @@ export default function App() {
                             {isAiring && <span className="airing-badge">ON AIR</span>}
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
                             <div className="event-title">
-                              {ev.title}
+                              {ev.title} {ev.is_bulk && <span className="bulk-badge" style={{ fontSize: '0.8em', background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>{ev.episode_count} Episodes</span>}
                             </div>
                             {ev.start_time && (
                               <div className="event-time" data-original-time={ev.start_time}>
@@ -351,7 +353,7 @@ export default function App() {
                           <div key={j} className={`event-card brutal-card event-${ev.type} event-past`}>
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
                             <div className="event-title">
-                              {ev.title}
+                              {ev.title} {ev.is_bulk && <span className="bulk-badge" style={{ fontSize: '0.8em', background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>{ev.episode_count} Episodes</span>}
                             </div>
                             {(ev.start_time || ev.date) && (
                               <div className="event-time">

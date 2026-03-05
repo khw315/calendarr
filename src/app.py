@@ -152,20 +152,55 @@ def get_events():
         for day in days:
             day_events = []
             
-            # Combine TV and movie events
+            # Group TV events by timestamp and show_name
+            tv_groups = {}
             for event_item in day.tv_events:
-                # Always skip past events in the Web UI
                 if event_item.is_past:
                     continue
+                
+                show_name = event_item.show_name if getattr(event_item, 'show_name', None) else (event_item.title if hasattr(event_item, 'title') else event_item.summary)
+                key = (getattr(event_item, 'timestamp', None), show_name)
+                
+                if key not in tv_groups:
+                    tv_groups[key] = []
+                tv_groups[key].append(event_item)
+
+            BULK_THRESHOLD = 2
+
+            for key, group in tv_groups.items():
+                if len(group) >= BULK_THRESHOLD:
+                    # Bulk format
+                    first = group[0]
+                    show_name = key[1]
+                    is_premiere = any(getattr(e, 'is_premiere', False) for e in group)
                     
-                day_events.append({
-                    'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                    'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
-                    'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
-                    'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
-                    'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
-                    'type': 'tv'
-                })
+                    title = f"{show_name} (Bulk)" if not is_premiere else f"{show_name} (Bulk) 🎉"
+                    # Remove (Bulk) and just keep the title, maybe add count
+                    title = f"{show_name}"
+                    if is_premiere:
+                        title += " 🎉"
+                        
+                    day_events.append({
+                        'title': title,
+                        'start_time': first.time_str if hasattr(first, 'time_str') else None,
+                        'timestamp': first.timestamp if hasattr(first, 'timestamp') else None,
+                        'end_time': first.end_time_str if hasattr(first, 'end_time_str') else None,
+                        'end_timestamp': first.end_timestamp if hasattr(first, 'end_timestamp') else None,
+                        'type': 'tv',
+                        'is_bulk': True,
+                        'episode_count': len(group)
+                    })
+                else:
+                    # Individual format
+                    for event_item in group:
+                        day_events.append({
+                            'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                            'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                            'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
+                            'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
+                            'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
+                            'type': 'tv'
+                        })
             
             for event_item in day.movie_events:
                 # Always skip past events in the Web UI
@@ -241,16 +276,49 @@ def get_past_events():
         # Collect only past events
         past_events = []
         for day in days:
-            # Check TV events
+            # Group TV events by timestamp and show_name
+            tv_groups = {}
             for event_item in day.tv_events:
                 if event_item.is_past:
+                    show_name = event_item.show_name if getattr(event_item, 'show_name', None) else (event_item.title if hasattr(event_item, 'title') else event_item.summary)
+                    key = (getattr(event_item, 'timestamp', None), show_name)
+                    
+                    if key not in tv_groups:
+                        tv_groups[key] = []
+                    tv_groups[key].append(event_item)
+
+            BULK_THRESHOLD = 4
+
+            for key, group in tv_groups.items():
+                if len(group) >= BULK_THRESHOLD:
+                    # Bulk format
+                    first = group[0]
+                    show_name = key[1]
+                    is_premiere = any(getattr(e, 'is_premiere', False) for e in group)
+                    
+                    title = f"{show_name}"
+                    if is_premiere:
+                        title += " 🎉"
+                        
                     past_events.append({
-                        'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
-                        'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                        'title': title,
+                        'start_time': first.time_str if hasattr(first, 'time_str') else None,
                         'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                         'type': 'tv',
-                        'timestamp': getattr(event_item, 'timestamp', None)
+                        'timestamp': getattr(first, 'timestamp', None),
+                        'is_bulk': True,
+                        'episode_count': len(group)
                     })
+                else:
+                    # Individual format
+                    for event_item in group:
+                        past_events.append({
+                            'title': event_item.title if hasattr(event_item, 'title') else event_item.summary,
+                            'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
+                            'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
+                            'type': 'tv',
+                            'timestamp': getattr(event_item, 'timestamp', None)
+                        })
             
             # Check movie events
             for event_item in day.movie_events:
