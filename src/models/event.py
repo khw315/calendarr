@@ -131,7 +131,6 @@ class Event:
             # Fallback: if no end time, assume 1 hour duration
             from datetime import timedelta
             end_dt = start_dt
-            # We'll adjust the datetime value later, just keeping the object structure for now
             
         start = start_dt.dt
         end = end_dt.dt if end_dt else None

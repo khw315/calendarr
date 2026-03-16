@@ -4,7 +4,6 @@ import Footer from './components/Footer'
 
 const API_BASE = ''
 
-// Reuse common type
 export default function Settings() {
     const [config, setConfig] = useState<any>({
         APP_LANGUAGE: "EN",
@@ -483,17 +482,8 @@ export default function Settings() {
 
             {/* Toast Notification Container */}
             {toast && (
-                <div className="toast-container" style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div className="toast" style={{
-                        background: toast.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-                        color: toast.type === 'success' ? 'var(--color-text)' : '#fff',
-                        padding: '12px 24px',
-                        border: '2px solid var(--color-border)',
-                        boxShadow: '4px 4px 0 var(--color-border)',
-                        fontWeight: 800,
-                        animation: 'slideIn 0.3s ease-out forwards',
-                        textTransform: 'uppercase'
-                    }}>
+                <div className="toast-container">
+                    <div className={`toast ${toast.type}`}>
                         {toast.message}
                     </div>
                 </div>

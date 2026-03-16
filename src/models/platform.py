@@ -178,8 +178,6 @@ class  DiscordPlatform(Platform):
             color = self.day_colors.get(day.day_name, 0)
 
             # Sort events by time then show name to ensure grouping works
-            # We create a new list to avoid modifying the original day object
-            # Use 0 as default timestamp if None for sorting
             sorted_tv_events = sorted(day.tv_events, key=lambda x: (x.timestamp or 0, x.show_name or x.summary))
             
             tv_formatted = []
@@ -196,8 +194,6 @@ class  DiscordPlatform(Platform):
                     # Threshold for "bulk" - e.g. a season drop
                     BULK_THRESHOLD = 4
                     
-                    # Check if we should use bulk formatting
-                    # Must be >= threshold AND have valid timestamp/show_name
                     first = group[0]
                     is_bulk = len(group) >= BULK_THRESHOLD
                     

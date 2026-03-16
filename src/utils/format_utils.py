@@ -45,10 +45,9 @@ def format_header_text(start_date, end_date,
     header_text = get_header_text(language)
     
     if show_date_range:
-        # Check if we're in daily mode (start and end date are the same day)
+        # Check if in daily mode (start and end date are the same day)
         if start_date.date() == end_date.date():
             # For daily mode, show just the day name and date
-            # day_name = start_date.strftime('%A')
             day_name = get_day_name(language, start_date.weekday())
             
             # month_name = start_date.strftime('%b')

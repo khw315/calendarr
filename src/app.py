@@ -9,7 +9,7 @@ import datetime
 import os
 import logging
 
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask import cli
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -57,8 +57,6 @@ def init_app():
     logger.info("🚀  Application initialized with configuration")
     return config
 
-    
-
 
 def run_main_job():
     """Run the main calandarr script"""
@@ -69,8 +67,7 @@ def run_main_job():
         output = io.StringIO()
         with redirect_stdout(output), redirect_stderr(output):
             success = main.main()
-        
-        # logger.info(f"Job output: {output.getvalue()}")
+
         if not success:
             logger.info(f"⚠️  Job completed with success: {success}")
         else:
@@ -93,16 +90,12 @@ def log_ping():
 @app.route('/')
 def index():
     """Serve the web UI"""
-    from flask import send_from_directory
-    import os
     public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
     return send_from_directory(public_dir, 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
     """Serve static files"""
-    from flask import send_from_directory
-    import os
     public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public')
     return send_from_directory(public_dir, path)
 
@@ -173,9 +166,7 @@ def get_events():
                     first = group[0]
                     show_name = key[1]
                     is_premiere = any(getattr(e, 'is_premiere', False) for e in group)
-                    
-                    title = f"{show_name} (Bulk)" if not is_premiere else f"{show_name} (Bulk) 🎉"
-                    # Remove (Bulk) and just keep the title, maybe add count
+
                     title = f"{show_name}"
                     if is_premiere:
                         title += " 🎉"
@@ -393,13 +384,8 @@ def handle_config():
     
     if request.method == 'GET':
         try:
-            # We want to return the current active configuration, not just what's in the file
-            # But the file config overrides env vars, so returning what the app is currently using is best
-            # First, read what is explicitly set in the file
             saved_config = load_config_from_file()
-            
-            # Then merge it with what the app is currently using (for fields that might be env variables)
-            # This ensures we display the actual configuration in the UI
+
             current_config = {
                 # General
                 'DEBUG': config.logging_settings.debug_mode,
@@ -462,15 +448,11 @@ def handle_config():
             if not new_config:
                 return jsonify({'error': 'No configuration data provided'}), 400
                 
-            # We should preserve things that aren't sent if we are partially updating?
-            # Normally frontend will send the full config.
             existing_config = load_config_from_file()
             
-            # Merge existing with new
             for k, v in new_config.items():
                 existing_config[k] = v
                 
-            # Save to file
             if save_config_to_file(existing_config):
                 # Reload global config
                 logger.info("Configuration updated via API, reloading...")

@@ -24,15 +24,15 @@ REGION_NAMES = {
     # Asia
     "IST": "India Standard Time",
     "ICT": "Indochina Time",
-    "JPT": "Japan Time",
-    "KRT": "Korea Time",
+    "JST": "Japan Standard Time",
+    "KST": "Korea Standard Time",
     "CST_CN": "China Standard Time",
     "GST": "Gulf Time",
 
     # Australia
     "AET": "Australian Eastern Time",
     "ACT": "Australian Central Time",
-    "AWT": "Australian Western Time",
+    "AWST": "Australian Western Standard Time",
 
     # Africa
     "WAT": "West Africa Time",
@@ -133,10 +133,9 @@ PREFIX_MAP = {
     "Asia/Vientiane": REGION_NAMES["ICT"],
     "Asia/Phnom_Penh": REGION_NAMES["ICT"],
 
-    "Asia/Tokyo": REGION_NAMES["JPT"],
-    "Asia/Seoul": REGION_NAMES["KRT"],
+    "Asia/Tokyo": REGION_NAMES["JST"],
+    "Asia/Seoul": REGION_NAMES["KST"],
     "Asia/Shanghai": REGION_NAMES["CST_CN"],
-    "Asia/Beijing": REGION_NAMES["CST_CN"],
 
     "Asia/Dubai": REGION_NAMES["GST"],
     "Asia/Qatar": REGION_NAMES["GST"],
@@ -157,7 +156,7 @@ PREFIX_MAP = {
     "Australia/Brisbane": REGION_NAMES["AET"],
     "Australia/Adelaide": REGION_NAMES["ACT"],
     "Australia/Darwin": REGION_NAMES["ACT"],
-    "Australia/Perth": REGION_NAMES["AWT"],
+    "Australia/Perth": REGION_NAMES["AWST"],
 
     # ===================== ATLANTIC / INDIAN =====================
     "Atlantic/Reykjavik": REGION_NAMES["GMT"],

@@ -83,7 +83,6 @@ class CalendarService:
         """
         url = calendar_url.url
         
-        # Ensure we request enough historical and future data from Sonarr/Radarr
         if "pastDays=" not in url:
             url += "&pastDays=30" if "?" in url else "?pastDays=30"
         if "futureDays=" not in url:

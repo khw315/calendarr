@@ -240,7 +240,6 @@ class PlatformService:
 
                 # --- Construct Slack Payload (Header Blocks + Day Attachments ONLY) ---
                 slack_payload = {}
-                # We only need header blocks here now
                 header_blocks = []
                 if header_payload and "blocks" in header_payload and header_payload["blocks"]:
                     header_blocks.extend(header_payload["blocks"])
