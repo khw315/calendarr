@@ -42,19 +42,13 @@ export default function Settings() {
 
     // Custom Toast State (replacing showToast)
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
-    const [timezones, setTimezones] = useState<string[]>([])
+    const [timezones, setTimezones] = useState<{ iana: string; label: string }[]>([])
     const [languages, setLanguages] = useState<{ code: string, name: string }[]>([])
 
     useEffect(() => {
         fetchConfig()
         fetchLanguages()
-        try {
-            const tzs = Intl.supportedValuesOf('timeZone')
-            setTimezones(tzs)
-        } catch (e) {
-            console.warn('Browser does not support Intl.supportedValuesOf API, using fallback...')
-            setTimezones(['UTC'])
-        }
+        fetchTimezones()
     }, [])
 
     const fetchConfig = async () => {
@@ -70,6 +64,26 @@ export default function Settings() {
             console.error(e)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchTimezones = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/timezones`)
+            if (res.ok) {
+                const data: Record<string, string> = await res.json()
+                const sorted = Object.entries(data)
+                    .map(([iana, label]) => ({ iana, label }))
+                    .sort((a, b) => a.iana.localeCompare(b.iana))
+                setTimezones(sorted)
+            }
+        } catch (e) {
+            console.error(e)
+            // Fallback to browser list
+            try {
+                const tzs = Intl.supportedValuesOf('timeZone')
+                setTimezones(tzs.map(iana => ({ iana, label: iana })))
+            } catch {}
         }
     }
 
@@ -359,11 +373,14 @@ export default function Settings() {
                                 <div className="form-group">
                                     <label htmlFor="set_TZ">Timezone</label>
                                     <select id="set_TZ" name="TZ" className="brutal-select" value={config.TZ || 'UTC'} onChange={handleChange}>
-                                        {timezones.map(tz => {
-                                            const isDefault = tz === Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                        {timezones.map(({ iana, label }) => {
+                                            const isDefault = iana === Intl.DateTimeFormat().resolvedOptions().timeZone
+                                            const displayLabel = label && label !== iana
+                                                ? `${iana} — ${label}`
+                                                : iana
                                             return (
-                                                <option key={tz} value={tz}>
-                                                    {isDefault ? `${tz} (System Default)` : tz}
+                                                <option key={iana} value={iana}>
+                                                    {isDefault ? `${displayLabel} (System Default)` : displayLabel}
                                                 </option>
                                             )
                                         })}

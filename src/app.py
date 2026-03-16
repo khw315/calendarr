@@ -500,6 +500,18 @@ def get_languages():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/timezones', methods=['GET'])
+def get_timezones():
+    """Get IANA timezone identifiers with human-friendly display names"""
+    from flask import jsonify
+    from utils.timezones import TIMEZONE_NAME_MAP
+    try:
+        return jsonify(TIMEZONE_NAME_MAP)
+    except Exception as e:
+        logger.error(f"Error getting timezones: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 # Initialize/configure the scheduler
 def init_scheduler():
     """
