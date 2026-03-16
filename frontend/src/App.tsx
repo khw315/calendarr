@@ -320,7 +320,6 @@ export default function App() {
                       <option value="3">Last 3 Days</option>
                       <option value="7">Last 7 Days</option>
                       <option value="14">Last 14 Days</option>
-                      <option value="30">Last 30 Days</option>
                     </select>
                   </>
                 )}

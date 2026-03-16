@@ -1,16 +1,13 @@
-![Docker Pulls](https://img.shields.io/docker/pulls/hann315/calendarr)
-![GitHub last commit](https://img.shields.io/github/last-commit/khw315/calendarr)
-
 > [!NOTE]
 > This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr)
 
-# 📆 Calendarr
+# Calendarr
 
 A simple Docker container that fetches upcoming airings/releases for TV shows and movies from Sonarr and Radarr calendars and posts them to Discord on a schedule.
 
 ![Example Discord post](screenshots/discord.png)
 
-## ✨ Features
+## Features
 
 - **Web UI**: Beautiful dashboard to view upcoming events, trigger manual runs, and view configuration.
 - **Consolidated Feed**: Combines multiple Sonarr and Radarr calendar feeds into one summary.
@@ -21,7 +18,7 @@ A simple Docker container that fetches upcoming airings/releases for TV shows an
 - **Dynamic Timezones**: Automatically adapts to your configured timezone.
 - **Highly Customizable**: Configure headers, footers, timestamp styles, and more.
 
-## 🌐 Web UI
+## Web UI
 
 Calendarr now includes a modern Web UI for easy management and visualization!
 
@@ -39,20 +36,20 @@ http://YOUR_SERVER_IP:5000
 
 ### Web UI Features
 
-- **📊 Dashboard**: View statistics including upcoming events count, next scheduled run, and schedule type
-- **📅 Calendar View**: See all upcoming TV shows and movies grouped by day with color-coding
-- **⚡ Manual Trigger**: Run the calendar job on-demand with a single click
-- **⚙️ Configuration Viewer**: View all current settings and platform configurations
-- **🔄 Auto-Refresh**: Events automatically refresh every 60 seconds
-- **🎨 Modern Design**: Bold Neobrutalist UI with high contrast, vibrant colors, and sharp shadows
+- **Dashboard**: View statistics including upcoming events count, next scheduled run, and schedule type
+- **Calendar View**: See all upcoming TV shows and movies grouped by day with color-coding
+- **Manual Trigger**: Run the calendar job on-demand with a single click
+- **Configuration Viewer**: View all current settings and platform configurations
+- **Auto-Refresh**: Events automatically refresh every 60 seconds
+- **Modern Design**: Bold Neobrutalist UI with high contrast, vibrant colors, and sharp shadows
 
 ![Web UI Screenshot](screenshots/preview.png)
 
-## 🚀 Getting Started
+## Getting Started
 
 Available via `ghcr.io/khw315/calendarr:latest`.
 
-### 🐳 With Docker Compose (Recommended)
+### With Docker Compose (Recommended)
 
 1.  **Create a `docker-compose.yml`**:
 
@@ -78,7 +75,7 @@ docker compose up -d
 
 3.  **Configure it**: Open `http://localhost:5000` to access the Web UI and set up your webhooks, schedules, and calendars!
 
-### ⌨️ With Docker CLI
+### With Docker CLI
 
 ```bash
 docker run -d \
@@ -89,12 +86,12 @@ docker run -d \
   ghcr.io/khw315/calendarr:latest
 ```
 
-### 🏃‍➡️ To Run Offschedule 
+### To Run Offschedule 
 
 1. Start the container via the compose file with `docker compose up -d`
 2. Use the command `docker exec -it calendarr python src/main.py`
 
-## 🛠️ Configuration
+## Configuration
 
 Configure the application directly from the **Web UI**! All changes apply instantly without requiring container restarts and are saved persistently to your mapped `/app/config` volume. 
 
@@ -111,7 +108,7 @@ The following settings are available in the Settings tab:
 
 *(Note: Advanced users can optionally pre-seed configurations via environment variables, but the Web UI is recommended for all typical modifications.)*
 
-## 🤝 Obtaining Calendar URLs
+## Obtaining Calendar URLs
 
 ### Sonarr / Radarr
 1.  Go to **Settings** > **General**.
@@ -122,14 +119,14 @@ The following settings are available in the Settings tab:
 
 *Alternatively, use the "Calendar > iCal Link" button in the UI (ensure no tags/filters are selected).*
 
-## ✍️ Custom Footers
+## Custom Footers
 
 You can inject text into the footer of your messages.
 
 1.  Set `ENABLE_CUSTOM_DISCORD_FOOTER=true` (or Slack equivalent).
 2.  Footers are now controlled entirely via the language translation engine. Edit the `footers` block within your chosen `src/data/locales/*.json` language file to use your desired markdown text.
 
-## 🚧 Development
+## Development
 
 ### Local Setup (Backend + Frontend)
 
@@ -165,12 +162,12 @@ To build the container locally instead:
 docker build -t calendarr .
 ```
 
-## 🧑‍💻 Contributing
+## Contributing
 
 Contributions are welcome!
 - **Localization**: Help us translate Calendarr into more languages by adding to `src/data/locales.json`.
 - **Features**: Submit PRs for new platform integrations or improvements.
 
-## 🧑‍⚖️ License
+## License
 
 [GNU General Public License v3.0](LICENSE)
