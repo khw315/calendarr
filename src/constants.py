@@ -19,6 +19,10 @@ SLACK_SUCCESS_CODES = [200, 201, 204]
 DEFAULT_HTTP_TIMEOUT = 30  # seconds
 DISCORD_EMBED_PAYLOAD_THRESHOLD = 5800
 
+# Minimum number of episodes from the same show on the same day to trigger bulk grouping
+BULK_THRESHOLD_UPCOMING = 2   # Upcoming releases: group 2+ episodes together
+BULK_THRESHOLD_PAST = 4       # Past releases: only group when 4+ episodes aired
+
 # ==============================================
 # Common Names
 # ==============================================

@@ -9,14 +9,15 @@ import datetime
 import os
 import logging
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, jsonify, request
 from flask import cli
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import main
 
 from constants import (
-    DEFAULT_LOG_DIR, JOB_ID_DEBUG_PING, JOB_ID_LOG_CLEANUP, JOB_ID_MAIN
+    DEFAULT_LOG_DIR, JOB_ID_DEBUG_PING, JOB_ID_LOG_CLEANUP, JOB_ID_MAIN,
+    BULK_THRESHOLD_UPCOMING, BULK_THRESHOLD_PAST
 )
 
 os.makedirs(DEFAULT_LOG_DIR, exist_ok=True)
@@ -107,7 +108,6 @@ def health():
 @app.route('/api/releases')
 def get_events():
     """Get upcoming releases"""
-    from flask import jsonify, request
     try:
         # Get days parameter from query string (default to 2 for today + tomorrow)
         days = request.args.get('days', default=2, type=int)
@@ -158,10 +158,10 @@ def get_events():
                     tv_groups[key] = []
                 tv_groups[key].append(event_item)
 
-            BULK_THRESHOLD = 2
+
 
             for key, group in tv_groups.items():
-                if len(group) >= BULK_THRESHOLD:
+                if len(group) >= BULK_THRESHOLD_UPCOMING:
                     # Bulk format
                     first = group[0]
                     show_name = key[1]
@@ -232,7 +232,6 @@ def get_events():
 @app.route('/api/past-releases')
 def get_past_events():
     """Get past releases"""
-    from flask import jsonify, request
     try:
         # Get last 7 days of events
         from datetime import datetime, timedelta
@@ -258,7 +257,7 @@ def get_past_events():
         formatter_service = FormatterService(config)
         
         events = calendar_service.fetch_events(start_date, end_date)
-        days, events_summary = formatter_service.process_events(
+        day_groups, events_summary = formatter_service.process_events(
             events, 
             start_date, 
             end_date
@@ -266,7 +265,7 @@ def get_past_events():
         
         # Collect only past events
         past_events = []
-        for day in days:
+        for day in day_groups:
             # Group TV events by timestamp and show_name
             tv_groups = {}
             for event_item in day.tv_events:
@@ -278,10 +277,8 @@ def get_past_events():
                         tv_groups[key] = []
                     tv_groups[key].append(event_item)
 
-            BULK_THRESHOLD = 4
-
             for key, group in tv_groups.items():
-                if len(group) >= BULK_THRESHOLD:
+                if len(group) >= BULK_THRESHOLD_PAST:
                     # Bulk format
                     first = group[0]
                     show_name = key[1]
@@ -335,7 +332,6 @@ def get_past_events():
 @app.route('/api/schedule')
 def get_schedule():
     """Get schedule information"""
-    from flask import jsonify
     try:
         schedule = config.schedule_settings
         
@@ -360,7 +356,6 @@ def get_schedule():
 @app.route('/api/trigger', methods=['POST'])
 def trigger_job():
     """Manually trigger the calendar job"""
-    from flask import jsonify
     try:
         logger.info("Manual trigger requested via API")
         run_main_job()
@@ -379,7 +374,6 @@ def trigger_job():
 def handle_config():
     """Get or save configuration"""
     global config, scheduler
-    from flask import jsonify, request
     from config.settings import load_config_from_file, save_config_to_file
     
     if request.method == 'GET':
@@ -491,7 +485,6 @@ def handle_config():
 @app.route('/api/languages', methods=['GET'])
 def get_languages():
     """Get available languages dynamically"""
-    from flask import jsonify
     from utils.localization import get_supported_languages
     try:
         return jsonify(get_supported_languages())
@@ -503,7 +496,6 @@ def get_languages():
 @app.route('/api/timezones', methods=['GET'])
 def get_timezones():
     """Get IANA timezone identifiers with human-friendly display names"""
-    from flask import jsonify
     from utils.timezones import TIMEZONE_NAME_MAP
     try:
         return jsonify(TIMEZONE_NAME_MAP)
