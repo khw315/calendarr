@@ -2,7 +2,7 @@
     "language_name": "Bahasa Indonesia",
     "movies_heading": "FILM",
     "header_text": "Rilis Baru",
-    "date_header": "{day_name}, {short_month_name} {day}",
+    "date_header": "{day_name}, {day} {short_month_name}",
     "mention_instruction": "Jika ingin diberi tahu saat ada konten baru, bergabunglah dengan role ini!",
     "timezone_message": "Semua waktu ditampilkan dalam {timezone}",
     "no_new_releases_messages": [
@@ -15,8 +15,9 @@
         "Nikmati harimu — tidak ada rilis yang dijadwalkan.",
         "Kalender kosong; semoga waktu istirahatmu menyenangkan.",
         "Tidak ada acara atau film baru hari ini; bersantailah dan nikmati.",
+        "Santai saja — tidak ada rilis yang direncanakan untuk saat ini.",
         "Tidak ada rilis yang dijadwalkan saat ini.",
-        "Server ingin beristirahat."
+        "Server sedang beristirahat."
     ],
     "no_day_content_messages": [
         "Tidak ada rilis yang dijadwalkan untuk hari ini.",
@@ -26,10 +27,11 @@
         "Hari ini tidak ada rilis yang dijadwalkan.",
         "Kalender menunjukkan tidak ada rilis baru untuk hari ini.",
         "Nikmati harimu — tidak ada konten baru yang dijadwalkan.",
+        "Tidak ada acara atau film baru yang direncanakan untuk hari ini.",
         "Silakan beristirahat — tidak ada yang dijadwalkan untuk hari ini.",
         "Jadwal hari ini kosong; bersantailah dan nikmati.",
         "Tidak ada rilis yang dijadwalkan saat ini.",
-        "Server ingin beristirahat."
+        "Server sedang beristirahat."
     ],
     "subheader_templates": {
         "tv": "{count} {label}",

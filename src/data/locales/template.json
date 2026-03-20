@@ -18,7 +18,8 @@
         "TODO: The calendar is empty; have a restful time.",
         "TODO: No new shows or movies today; unwind and enjoy.",
         "TODO: Take it easy — no releases planned for now.",
-        "TODO: No scheduled releases at this time."
+        "TODO: No scheduled releases at this time.",
+        "TODO: Server is taking a break."
     ],
     "no_day_content_messages": [
         "YOU CAN ADD YOUR OWN MESSAGES HERE",
@@ -32,7 +33,8 @@
         "TODO: No new shows or movies planned for today.",
         "TODO: Take a break — nothing new is scheduled for today.",
         "TODO: The schedule is empty for today; relax and enjoy.",
-        "TODO: No scheduled releases at this time."
+        "TODO: No scheduled releases at this time.",
+        "TODO: Server is taking a break."
     ],
     "subheader_templates": {
         "tv": "{count} {label}",
