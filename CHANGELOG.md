@@ -5,6 +5,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] 2026-03-20
+
+### Added
+
+- Web UI, API endpoints, and past releases view.
+- Settings UI and persistent configuration system.
+- Dark mode (toggle).
+- Localization support with per-language files (EN, ID, KO, JA).
+- Timezone API and dynamic timezone selection.
+- Grouping of TV episodes into bulk events.
+- Display of end time and current airing status.
+- Localized empty state for no releases, including random selection messages.
+- Configurable past releases lookup.
+- GitHub action workflows (CodeQL, labeler, dependabot) and issue templates.
+
+### Changed
+
+- Refactored configuration logic, centralized bulk thresholds, and standardized timezone keys.
+- Refactored shared Header and Footer; reorganized settings structure.
+- Changed license from MIT to GPL v3.0.
+- Updated Web UI design to Neobrutalist aesthetic.
+- Improved event countdowns, airing states, and overall UI polish.
+- Optimized Docker image and updated GHCR login configurations.
+
+### Fixed
+
+- Minor H1 formatting issues in headers.
+- Docker command formatting.
+
+### Removed
+
+- `.github/FUNDING.yml`.
+- 30-day date range option.
+- "Releases" navigation link from settings.
+- Copyright text from the footer.
+
 ## [1.5.0] 2025-04-15
 
 ### Added
