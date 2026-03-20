@@ -329,7 +329,12 @@ class  DiscordPlatform(Platform):
             safe_header = str(header_text) if header_text is not None else ""
             safe_subheader = str(subheader).rstrip() if subheader is not None else "" # Use rstrip here
 
-            final_content = f"# {safe_header}\n\n{safe_subheader}"
+            # Omit the header title when there are no releases;
+            if tv_count == 0 and movie_count == 0:
+                nothing_new_message = get_random_message(self.config.language, "no_new_releases")
+                final_content = f"# {nothing_new_message}"
+            else:
+                final_content = f"# {safe_header}\n\n{safe_subheader}"
             logger.debug("🖌️  format_header - Assembled base final_content")
 
             if timezone_line:
@@ -545,24 +550,35 @@ class SlackPlatform(Platform):
         # --- Assemble Blocks ---
         blocks = []
 
-        # Add Header Block
-        blocks.append({
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": header_text
-            }
-        })
-
-        # Add Section Block only if it has content
-        if section_block_text:
+        if tv_count == 0 and movie_count == 0:
+            # No releases: render the empty message at header size
+            nothing_new_message = get_random_message(self.config.language, "no_new_releases")
             blocks.append({
-                "type": "section",
+                "type": "header",
                 "text": {
-                    "type": "mrkdwn",
-                    "text": section_block_text
+                    "type": "plain_text",
+                    "text": nothing_new_message
                 }
             })
+        else:
+            # Add Header Block
+            blocks.append({
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": header_text
+                }
+            })
+
+            # Add Section Block only if it has content
+            if section_block_text:
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": section_block_text
+                    }
+                })
 
         return {
             "blocks": blocks
