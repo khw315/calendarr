@@ -3,56 +3,52 @@
 
 # Calendarr
 
-A simple Docker container that fetches upcoming airings/releases for TV shows and movies from Sonarr and Radarr calendars and posts them to Discord on a schedule.
+A simple, lightweight Docker container that fetches upcoming airings and releases for TV shows and movies directly from your **Sonarr** and **Radarr** calendars, and seamlessly posts them to **Discord** or **Slack** on a schedule.
 
 ![Example Discord post](screenshots/discord.png)
 
 ## Features
 
-- **Web UI**: Beautiful dashboard to view upcoming events, trigger manual runs, and view configuration.
-- **Consolidated Feed**: Combines multiple Sonarr and Radarr calendar feeds into one summary.
-- **Smart Grouping**: Groups shows and movies by day of the week for easy reading.
-- **Flexible Scheduling**: Runs on a customizable schedule (Daily or Weekly) or Cron expression.
-- **Multi-Platform**: Supports both Discord and Slack notifications.
-- **Localization**: Native support for English (EN), Korean (KO), Japanese (JA), and Indonesian (ID).
-- **Dynamic Timezones**: Automatically adapts to your configured timezone.
-- **Highly Customizable**: Configure headers, footers, timestamp styles, and more.
+- **Consolidated Feed**: Combines multiple Sonarr and Radarr calendar iCal feeds into one beautiful, easy-to-read summary.
+- **Modern Web UI**: A bold, Neobrutalist dashboard to view upcoming events, manually trigger runs, and configure your settings on the fly.
+- **Smart Grouping**: Groups upcoming shows and movies intelligently by day of the week to maximize readability and reduce notification fatigue.
+- **Flexible Scheduling**: Runs exactly when you want it to. Choose a Daily schedule, a Weekly summary, or provide your own robust Cron expression.
+- **Multi-Platform Integrations**: Effortlessly supports Webhooks for both Discord and Slack out-of-the-box.
+- **Localization Support**: Native translation support for English (EN), Korean (KO), Japanese (JA), and Indonesian (ID).
+- **Dynamic Timezones**: Automatically adapts all outputs and schedules to your explicitly configured timezone without any rigid system dependencies.
+- **Extremely Customizable**: Configure headers, footers, timestamp styles, and custom role mentions dynamically.
 
-## Web UI
+---
 
-Calendarr now includes a modern Web UI for easy management and visualization!
+## Web UI Dashboard
 
-### Accessing the Web UI
+Calendarr features a modern Web UI for visualization and configuration without forcing you to restart the container or edit raw files.
 
-Once your container is running, access the Web UI at:
-```
+### Accessing the Dashboard
+Once the container is spun up, access the Web UI at:
+```text
 http://localhost:5000
 ```
+*(Or replace `localhost` with your remote server IP).*
 
-Or if running on a remote server:
-```
-http://YOUR_SERVER_IP:5000
-```
-
-### Web UI Features
-
-- **Dashboard**: View statistics including upcoming events count, next scheduled run, and schedule type
-- **Calendar View**: See all upcoming TV shows and movies grouped by day with color-coding
-- **Manual Trigger**: Run the calendar job on-demand with a single click
-- **Configuration Viewer**: View all current settings and platform configurations
-- **Auto-Refresh**: Events automatically refresh every 60 seconds
-- **Modern Design**: Bold Neobrutalist UI with high contrast, vibrant colors, and sharp shadows
+### UI Capabilities
+- **Dashboard Hub**: View analytics including upcoming events count, the next scheduled cron run, and your schedule type.
+- **Live Calendar View**: See all upcoming releases cleanly grouped by day, complete with color-coding for TV versus Movies.
+- **Manual Automation Trigger**: Force-run the synchronization job instantly with a single button click.
+- **Visual Configuration Viewer**: Edit your settings, URLs, scheduling, and timezone dynamically.
+- **Auto-Refresh Data**: The event dashboard automatically syncs and refreshes dynamically.
 
 ![Web UI Screenshot](screenshots/preview.png)
 
+---
+
 ## Getting Started
 
-Available via `ghcr.io/khw315/calendarr:latest`.
+The official image is available via `ghcr.io/khw315/calendarr:latest`
 
-### With Docker Compose (Recommended)
+### Option 1: Docker Compose (Recommended)
 
-1.  **Create a `docker-compose.yml`**:
-
+1. **Create your `docker-compose.yml`**:
 ```yaml
 services:
   calendarr:
@@ -60,22 +56,20 @@ services:
     container_name: calendarr
     restart: unless-stopped
     ports:
-      - "5000:5000"  # Web UI - Access at http://localhost:5000
+      - "5000:5000"  # Web UI Access
     volumes:
-      # Mount config directory to save settings from Web UI
       - ./calendarr/config:/app/config:rw
-      # Mount logs directory (optional but recommended)
-      - ./calendarr/logs:/app/logs:rw
+      - ./calendarr/logs:/app/logs:rw  # Optional but recommended
 ```
 
-2.  **Run it**:
+2. **Spin it up**:
 ```bash
 docker compose up -d
 ```
 
-3.  **Configure it**: Open `http://localhost:5000` to access the Web UI and set up your webhooks, schedules, and calendars!
+3. **Configure the App**: Navigate to `http://localhost:5000` to setup your webhook integrations, schedules, and your calendar URLs!
 
-### With Docker CLI
+### Option 2: Docker CLI
 
 ```bash
 docker run -d \
@@ -86,87 +80,97 @@ docker run -d \
   ghcr.io/khw315/calendarr:latest
 ```
 
-### To Run Offschedule 
+### Manual Trigger (Off-schedule)
+If you ever want to bypass the internal scheduler purely through standard CLI commands:
+1. Hit the "Run Now" button on the Web UI.
+2. POST a request to `http://localhost:5000/api/trigger` with command:
+   ```bash
+   curl -X POST http://localhost:5000/api/trigger
+   ```
+3. Execute the primary thread manually:
+   `docker exec -it calendarr python src/main.py`
 
-1. Start the container via the compose file with `docker compose up -d`
-2. Use the command `docker exec -it calendarr python src/main.py`
+---
 
-## Configuration
+## App Configuration
 
-Configure the application directly from the **Web UI**! All changes apply instantly without requiring container restarts and are saved persistently to your mapped `/app/config` volume. 
+Configuration is managed directly from the **Web UI**. All changes will seamlessly apply instantly without restarting the orchestrator, and are persisted mapped into your `/app/config` volume automatically.
 
-The following settings are available in the Settings tab:
-
-| Setting Group | Settings Available |
+| Settings Panel | Description |
 | :--- | :--- |
-| **Calendars** | Add multiple Sonarr/Radarr calendar iCal URLs and define their media type (`tv` or `movie`). |
-| **Integrations** | Enable Discord or Slack notifications, input your Webhook URLs, and configure mention instructions/styles. |
-| **Format** | Customize language, headers, and footer toggles. |
-| **Event Display** | Define how past/duplicate events are handled, toggle 24-hour time, and timezone display options. |
-| **Schedule** | Set the timezone, Daily/Weekly schedule, specific Run Time, or provide a raw Cron expression. |
-| **Advanced** | Toggle system debug logging, max log sizes, and HTTP timeouts. |
+| **Calendars** | Add endless Sonarr or Radarr `iCal` URLs and declare their media target (`tv` or `movie`). |
+| **Integrations** | Enable/Disable Discord and Slack delivery triggers. Define custom Webhook URLs and role mentions. |
+| **Format** | Adjust your primary locale translation engine, header verbosity, and dynamic footer injections. |
+| **Event Display** | Define logic rules for duplicate event resolutions, toggle 24-hour timestamp clocks, and TZ metadata. |
+| **Schedule** | Instruct internal Chron schedulers for Daily logic, Weekly recaps, absolute Run Times, or Raw Cron inputs. |
+| **Advanced** | Developer settings for logging velocity controls, max file chunking, debugging, and strict HTTP boundaries. |
 
-*(Note: Advanced users can optionally pre-seed configurations via environment variables, but the Web UI is recommended for all typical modifications.)*
+---
 
-## Obtaining Calendar URLs
+## Syncing Calendars (Sonarr/Radarr)
 
-### Sonarr / Radarr
-1.  Go to **Settings** > **General**.
-2.  Copy your **API Key**.
-3.  Construct your URL:
-    *   **Sonarr**: `http://YOUR_HOST:8989/feed/v3/calendar/Sonarr.ics?apikey=YOUR_API_KEY`
-    *   **Radarr**: `http://YOUR_HOST:7878/feed/v3/calendar/Radarr.ics?apikey=YOUR_API_KEY`
+Calendarr processes external standard `iCal` (.ics) endpoints. To fetch these:
+1. In your media manager (Sonarr or Radarr), navigate to **Settings** > **General**.
+2. Copy your static **API Key**.
+3. Construct the endpoint URLs manually logic:
+   - **Sonarr**: `http://YOUR_HOST:8989/feed/v3/calendar/Sonarr.ics?unmonitored=true&apikey=YOUR_API_KEY`
+   - **Radarr**: `http://YOUR_HOST:7878/feed/v3/calendar/Radarr.ics?unmonitored=true&apikey=YOUR_API_KEY`
 
-*Alternatively, use the "Calendar > iCal Link" button in the UI (ensure no tags/filters are selected).*
+*Pro-tip: You can quickly utilize the **Calendar > iCal Link** dashboard UI button natively in Sonarr/Radarr.*
 
-## Custom Footers
+---
 
-You can inject text into the footer of your messages.
+## Local Development
 
-1.  Set `ENABLE_CUSTOM_DISCORD_FOOTER=true` (or Slack equivalent).
-2.  Footers are now controlled entirely via the language translation engine. Edit the `footers` block within your chosen `src/data/locales/*.json` language file to use your desired markdown text.
+### Prerequisites & Tech Stack
+- **Backend Framework**: Python (Flask)
+- **Frontend Framework**: React + TypeScript (Vite + TailwindCSS)
+- **Tooling Engine**: [`uv`](https://github.com/astral-sh/uv) (Python Packager)
 
-## Development
+### 1. Repository Setup
 
-### Local Setup (Backend + Frontend)
+Clone the source matrix:
+```bash
+git clone https://github.com/khw315/calendarr.git
+cd calendarr
+```
 
-This project uses Python for the backend and React/Vite for the Web UI. We recommend using [`uv`](https://github.com/astral-sh/uv) for Python package management.
+### 2. Starting the Backend Server
+Initialize the Python stack. `uv` will safely scaffold and run standard execution logic directly without boilerplate configurations:
+```bash
+uv run src/app.py
+```
+*(The backend logic API sits at `localhost:5000`)*
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/khw315/calendarr.git
-    cd calendarr
-    ```
+### 3. Starting the Frontend UI
+In a separate terminal, deploy the hot-reload Vite server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*(Development GUI is served via `localhost:5173` with proxy linking API queries down to the backend `5000` port).*
 
-2.  **Start the Backend:**
-    Open a terminal in the root directory and run:
-    ```bash
-    uv run src/app.py
-    ```
-    This will install dependencies and start the backend server on `http://localhost:5000`.
+### 4. Running Backend Tests
+Calendarr holds a robust internal test suite managed via `pytest`. Running the test suite ensures configurations (like translations) natively conform securely to runtime patterns:
+```bash
+uv pip install -r requirements-test.txt
+uv run pytest tests/
+```
 
-3.  **Start the Frontend:**
-    Open a new terminal, navigate to the `frontend` directory, and start the Vite dev server:
-    ```bash
-    cd frontend
-    npm install
-    npm run dev
-    ```
-    Access the Web UI development server at `http://localhost:5173`. Any changes to the frontend code will hot-reload automatically.
-
-### Docker Build
-
-To build the container locally instead:
-
+### 5. Docker Builds
+If you desire testing raw container builds directly inside an isolated space:
 ```bash
 docker build -t calendarr .
 ```
 
+---
+
 ## Contributing
 
-Contributions are welcome!
-- **Localization**: Help us translate Calendarr into more languages by adding to `src/data/locales.json`.
-- **Features**: Submit PRs for new platform integrations or improvements.
+Continuous Open-Source participation is heavily valued!
+- **Features**: Submit PRs containing architectural backend integrations, frontend tweaks, or general enhancements.
+- **Localization**: Improve or append dictionaries directly toward `src/data/locales/`. The JSON system inherently cascades template mappings into global text hooks globally.
 
 ## License
 
