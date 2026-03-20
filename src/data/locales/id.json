@@ -2,7 +2,7 @@
     "language_name": "Bahasa Indonesia",
     "movies_heading": "FILM",
     "header_text": "Rilis Baru",
-    "date_header": "{day_name}, {day} {short_month_name}",
+    "date_header": "{day_name}, {day_num} {short_month_name}",
     "mention_instruction": "Jika ingin diberi tahu saat ada konten baru, bergabunglah dengan role ini!",
     "timezone_message": "Semua waktu ditampilkan dalam {timezone}",
     "no_new_releases_messages": [

@@ -2,7 +2,7 @@
     "language_name": "日本語",
     "movies_heading": "映画",
     "header_text": "新しいリリース",
-    "date_header": "{month}月{day}日（{day_name}）",
+    "date_header": "{month_num}月{day_num}日（{day_name}）",
     "mention_instruction": "新しいコンテンツの通知を受け取りたい場合は、このロールに参加してください！",
     "timezone_message": "時間は{timezone}基準で表示されます",
     "no_new_releases_messages": [

@@ -2,7 +2,7 @@
     "language_name": "한국어",
     "movies_heading": "영화",
     "header_text": "새로운 콘텐츠",
-    "date_header": "{month}월 {day}일 {day_name}",
+    "date_header": "{month_num}월 {day_num}일 {day_name}",
     "mention_instruction": "새로운 콘텐츠가 올라오면 알림을 받고 싶다면 이 역할에 참여하세요!",
     "timezone_message": "{timezone} 기준으로 시간이 표시됩니다",
     "no_new_releases_messages": [

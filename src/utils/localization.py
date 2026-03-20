@@ -236,7 +236,7 @@ def get_short_month_name(language: str, month: int) -> str:
 def format_date(date_obj: date | datetime, language: str) -> str:
     """
     Format a date using the localized 'date_header' template.
-    Supported placeholders: {year}, {month}, {day}, {day_name}, {short_day_name}, {month_name}, {short_month_name}
+    Supported placeholders: {year}, {month}, {month_num}, {day}, {day_num}, {day_name}, {short_day_name}, {month_name}, {short_month_name}
     """
     template = get_text(language, "date_header")
     # Fallback if specific language template is missing
@@ -247,6 +247,8 @@ def format_date(date_obj: date | datetime, language: str) -> str:
     year = str(date_obj.year)
     month = f"{date_obj.month:02d}"
     day = f"{date_obj.day:02d}"
+    month_num = str(date_obj.month)
+    day_num = str(date_obj.day)
     
     # Get localized names
     day_name = get_day_name(language, date_obj.weekday())
@@ -258,6 +260,8 @@ def format_date(date_obj: date | datetime, language: str) -> str:
         year=year,
         month=month,
         day=day,
+        month_num=month_num,
+        day_num=day_num,
         day_name=day_name,
         short_day_name=short_day_name,
         month_name=month_name,

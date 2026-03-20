@@ -3,7 +3,7 @@
     "language_name": "TODO: Localized Language Name (e.g. Français, Deutsch)",
     "movies_heading": "TODO: MOVIES",
     "header_text": "TODO: New Releases",
-    "date_header": "TODO (e.g. {day_name}, {short_month_name} {day}) - must include {day_name}, {short_month_name}, {day} placeholders",
+    "date_header": "TODO (e.g. {day_name}, {short_month_name} {day_num}) - must include placeholders like {day_name}, {short_month_name}, {day_num}",
     "mention_instruction": "TODO: If you'd like to be notified when new content is available, join this role!",
     "timezone_message": "TODO: All times shown in {timezone} - must include {timezone} placeholder",
     "no_new_releases_messages": [
