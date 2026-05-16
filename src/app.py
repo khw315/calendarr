@@ -178,6 +178,7 @@ def get_events():
                         'end_time': first.end_time_str if hasattr(first, 'end_time_str') else None,
                         'end_timestamp': first.end_timestamp if hasattr(first, 'end_timestamp') else None,
                         'type': 'tv',
+                        'is_series_finale': any(getattr(e, 'is_series_finale', False) for e in group),
                         'is_bulk': True,
                         'episode_count': len(group)
                     })
@@ -190,7 +191,8 @@ def get_events():
                             'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
                             'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
                             'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
-                            'type': 'tv'
+                            'type': 'tv',
+                            'is_series_finale': getattr(event_item, 'is_series_finale', False)
                         })
             
             for event_item in day.movie_events:
@@ -204,7 +206,8 @@ def get_events():
                     'timestamp': event_item.timestamp if hasattr(event_item, 'timestamp') else None,
                     'end_time': event_item.end_time_str if hasattr(event_item, 'end_time_str') else None,
                     'end_timestamp': event_item.end_timestamp if hasattr(event_item, 'end_timestamp') else None,
-                    'type': 'movie'
+                    'type': 'movie',
+                    'is_series_finale': getattr(event_item, 'is_series_finale', False)
                 })
             
             # Only include days that have events (after filtering)
@@ -294,6 +297,7 @@ def get_past_events():
                         'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                         'type': 'tv',
                         'timestamp': getattr(first, 'timestamp', None),
+                        'is_series_finale': any(getattr(e, 'is_series_finale', False) for e in group),
                         'is_bulk': True,
                         'episode_count': len(group)
                     })
@@ -305,7 +309,8 @@ def get_past_events():
                             'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
                             'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                             'type': 'tv',
-                            'timestamp': getattr(event_item, 'timestamp', None)
+                            'timestamp': getattr(event_item, 'timestamp', None),
+                            'is_series_finale': getattr(event_item, 'is_series_finale', False)
                         })
             
             # Check movie events
@@ -316,7 +321,8 @@ def get_past_events():
                         'start_time': event_item.time_str if hasattr(event_item, 'time_str') else None,
                         'date': day.date.strftime('%B %d, %Y') if day.date else day.name,
                         'type': 'movie',
-                        'timestamp': getattr(event_item, 'timestamp', None)
+                        'timestamp': getattr(event_item, 'timestamp', None),
+                        'is_series_finale': getattr(event_item, 'is_series_finale', False)
                     })
         
         return jsonify({

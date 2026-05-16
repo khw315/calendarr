@@ -15,6 +15,7 @@ interface EventItem {
   end_timestamp?: number
   is_bulk?: boolean
   episode_count?: number
+  is_series_finale?: boolean
 }
 
 interface DayGroup {
@@ -280,7 +281,9 @@ export default function App() {
                             {isAiring && <span className="airing-badge">ON AIR</span>}
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
                             <div className="event-title">
-                              {ev.title} {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                              {ev.title}
+                              {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                              {ev.is_series_finale && <span className="finale-badge">Series End</span>}
                             </div>
                             {ev.start_time && (
                               <div className="event-time" data-original-time={ev.start_time}>
@@ -352,7 +355,9 @@ export default function App() {
                           <div key={j} className={`event-card brutal-card event-${ev.type} event-past`}>
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
                             <div className="event-title">
-                              {ev.title} {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                              {ev.title}
+                              {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                              {ev.is_series_finale && <span className="finale-badge">Series End</span>}
                             </div>
                             {(ev.start_time || ev.date) && (
                               <div className="event-time">

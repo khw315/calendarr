@@ -21,6 +21,7 @@ class EventItem:
     summary: str
     source_type: str  # "tv" or "movie"
     is_premiere: bool = False
+    is_series_finale: bool = False
     is_past: bool = False
     time_str: Optional[str] = None
     end_time: Optional[str] = None

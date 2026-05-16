@@ -211,11 +211,14 @@ class  DiscordPlatform(Platform):
                          # If ALL are past, strike through. If ANY is premiering (unlikely for bulk?), add party.
                          all_past = all(e.is_past for e in group)
                          is_premiere = any(e.is_premiere for e in group)
+                         is_series_finale = any(e.is_series_finale for e in group)
                          
                          line = f"{DISCORD_BOLD_START}{show_name_to_format}{DISCORD_BOLD_END}{timestamp_suffix}"
                          
                          if is_premiere:
                              line += "  🎉"
+                         if is_series_finale:
+                             line += "  🏁 Series End"
                          
                          if all_past and self.config.passed_event_handling == "STRIKE":
                              line = f"{DISCORD_STRIKE_START}{line}{DISCORD_STRIKE_END}"
@@ -405,6 +408,8 @@ class  DiscordPlatform(Platform):
         formatted = f"{time_prefix}{formatted_show}{episode_details}{timestamp_suffix}"
         if event_item.is_premiere:
             formatted += "  🎉"
+        if event_item.is_series_finale:
+            formatted += "  🏁 Series End"
         if event_item.is_past and passed_event_handling == "STRIKE":
             formatted = f"{DISCORD_STRIKE_START}{formatted}{DISCORD_STRIKE_END}"
 

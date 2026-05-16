@@ -68,6 +68,40 @@ class Event:
             String key in format "Day, Mon DD"
         """
         return self.start_time.strftime('%A, %b %d')
+
+    @property
+    def is_series_finale(self) -> bool:
+        """
+        Check if this occurrence is the final one in a recurring series.
+
+        Returns:
+            Boolean indicating if this event is the last occurrence by RRULE UNTIL.
+        """
+        rrule = self.raw_event.get("RRULE")
+        if not rrule:
+            return False
+
+        until_value = rrule.get("UNTIL")
+        if not until_value:
+            return False
+
+        if isinstance(until_value, (list, tuple)):
+            until_value = until_value[0] if until_value else None
+        if until_value is None:
+            return False
+
+        # UNTIL can be either a date or datetime in iCal feeds.
+        if isinstance(until_value, date) and not isinstance(until_value, datetime):
+            return self.start_time.date() == until_value
+
+        if isinstance(until_value, datetime):
+            if until_value.tzinfo is None:
+                until_value = until_value.replace(tzinfo=self.start_time.tzinfo or pytz.UTC)
+            else:
+                until_value = until_value.astimezone(self.start_time.tzinfo or pytz.UTC)
+            return self.start_time.date() == until_value.date()
+
+        return False
     
     def get_event_key(self) -> Tuple[str, date]:
         """

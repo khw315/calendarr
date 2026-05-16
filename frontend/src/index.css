@@ -618,6 +618,20 @@ body {
     display: inline-block;
 }
 
+
+.finale-badge {
+    background: var(--color-warning);
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #000;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
 [data-theme='dark'] .bulk-badge {
     background-color: var(--color-bg-tertiary);
     border-color: var(--color-border);

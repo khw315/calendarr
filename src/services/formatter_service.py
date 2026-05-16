@@ -230,6 +230,7 @@ class FormatterService:
             summary=summary,
             source_type=event.source_type,
             is_premiere=is_premiere,
+            is_series_finale=event.is_series_finale,
             is_past=event.is_past,
             time_str=time_str,
             end_time=event.end_time.isoformat(),
