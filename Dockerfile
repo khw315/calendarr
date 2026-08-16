@@ -23,9 +23,11 @@ FROM alpine:3.21
 
 WORKDIR /app
 
-LABEL org.opencontainers.image.source=https://github.com/khw315/calendarr
+LABEL org.opencontainers.image.title="Calendarr"
 LABEL org.opencontainers.image.description="Calendar feeds from Sonarr/Radarr to Discord and Slack"
-LABEL org.opencontainers.image.licenses=GPL-3.0
+LABEL org.opencontainers.image.source="https://github.com/khw315/calendarr"
+LABEL org.opencontainers.image.documentation="https://github.com/khw315/calendarr/blob/main/README.md"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
 
 RUN apk add --no-cache ca-certificates tzdata && \
     addgroup -S calendarr && adduser -S calendarr -G calendarr
