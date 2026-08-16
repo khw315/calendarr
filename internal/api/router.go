@@ -150,21 +150,45 @@ func (r *Router) handleGetSchedule(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
-func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set(contentTypeHeader, contentTypeJSON)
-	w.WriteHeader(http.StatusOK)
-	cfg := r.cfgMgr.Get()
-
-	loc := cfg.TimezoneLocation
-	if loc == nil {
-		loc = time.UTC
-	}
-
+func (r *Router) getDaysQueryParam(req *http.Request) int {
 	days := 7
 	if dStr := req.URL.Query().Get("days"); dStr != "" {
 		if d, err := strconv.Atoi(dStr); err == nil && d > 0 {
 			days = d
 		}
+	}
+	return days
+}
+
+func (r *Router) fetchEventsForRange(req *http.Request, startDate, endDate time.Time) ([]*models.Event, *models.Config, *time.Location) {
+	cfg := r.cfgMgr.Get()
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	var events []*models.Event
+	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
+		fetched, err := r.calSvc.FetchEvents(req.Context(), cfg, startDate, endDate)
+		if err == nil {
+			events = fetched
+		}
+	}
+	if events == nil {
+		events = r.schedSvc.GetCachedEvents()
+	}
+	return events, cfg, loc
+}
+
+func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+
+	days := r.getDaysQueryParam(req)
+	cfg := r.cfgMgr.Get()
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
 	}
 
 	now := time.Now().In(loc)
@@ -172,35 +196,19 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 	startDate := startOfDay
 	endDate := startOfDay.AddDate(0, 0, days).Add(-1 * time.Nanosecond)
 
-	var events []*models.Event
-	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
-		fetched, err := r.calSvc.FetchEvents(req.Context(), cfg, startDate, endDate)
-		if err == nil {
-			events = fetched
-		}
-	}
-	if events == nil {
-		events = r.schedSvc.GetCachedEvents()
-	}
-
+	events, cfg, loc := r.fetchEventsForRange(req, startDate, endDate)
 	r.respondWithEventsDTO(w, cfg, loc, events)
 }
 
 func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	cfg := r.cfgMgr.Get()
 
+	days := r.getDaysQueryParam(req)
+	cfg := r.cfgMgr.Get()
 	loc := cfg.TimezoneLocation
 	if loc == nil {
 		loc = time.UTC
-	}
-
-	days := 7
-	if dStr := req.URL.Query().Get("days"); dStr != "" {
-		if d, err := strconv.Atoi(dStr); err == nil && d > 0 {
-			days = d
-		}
 	}
 
 	now := time.Now().In(loc)
@@ -208,16 +216,7 @@ func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request)
 	startDate := startOfDay.AddDate(0, 0, -days)
 	endDate := startOfDay.Add(-1 * time.Nanosecond)
 
-	var events []*models.Event
-	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
-		fetched, err := r.calSvc.FetchEvents(req.Context(), cfg, startDate, endDate)
-		if err == nil {
-			events = fetched
-		}
-	}
-	if events == nil {
-		events = r.schedSvc.GetCachedEvents()
-	}
+	events, cfg, loc := r.fetchEventsForRange(req, startDate, endDate)
 
 	var pastEvents []*models.Event
 	for _, ev := range events {
