@@ -74,7 +74,47 @@ func TestAPIRoutes(t *testing.T) {
 		t.Errorf("Expected status 400 on bad JSON POST /api/config, got %d", recBadPost.Code)
 	}
 
-	// 5. POST /api/trigger
+	// 5. GET /api/languages
+	reqLang := httptest.NewRequest(http.MethodGet, "/api/languages", nil)
+	recLang := httptest.NewRecorder()
+	handler.ServeHTTP(recLang, reqLang)
+	if recLang.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on /api/languages, got %d", recLang.Code)
+	}
+
+	// 6. GET /api/schedule
+	reqSched := httptest.NewRequest(http.MethodGet, "/api/schedule", nil)
+	recSched := httptest.NewRecorder()
+	handler.ServeHTTP(recSched, reqSched)
+	if recSched.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on /api/schedule, got %d", recSched.Code)
+	}
+
+	// 7. GET /api/releases
+	reqRel := httptest.NewRequest(http.MethodGet, "/api/releases", nil)
+	recRel := httptest.NewRecorder()
+	handler.ServeHTTP(recRel, reqRel)
+	if recRel.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on /api/releases, got %d", recRel.Code)
+	}
+
+	// 8. GET /api/timezones
+	reqTZ := httptest.NewRequest(http.MethodGet, "/api/timezones", nil)
+	recTZ := httptest.NewRecorder()
+	handler.ServeHTTP(recTZ, reqTZ)
+	if recTZ.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on /api/timezones, got %d", recTZ.Code)
+	}
+
+	// 9. OPTIONS /api/config (CORS preflight)
+	reqOpt := httptest.NewRequest(http.MethodOptions, "/api/config", nil)
+	recOpt := httptest.NewRecorder()
+	handler.ServeHTTP(recOpt, reqOpt)
+	if recOpt.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on OPTIONS /api/config, got %d", recOpt.Code)
+	}
+
+	// 10. POST /api/trigger
 	reqTrigger := httptest.NewRequest(http.MethodPost, "/api/trigger", nil)
 	recTrigger := httptest.NewRecorder()
 	handler.ServeHTTP(recTrigger, reqTrigger)

@@ -179,11 +179,17 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	c.applyFlatStringFields(raw)
+	c.applyFlatBoolFields(raw)
+	c.applyFlatScheduleAndLoggingFields(raw)
+	c.applyFlatCalendarURLs(raw)
+
+	return nil
+}
+
+func (c *Config) applyFlatStringFields(raw map[string]interface{}) {
 	if val, ok := raw["APP_LANGUAGE"].(string); ok && val != "" {
 		c.Language = val
-	}
-	if val, ok := raw["USE_DISCORD"].(bool); ok {
-		c.UseDiscord = val
 	}
 	if val, ok := raw["DISCORD_WEBHOOK_URL"].(string); ok {
 		c.DiscordWebhookURL = val
@@ -191,11 +197,26 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["DISCORD_MENTION_ROLE_ID"].(string); ok {
 		c.DiscordMentionRoleID = val
 	}
-	if val, ok := raw["DISCORD_HIDE_MENTION_INSTRUCTIONS"].(bool); ok {
-		c.DiscordHideMentionInstructions = val
-	}
 	if val, ok := raw["DISCORD_TIMESTAMP_STYLE"].(string); ok {
 		c.DiscordTimestampStyle = val
+	}
+	if val, ok := raw["SLACK_WEBHOOK_URL"].(string); ok {
+		c.SlackWebhookURL = val
+	}
+	if val, ok := raw["PASSED_EVENT_HANDLING"].(string); ok {
+		c.PassedEventHandling = val
+	}
+	if val, ok := raw["TZ"].(string); ok && val != "" {
+		c.Timezone = val
+	}
+}
+
+func (c *Config) applyFlatBoolFields(raw map[string]interface{}) {
+	if val, ok := raw["USE_DISCORD"].(bool); ok {
+		c.UseDiscord = val
+	}
+	if val, ok := raw["DISCORD_HIDE_MENTION_INSTRUCTIONS"].(bool); ok {
+		c.DiscordHideMentionInstructions = val
 	}
 	if val, ok := raw["ENABLE_CUSTOM_DISCORD_FOOTER"].(bool); ok {
 		c.EnableCustomDiscordFooter = val
@@ -203,14 +224,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["USE_SLACK"].(bool); ok {
 		c.UseSlack = val
 	}
-	if val, ok := raw["SLACK_WEBHOOK_URL"].(string); ok {
-		c.SlackWebhookURL = val
-	}
 	if val, ok := raw["ENABLE_CUSTOM_SLACK_FOOTER"].(bool); ok {
 		c.EnableCustomSlackFooter = val
-	}
-	if val, ok := raw["PASSED_EVENT_HANDLING"].(string); ok {
-		c.PassedEventHandling = val
 	}
 	if val, ok := raw["DEDUPLICATE_EVENTS"].(bool); ok {
 		c.DeduplicateEvents = val
@@ -221,11 +236,6 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["SHOW_TIMEZONE_IN_SUBHEADER"].(bool); ok {
 		c.ShowTimezoneInSubheader = val
 	}
-	if val, ok := raw["TZ"].(string); ok && val != "" {
-		c.Timezone = val
-	}
-
-	// TimeSettings
 	if val, ok := raw["USE_24_HOUR"].(bool); ok {
 		c.TimeSettings.Use24Hour = val
 	}
@@ -235,8 +245,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["DISPLAY_TIME"].(bool); ok {
 		c.TimeSettings.DisplayTime = val
 	}
+}
 
-	// ScheduleSettings
+func (c *Config) applyFlatScheduleAndLoggingFields(raw map[string]interface{}) {
 	if val, ok := raw["SCHEDULE_TYPE"].(string); ok && val != "" {
 		c.ScheduleSettings.ScheduleType = val
 	}
@@ -252,8 +263,6 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["RUN_ON_STARTUP"].(bool); ok {
 		c.ScheduleSettings.RunOnStartup = val
 	}
-
-	// Logging & Timeout
 	if val, ok := raw["DEBUG"].(bool); ok {
 		c.LoggingSettings.DebugMode = val
 	}
@@ -266,8 +275,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if val, ok := raw["LOG_BACKUP_COUNT"].(float64); ok {
 		c.LoggingSettings.BackupCount = int(val)
 	}
+}
 
-	// CALENDAR_URLS array from FE
+func (c *Config) applyFlatCalendarURLs(raw map[string]interface{}) {
 	if rawURLs, ok := raw["CALENDAR_URLS"].([]interface{}); ok {
 		var urls []CalendarUrl
 		for _, item := range rawURLs {
@@ -281,6 +291,4 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		}
 		c.CalendarURLs = urls
 	}
-
-	return nil
 }

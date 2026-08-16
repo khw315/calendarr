@@ -12,6 +12,11 @@ import (
 
 type Service struct{}
 
+const (
+	timeFormat12Hour = "03:04 PM"
+	timeFormat24Hour = "15:04"
+)
+
 func NewService() *Service {
 	return &Service{}
 }
@@ -72,6 +77,30 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		loc = time.UTC
 	}
 
+	title, content := s.buildDiscordHeaderContent(lang, tvCount, movieCount, cfg)
+
+	if len(events) == 0 {
+		return &models.DiscordPayload{
+			Content: content,
+			Embeds: []models.DiscordEmbed{
+				{
+					Title:       title,
+					Description: localization.GetRandomMessage(lang, "no_new_releases"),
+					Color:       constants.DiscordColors["blue"],
+				},
+			},
+		}
+	}
+
+	embeds := s.buildDiscordEmbedsByDay(events, cfg, now, loc, lang)
+
+	return &models.DiscordPayload{
+		Content: content,
+		Embeds:  embeds,
+	}
+}
+
+func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount int, cfg *models.Config) (string, string) {
 	title := localization.GetText(lang, "header_text")
 	if title == "" {
 		title = localization.GetText(lang, "title")
@@ -80,7 +109,6 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		title = "Rilis Baru"
 	}
 
-	// Role mention & content header
 	contentParts := []string{fmt.Sprintf("# %s", title)}
 	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
 	if subheader != "" {
@@ -100,22 +128,10 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		contentParts = append(contentParts, mentionStr)
 	}
 
-	content := strings.Join(contentParts, "\n\n")
+	return title, strings.Join(contentParts, "\n\n")
+}
 
-	if len(events) == 0 {
-		return &models.DiscordPayload{
-			Content: content,
-			Embeds: []models.DiscordEmbed{
-				{
-					Title:       title,
-					Description: localization.GetRandomMessage(lang, "no_new_releases"),
-					Color:       constants.DiscordColors["blue"],
-				},
-			},
-		}
-	}
-
-	// Group by day for Embeds
+func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Config, now time.Time, loc *time.Location, lang string) []models.DiscordEmbed {
 	grouped := make(map[string][]*models.Event)
 	var dates []string
 
@@ -128,7 +144,6 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 	}
 
 	var embeds []models.DiscordEmbed
-
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
 		var lines []string
@@ -151,11 +166,7 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 			Color:       embedColor,
 		})
 	}
-
-	return &models.DiscordPayload{
-		Content: content,
-		Embeds:  embeds,
-	}
+	return embeds
 }
 
 func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.SlackPayload {
@@ -296,9 +307,9 @@ func (s *Service) formatTVEventDiscord(ev *models.Event, cfg *models.Config, now
 		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
 	} else if cfg.TimeSettings.DisplayTime {
 		if cfg.TimeSettings.Use24Hour {
-			timeStr = fmt.Sprintf(" — %s", t.Format("15:04"))
+			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat24Hour))
 		} else {
-			timeStr = fmt.Sprintf(" — %s", t.Format("03:04 PM"))
+			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat12Hour))
 		}
 	}
 
@@ -316,9 +327,9 @@ func (s *Service) formatMovieEventDiscord(ev *models.Event, cfg *models.Config, 
 		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
 	} else if cfg.TimeSettings.DisplayTime {
 		if cfg.TimeSettings.Use24Hour {
-			timeStr = fmt.Sprintf(" — %s", t.Format("15:04"))
+			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat24Hour))
 		} else {
-			timeStr = fmt.Sprintf(" — %s", t.Format("03:04 PM"))
+			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat12Hour))
 		}
 	}
 
@@ -334,9 +345,9 @@ func (s *Service) formatEventLineSlack(ev *models.Event, cfg *models.Config, now
 	if cfg.TimeSettings.DisplayTime {
 		t := ev.StartTime.In(loc)
 		if cfg.TimeSettings.Use24Hour {
-			timePrefix = fmt.Sprintf("`%s` ", t.Format("15:04"))
+			timePrefix = fmt.Sprintf("`%s` ", t.Format(timeFormat24Hour))
 		} else {
-			timePrefix = fmt.Sprintf("`%s` ", t.Format("03:04 PM"))
+			timePrefix = fmt.Sprintf("`%s` ", t.Format(timeFormat12Hour))
 		}
 	}
 

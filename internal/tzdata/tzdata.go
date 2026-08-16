@@ -1,9 +1,11 @@
 package tzdata
 
 import (
+	// embed is required for the //go:embed directive
 	_ "embed"
 	"sort"
 	"strings"
+	// time/tzdata embeds the IANA time zone database into the binary
 	_ "time/tzdata"
 )
 

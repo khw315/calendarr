@@ -71,3 +71,53 @@ func TestCalendarServiceEmpty(t *testing.T) {
 		t.Errorf("Expected 0 events, got %d", len(events))
 	}
 }
+
+func TestCalendarServiceDeduplicationAndErrors(t *testing.T) {
+	sampleICS := `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:dup-event-1
+SUMMARY:Duplicate Show S01E01
+DTSTART:20260816T120000Z
+DTEND:20260816T130000Z
+END:VEVENT
+BEGIN:VEVENT
+UID:dup-event-1
+SUMMARY:Duplicate Show S01E01
+DTSTART:20260816T120000Z
+DTEND:20260816T130000Z
+END:VEVENT
+END:VCALENDAR`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/calendar")
+		_, _ = w.Write([]byte(sampleICS))
+	}))
+	defer ts.Close()
+
+	svc := NewService()
+	cfg := models.DefaultConfig()
+	cfg.DeduplicateEvents = true
+	cfg.CalendarURLs = []models.CalendarUrl{
+		{URL: ts.URL, Type: constants.EventTypeTV},
+	}
+
+	startDate, _ := time.Parse("2006-01-02", "2026-08-01")
+	endDate, _ := time.Parse("2006-01-02", "2026-08-31")
+
+	events, err := svc.FetchEvents(context.Background(), cfg, startDate, endDate)
+	if err != nil {
+		t.Fatalf("FetchEvents failed: %v", err)
+	}
+
+	if len(events) != 1 {
+		t.Fatalf("Expected 1 deduplicated event, got %d", len(events))
+	}
+
+	// Unreachable server
+	badCfg := models.DefaultConfig()
+	badCfg.CalendarURLs = []models.CalendarUrl{
+		{URL: "http://127.0.0.1:59999/invalid.ics", Type: constants.EventTypeTV},
+	}
+	_, _ = svc.FetchEvents(context.Background(), badCfg, startDate, endDate)
+}

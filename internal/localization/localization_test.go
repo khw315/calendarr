@@ -2,12 +2,30 @@ package localization
 
 import (
 	"testing"
+	"time"
 )
 
 func TestLocalization(t *testing.T) {
 	langs := SupportedLanguages()
 	if len(langs) == 0 {
 		t.Errorf("Expected supported languages to be loaded")
+	}
+
+	langList := GetLanguageList()
+	if len(langList) == 0 {
+		t.Errorf("Expected GetLanguageList to return items")
+	}
+	foundEN := false
+	for _, l := range langList {
+		if l.Code == "EN" {
+			foundEN = true
+			if l.Name == "" {
+				t.Errorf("Expected EN language name to be non-empty")
+			}
+		}
+	}
+	if !foundEN {
+		t.Errorf("Expected EN in GetLanguageList")
 	}
 
 	normEN := NormalizeLanguage("en")
@@ -63,5 +81,95 @@ func TestLocalization(t *testing.T) {
 	emptyItem := getRandomItem([]string{})
 	if emptyItem != "" {
 		t.Errorf("Expected empty string for empty slice, got %s", emptyItem)
+	}
+}
+
+func TestFormatDateHeader(t *testing.T) {
+	testTime := time.Date(2026, 8, 16, 12, 0, 0, 0, time.UTC)
+
+	headerEN := FormatDateHeader(testTime, "EN")
+	if headerEN == "" {
+		t.Errorf("Expected non-empty date header for EN")
+	}
+
+	headerID := FormatDateHeader(testTime, "ID")
+	if headerID == "" {
+		t.Errorf("Expected non-empty date header for ID")
+	}
+
+	headerFR := FormatDateHeader(testTime, "FR")
+	if headerFR == "" {
+		t.Errorf("Expected non-empty date header for FR")
+	}
+
+	headerInvalid := FormatDateHeader(testTime, "INVALID")
+	if headerInvalid == "" {
+		t.Errorf("Expected non-empty date header for fallback language")
+	}
+}
+
+func TestFormatSubheader(t *testing.T) {
+	// 1. Both TV and Movie (plural)
+	subBoth := FormatSubheader("EN", 2, 3)
+	if subBoth == "" {
+		t.Errorf("Expected non-empty subheader")
+	}
+
+	// 2. Singular TV & Movie
+	subSingular := FormatSubheader("EN", 1, 1)
+	if subSingular == "" {
+		t.Errorf("Expected non-empty subheader for singular items")
+	}
+
+	// 3. TV only
+	subTV := FormatSubheader("EN", 5, 0)
+	if subTV == "" {
+		t.Errorf("Expected non-empty subheader for TV only")
+	}
+
+	// 4. Movie only
+	subMovie := FormatSubheader("EN", 0, 4)
+	if subMovie == "" {
+		t.Errorf("Expected non-empty subheader for Movie only")
+	}
+
+	// 5. Zero items -> fallback random message
+	subZero := FormatSubheader("EN", 0, 0)
+	if subZero == "" {
+		t.Errorf("Expected fallback message when count is 0")
+	}
+}
+
+func TestHelpers(t *testing.T) {
+	// extractString
+	if str := extractString(nil, "key"); str != "" {
+		t.Errorf("Expected empty string for nil map")
+	}
+	if str := extractString(map[string]interface{}{"num": 123}, "num"); str != "" {
+		t.Errorf("Expected empty string for non-string val")
+	}
+
+	// extractMessages
+	if msgs := extractMessages(nil, "key"); msgs != nil {
+		t.Errorf("Expected nil for nil map")
+	}
+	if msgs := extractMessages(map[string]interface{}{"key_messages": "not a slice"}, "key"); msgs != nil {
+		t.Errorf("Expected nil for non-slice value")
+	}
+
+	// getSubheaderLabel
+	if lbl := getSubheaderLabel(nil, "tv", 1); lbl != "tv" {
+		t.Errorf("Expected 'tv' fallback for nil map, got %s", lbl)
+	}
+	if lbl := getSubheaderLabel(map[string]interface{}{"subheader_labels": "invalid"}, "tv", 1); lbl != "tv" {
+		t.Errorf("Expected 'tv' fallback for invalid subheader_labels, got %s", lbl)
+	}
+
+	// extractNestedString
+	if val := extractNestedString(nil, "section", "key"); val != "" {
+		t.Errorf("Expected empty string for nil map")
+	}
+	if val := extractNestedString(map[string]interface{}{"section": "invalid"}, "section", "key"); val != "" {
+		t.Errorf("Expected empty string for non-map section")
 	}
 }
