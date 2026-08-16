@@ -5,16 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-08-16
+
 ### Added
-- Dynamic localization support loading localized language names directly from the `"language_name"` key in embedded locale files (`locales/*.json`).
-- Embedded standard IANA timezone database (`_ "time/tzdata"`) serving 420+ timezones to the Web UI frontend timezone dropdown.
-- Custom `MarshalJSON` and `UnmarshalJSON` on `models.Config` supporting flat uppercase JSON keys bi-directionally with the React frontend settings form.
-- Explicit HTTP 200 OK status code headers across all API router endpoints.
+- Dynamic `?days` query parameter support on `/api/past-releases` endpoint to retrieve past release events for selectable ranges.
+- Automatic background reload of iCal feeds immediately upon saving settings (`POST /api/config`).
+- Comprehensive TypeScript interfaces (`ConfigState`, `CalendarUrlItem`, `DayGroup`, `EventItem`) ensuring type safety across the React Web UI.
+
+### Changed
+- Web UI day headers are now formatted exclusively in English (`Sunday, Aug 16`), while multi-language translations (French, German, Indonesian) apply strictly to Discord and Slack notifications.
+- Updated Past Releases Web UI layout to group events under Day Headers and display only start times on cards (`20:45`), removing raw date badges.
 
 ### Fixed
-- Fixed partial settings update in `handlePostConfig` wiping out un-modified configuration fields.
-- Fixed false `"Failed to save settings"` red error toast in React frontend by checking both `data.success` and `data.status === "success"`.
-- Fixed iCal feed parsing failures on parameter-rich `DTSTART`/`DTEND` properties using `vevent.GetStartAt()` and `vevent.GetEndAt()`.
+- Fixed `DAILY` schedule mode parsing to strictly return 1-day events (today only) instead of spanning into 2 days.
+- Fixed Past Releases date range to query strictly up to yesterday (`startOfDay - 1ns`), filtering out future airing events.
+- Fixed 20 ESLint code quality, type safety, and React hook dependency warnings in `App.tsx` and `Settings.tsx`.
+- Refactored `internal/api/router.go` and `internal/services/calendar/service.go` to eliminate code duplications and reduce Cognitive Complexity for SonarQube quality gate compliance.
 
 ## [2.0.2] - 2026-08-16
 
