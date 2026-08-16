@@ -13,12 +13,12 @@ var (
 )
 
 type Event struct {
-	Summary    string    `json:"summary"`
-	StartTime  time.Time `json:"start_time"`
-	EndTime    time.Time `json:"end_time"`
-	SourceType string    `json:"source_type"` // "tv" or "movie"
-	UID        string    `json:"uid,omitempty"`
-	Description string   `json:"description,omitempty"`
+	Summary     string    `json:"summary"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	SourceType  string    `json:"source_type"` // "tv", "movie", "SONARR", "RADARR"
+	UID         string    `json:"uid,omitempty"`
+	Description string    `json:"description,omitempty"`
 }
 
 func (e *Event) IsPremiere() bool {
@@ -34,7 +34,7 @@ func (e *Event) DayKey(loc *time.Location) string {
 	if loc != nil {
 		t = t.In(loc)
 	}
-	return t.Format("Monday, Jan 02")
+	return t.Format("2006-01-02")
 }
 
 func (e *Event) DeduplicationKey(loc *time.Location) string {
@@ -46,9 +46,11 @@ func (e *Event) DeduplicationKey(loc *time.Location) string {
 }
 
 func (e *Event) IsMovie() bool {
-	return e.SourceType == constants.EventTypeMovie
+	st := strings.ToUpper(e.SourceType)
+	return st == "RADARR" || st == "MOVIE" || st == strings.ToUpper(constants.EventTypeMovie)
 }
 
 func (e *Event) IsTV() bool {
-	return e.SourceType == constants.EventTypeTV
+	st := strings.ToUpper(e.SourceType)
+	return st == "SONARR" || st == "TV" || st == strings.ToUpper(constants.EventTypeTV)
 }

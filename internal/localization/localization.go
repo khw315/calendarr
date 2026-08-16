@@ -5,10 +5,12 @@ import (
 	"embed"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed locales/*.json
@@ -158,4 +160,93 @@ func getRandomItem(items []string) string {
 	val := binary.LittleEndian.Uint64(b[:])
 	idx := int(val % uint64(len(items)))
 	return items[idx]
+}
+
+func FormatDateHeader(t time.Time, lang string) string {
+	once.Do(initTranslations)
+	lang = NormalizeLanguage(lang)
+	localeData := translations[lang]
+
+	// Python weekday index: Mon=0 .. Sun=6
+	pyWeekday := fmt.Sprintf("%d", (int(t.Weekday())+6)%7)
+	monthKey := fmt.Sprintf("%d", int(t.Month()))
+
+	dayName := extractNestedString(localeData, "days", pyWeekday)
+	if dayName == "" {
+		dayName = t.Format("Monday")
+	}
+
+	shortMonthName := extractNestedString(localeData, "short_months", monthKey)
+	if shortMonthName == "" {
+		shortMonthName = t.Format("Jan")
+	}
+
+	template := extractString(localeData, "date_header")
+	if template == "" {
+		template = "{day_name}, {short_month_name} {day_num}"
+	}
+
+	res := strings.ReplaceAll(template, "{day_name}", dayName)
+	res = strings.ReplaceAll(res, "{day_num}", fmt.Sprintf("%d", t.Day()))
+	res = strings.ReplaceAll(res, "{short_month_name}", shortMonthName)
+	return res
+}
+
+func FormatSubheader(lang string, tvCount, movieCount int) string {
+	once.Do(initTranslations)
+	lang = NormalizeLanguage(lang)
+	localeData := translations[lang]
+
+	var parts []string
+
+	if tvCount > 0 {
+		label := getSubheaderLabel(localeData, "tv", tvCount)
+		parts = append(parts, fmt.Sprintf("%d %s", tvCount, label))
+	}
+	if movieCount > 0 {
+		label := getSubheaderLabel(localeData, "movie", movieCount)
+		parts = append(parts, fmt.Sprintf("%d %s", movieCount, label))
+	}
+
+	if len(parts) == 0 {
+		return GetRandomMessage(lang, "no_new_releases")
+	}
+
+	return strings.Join(parts, ", ")
+}
+
+func getSubheaderLabel(data map[string]interface{}, category string, count int) string {
+	if data == nil {
+		return category
+	}
+	labels, ok := data["subheader_labels"].(map[string]interface{})
+	if !ok {
+		return category
+	}
+	catLabels, ok := labels[category].(map[string]interface{})
+	if !ok {
+		return category
+	}
+	key := "plural"
+	if count == 1 {
+		key = "singular"
+	}
+	if val, ok := catLabels[key].(string); ok && val != "" {
+		return val
+	}
+	return category
+}
+
+func extractNestedString(data map[string]interface{}, section, key string) string {
+	if data == nil {
+		return ""
+	}
+	secMap, ok := data[section].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if val, ok := secMap[key].(string); ok {
+		return val
+	}
+	return ""
 }

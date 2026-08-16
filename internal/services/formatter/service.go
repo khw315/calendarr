@@ -68,6 +68,14 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.DiscordPayload {
 	lang := cfg.Language
 
+	title := localization.GetText(lang, "header_text")
+	if title == "" {
+		title = localization.GetText(lang, "title")
+	}
+	if title == "" {
+		title = "Rilis Baru"
+	}
+
 	// Role mention header
 	content := ""
 	if cfg.DiscordMentionRoleID != "" {
@@ -79,7 +87,7 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 			Content: content,
 			Embeds: []models.DiscordEmbed{
 				{
-					Title:       localization.GetText(lang, "title"),
+					Title:       title,
 					Description: localization.GetRandomMessage(lang, "no_new_releases"),
 					Color:       constants.DiscordColors["blue"],
 				},
@@ -88,13 +96,13 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 	}
 
 	// Subheader
-	subheader := s.buildSubheader(lang, tvCount, movieCount)
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
 	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
 		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
 	}
 
 	embed := models.DiscordEmbed{
-		Title:       localization.GetText(lang, "title"),
+		Title:       title,
 		Description: subheader,
 		Color:       constants.DiscordColors["blue"],
 	}
@@ -125,8 +133,10 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 			lines = append(lines, line)
 		}
 
+		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
+
 		embed.Fields = append(embed.Fields, models.DiscordField{
-			Name:   fmt.Sprintf("📅 %s", dayKey),
+			Name:   fmt.Sprintf("📅 %s", dateHeader),
 			Value:  strings.Join(lines, "\n"),
 			Inline: false,
 		})
@@ -141,6 +151,14 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.SlackPayload {
 	lang := cfg.Language
 
+	title := localization.GetText(lang, "header_text")
+	if title == "" {
+		title = localization.GetText(lang, "title")
+	}
+	if title == "" {
+		title = "Rilis Baru"
+	}
+
 	if len(events) == 0 {
 		return &models.SlackPayload{
 			Blocks: []models.SlackBlock{
@@ -148,7 +166,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 					Type: "header",
 					Text: &models.SlackText{
 						Type: "plain_text",
-						Text: localization.GetText(lang, "title"),
+						Text: title,
 					},
 				},
 				{
@@ -162,7 +180,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 		}
 	}
 
-	subheader := s.buildSubheader(lang, tvCount, movieCount)
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
 	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
 		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
 	}
@@ -172,7 +190,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 			Type: "header",
 			Text: &models.SlackText{
 				Type: "plain_text",
-				Text: localization.GetText(lang, "title"),
+				Text: title,
 			},
 		},
 		{
@@ -213,11 +231,13 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 			lines = append(lines, line)
 		}
 
+		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
+
 		blocks = append(blocks, models.SlackBlock{
 			Type: "section",
 			Text: &models.SlackText{
 				Type: "mrkdwn",
-				Text: fmt.Sprintf("*📅 %s*\n%s", dayKey, strings.Join(lines, "\n")),
+				Text: fmt.Sprintf("*📅 %s*\n%s", dateHeader, strings.Join(lines, "\n")),
 			},
 		})
 	}
@@ -264,18 +284,4 @@ func (s *Service) formatTitleMarkup(summary string, isPast bool, handling string
 		return fmt.Sprintf("**%s**", summary)
 	}
 	return fmt.Sprintf("*%s*", summary)
-}
-
-func (s *Service) buildSubheader(lang string, tvCount, movieCount int) string {
-	parts := []string{}
-	if tvCount > 0 {
-		parts = append(parts, fmt.Sprintf("%d TV Show(s)", tvCount))
-	}
-	if movieCount > 0 {
-		parts = append(parts, fmt.Sprintf("%d Movie(s)", movieCount))
-	}
-	if len(parts) == 0 {
-		return "No upcoming releases"
-	}
-	return fmt.Sprintf("Upcoming releases: %s", strings.Join(parts, ", "))
 }
