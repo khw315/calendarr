@@ -36,7 +36,11 @@ func (s *Service) FetchEvents(ctx context.Context, cfg *models.Config, startDate
 		Timeout: time.Duration(timeoutSec) * time.Second,
 	}
 
-	fetchCtx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSec)*time.Second)
+	parentCtx := ctx
+	if parentCtx == nil {
+		parentCtx = context.Background()
+	}
+	fetchCtx, cancel := context.WithTimeout(parentCtx, time.Duration(timeoutSec)*time.Second)
 	defer cancel()
 
 	loc := cfg.TimezoneLocation
