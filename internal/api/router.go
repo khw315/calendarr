@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/khw315/calendarr/internal/config"
 	"github.com/khw315/calendarr/internal/localization"
 	"github.com/khw315/calendarr/internal/models"
+	"github.com/khw315/calendarr/internal/services/calendar"
 	"github.com/khw315/calendarr/internal/services/scheduler"
 	"github.com/khw315/calendarr/internal/tzdata"
 )
@@ -29,13 +31,15 @@ const (
 type Router struct {
 	cfgMgr     *config.Manager
 	schedSvc   *scheduler.Service
+	calSvc     *calendar.Service
 	embeddedFS embed.FS
 }
 
-func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, embeddedFS embed.FS) *Router {
+func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, calSvc *calendar.Service, embeddedFS embed.FS) *Router {
 	return &Router{
 		cfgMgr:     cfgMgr,
 		schedSvc:   schedSvc,
+		calSvc:     calSvc,
 		embeddedFS: embeddedFS,
 	}
 }
@@ -69,7 +73,7 @@ func (r *Router) Setup() http.Handler {
 	apiRouter.Get("/languages", r.handleGetLanguages)
 	apiRouter.Get("/schedule", r.handleGetSchedule)
 	apiRouter.Get("/releases", r.handleGetReleases)
-	apiRouter.Get("/past-releases", r.handleGetReleases)
+	apiRouter.Get("/past-releases", r.handleGetPastReleases)
 	apiRouter.Get("/timezones", r.handleGetTimezones)
 	apiRouter.Post("/config", r.handlePostConfig)
 	apiRouter.Post("/trigger", r.handlePostTrigger)
@@ -150,13 +154,75 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	cfg := r.cfgMgr.Get()
-	events := r.schedSvc.GetCachedEvents()
 
 	loc := cfg.TimezoneLocation
 	if loc == nil {
 		loc = time.UTC
 	}
 
+	days := 7
+	if dStr := req.URL.Query().Get("days"); dStr != "" {
+		if d, err := strconv.Atoi(dStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	now := time.Now().In(loc)
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	startDate := startOfDay
+	endDate := startOfDay.AddDate(0, 0, days).Add(-1 * time.Nanosecond)
+
+	var events []*models.Event
+	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
+		fetched, err := r.calSvc.FetchEvents(req.Context(), cfg, startDate, endDate)
+		if err == nil {
+			events = fetched
+		}
+	}
+	if events == nil {
+		events = r.schedSvc.GetCachedEvents()
+	}
+
+	r.respondWithEventsDTO(w, cfg, loc, events)
+}
+
+func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	cfg := r.cfgMgr.Get()
+
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	days := 7
+	if dStr := req.URL.Query().Get("days"); dStr != "" {
+		if d, err := strconv.Atoi(dStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	now := time.Now().In(loc)
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	startDate := startOfDay.AddDate(0, 0, -days)
+	endDate := startOfDay.AddDate(0, 0, 1).Add(-1 * time.Nanosecond)
+
+	var events []*models.Event
+	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
+		fetched, err := r.calSvc.FetchEvents(req.Context(), cfg, startDate, endDate)
+		if err == nil {
+			events = fetched
+		}
+	}
+	if events == nil {
+		events = r.schedSvc.GetCachedEvents()
+	}
+
+	r.respondWithEventsDTO(w, cfg, loc, events)
+}
+
+func (r *Router) respondWithEventsDTO(w http.ResponseWriter, cfg *models.Config, loc *time.Location, events []*models.Event) {
 	grouped := make(map[string][]*models.Event)
 	var dates []string
 
@@ -262,11 +328,16 @@ func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
 
 	r.schedSvc.UpdateSchedule()
 
+	// Trigger immediate background iCal reload on config save
+	go func() {
+		_, _ = r.schedSvc.TriggerRun(context.Background())
+	}()
+
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "success",
 		"success": true,
-		"message": "Configuration saved and schedule updated",
+		"message": "Configuration saved, schedule updated, and feeds reloading in background",
 		"config":  updatedCfg,
 	})
 }

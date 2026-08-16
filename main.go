@@ -39,7 +39,7 @@ func main() {
 	schedSvc.Start()
 
 	// 4. HTTP Router
-	router := api.NewRouter(cfgMgr, schedSvc, embeddedPublicFS)
+	router := api.NewRouter(cfgMgr, schedSvc, calSvc, embeddedPublicFS)
 	handler := router.Setup()
 
 	port := os.Getenv("PORT")

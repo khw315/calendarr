@@ -28,7 +28,7 @@ func TestAPIRoutes(t *testing.T) {
 	schedSvc := scheduler.NewService(cfgMgr, calSvc, fmtSvc, platSvc)
 
 	var emptyFS embed.FS
-	router := NewRouter(cfgMgr, schedSvc, emptyFS)
+	router := NewRouter(cfgMgr, schedSvc, calSvc, emptyFS)
 	handler := router.Setup()
 
 	// 1. GET /api/status
@@ -91,11 +91,19 @@ func TestAPIRoutes(t *testing.T) {
 	}
 
 	// 7. GET /api/releases
-	reqRel := httptest.NewRequest(http.MethodGet, "/api/releases", nil)
+	reqRel := httptest.NewRequest(http.MethodGet, "/api/releases?days=3", nil)
 	recRel := httptest.NewRecorder()
 	handler.ServeHTTP(recRel, reqRel)
 	if recRel.Code != http.StatusOK {
 		t.Errorf("Expected status 200 on /api/releases, got %d", recRel.Code)
+	}
+
+	// 7b. GET /api/past-releases
+	reqPastRel := httptest.NewRequest(http.MethodGet, "/api/past-releases?days=3", nil)
+	recPastRel := httptest.NewRecorder()
+	handler.ServeHTTP(recPastRel, reqPastRel)
+	if recPastRel.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on /api/past-releases, got %d", recPastRel.Code)
 	}
 
 	// 8. GET /api/timezones
