@@ -6,8 +6,10 @@ import Footer from './components/Footer'
 const API_BASE = ''
 
 interface EventItem {
-  title: string
-  type: 'tv' | 'movie'
+  title?: string
+  summary?: string
+  type?: 'tv' | 'movie' | string
+  source_type?: string
   start_time?: string
   end_time?: string
   date?: string
@@ -349,24 +351,47 @@ export default function App() {
                     <div className="day-group">
                       <div className="events-list">
                         {[...pastEvents].sort((a, b) => {
-                          if (!a.timestamp || !b.timestamp) return 0;
-                          return pastSort === 'newest' ? b.timestamp - a.timestamp : a.timestamp - b.timestamp;
-                        }).map((ev, j) => (
-                          <div key={j} className={`event-card brutal-card event-${ev.type} event-past`}>
-                            <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
-                            <div className="event-title">
-                              {ev.title}
-                              {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
-                              {ev.is_series_finale && <span className="finale-badge">Series End</span>}
-                            </div>
-                            {(ev.start_time || ev.date) && (
-                              <div className="event-time">
-                                {ev.date && <span className="time-text" style={{ marginRight: '8px' }}>{ev.date}</span>}
-                                {ev.start_time && <span className="time-text">{ev.start_time}</span>}
+                          const tA = a.timestamp || (a.start_time ? new Date(a.start_time).getTime() / 1000 : 0);
+                          const tB = b.timestamp || (b.start_time ? new Date(b.start_time).getTime() / 1000 : 0);
+                          return pastSort === 'newest' ? tB - tA : tA - tB;
+                        }).map((ev, j) => {
+                          const title = ev.title || ev.summary || 'Untitled';
+                          const rawType = ev.type || ev.source_type || 'tv';
+                          const isTv = rawType.toLowerCase() === 'tv';
+                          let dateDisplay = ev.date || '';
+                          let timeDisplay = ev.start_time || '';
+
+                          if (timeDisplay && timeDisplay.includes('T')) {
+                            try {
+                              const d = new Date(timeDisplay);
+                              if (!dateDisplay) {
+                                dateDisplay = d.toISOString().split('T')[0];
+                              }
+                              const hours = String(d.getHours()).padStart(2, '0');
+                              const mins = String(d.getMinutes()).padStart(2, '0');
+                              timeDisplay = `${hours}:${mins}`;
+                            } catch (e) {
+                              // ignore
+                            }
+                          }
+
+                          return (
+                            <div key={j} className={`event-card brutal-card event-${isTv ? 'tv' : 'movie'} event-past`}>
+                              <span className="event-type">{isTv ? 'TV' : 'Movie'}</span>
+                              <div className="event-title">
+                                {title}
+                                {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                                {ev.is_series_finale && <span className="finale-badge">Series End</span>}
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              {(timeDisplay || dateDisplay) && (
+                                <div className="event-time">
+                                  {dateDisplay && <span className="time-text" style={{ marginRight: '8px' }}>{dateDisplay}</span>}
+                                  {timeDisplay && <span className="time-text">{timeDisplay}</span>}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

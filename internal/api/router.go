@@ -176,6 +176,7 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 		Date         string `json:"date"`
 		Timestamp    int64  `json:"timestamp"`
 		EndTimestamp int64  `json:"end_timestamp"`
+		Description  string `json:"description,omitempty"`
 	}
 
 	type DayDTO struct {
@@ -185,6 +186,7 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var days []DayDTO
+	var allEventDTOs []EventDTO
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
 		var evDTOs []EventDTO
@@ -194,14 +196,18 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 			if ev.IsMovie() {
 				evType = "movie"
 			}
-			evDTOs = append(evDTOs, EventDTO{
+			dto := EventDTO{
 				Title:        ev.Summary,
 				Type:         evType,
 				StartTime:    t.Format("15:04"),
+				EndTime:      ev.EndTime.In(loc).Format("15:04"),
 				Date:         t.Format("2006-01-02"),
 				Timestamp:    t.Unix(),
 				EndTimestamp: ev.EndTime.In(loc).Unix(),
-			})
+				Description:  ev.Description,
+			}
+			evDTOs = append(evDTOs, dto)
+			allEventDTOs = append(allEventDTOs, dto)
 		}
 		dayStartTime := dayEvents[0].StartTime.In(loc)
 		dateHeader := localization.FormatDateHeader(dayStartTime, cfg.Language)
@@ -214,7 +220,7 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"days":   days,
-		"events": events,
+		"events": allEventDTOs,
 	})
 }
 
