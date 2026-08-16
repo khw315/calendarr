@@ -27,7 +27,7 @@ func (s *Service) Dispatch(ctx context.Context, cfg *models.Config, formatted *m
 	var errs []string
 
 	if cfg.UseDiscord && cfg.DiscordWebhookURL != "" {
-		if err := s.sendDiscord(ctx, client, cfg.DiscordWebhookURL, formatted); err != nil {
+		if err := s.postWebhook(ctx, client, "Discord", cfg.DiscordWebhookURL, formatted); err != nil {
 			log.Printf("❌ Failed to send Discord webhook: %v", err)
 			errs = append(errs, fmt.Sprintf("Discord error: %v", err))
 		} else {
@@ -36,7 +36,7 @@ func (s *Service) Dispatch(ctx context.Context, cfg *models.Config, formatted *m
 	}
 
 	if cfg.UseSlack && cfg.SlackWebhookURL != "" {
-		if err := s.sendSlack(ctx, client, cfg.SlackWebhookURL, slackFormatted); err != nil {
+		if err := s.postWebhook(ctx, client, "Slack", cfg.SlackWebhookURL, slackFormatted); err != nil {
 			log.Printf("❌ Failed to send Slack webhook: %v", err)
 			errs = append(errs, fmt.Sprintf("Slack error: %v", err))
 		} else {
@@ -45,59 +45,33 @@ func (s *Service) Dispatch(ctx context.Context, cfg *models.Config, formatted *m
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("errors during dispatch: %s", fmt.Sprintf("%v", errs))
+		return fmt.Errorf("errors during dispatch: %v", errs)
 	}
 
 	return nil
 }
 
-func (s *Service) sendDiscord(ctx context.Context, client *http.Client, webhookURL string, payload *models.DiscordPayload) error {
+func (s *Service) postWebhook(ctx context.Context, client *http.Client, platformName, webhookURL string, payload interface{}) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal Discord payload: %w", err)
+		return fmt.Errorf("failed to marshal %s payload: %w", platformName, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewBuffer(data))
 	if err != nil {
-		return fmt.Errorf("failed to create Discord request: %w", err)
+		return fmt.Errorf("failed to create %s request: %w", platformName, err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Discord HTTP POST failed: %w", err)
+		return fmt.Errorf("%s HTTP POST failed: %w", platformName, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Discord returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
-}
-
-func (s *Service) sendSlack(ctx context.Context, client *http.Client, webhookURL string, payload *models.SlackPayload) error {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal Slack payload: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewBuffer(data))
-	if err != nil {
-		return fmt.Errorf("failed to create Slack request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("Slack HTTP POST failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Slack returned status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("%s returned status %d: %s", platformName, resp.StatusCode, string(body))
 	}
 
 	return nil
