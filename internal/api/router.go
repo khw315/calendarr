@@ -283,7 +283,7 @@ func (r *Router) respondWithEventsDTO(w http.ResponseWriter, cfg *models.Config,
 			allEventDTOs = append(allEventDTOs, dto)
 		}
 		dayStartTime := dayEvents[0].StartTime.In(loc)
-		dateHeader := localization.FormatDateHeader(dayStartTime, cfg.Language)
+		dateHeader := localization.FormatDateHeader(dayStartTime, "en")
 		days = append(days, DayDTO{
 			DayName: dateHeader,
 			Date:    dayKey,
