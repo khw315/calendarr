@@ -176,6 +176,16 @@ func FormatDateHeader(t time.Time, lang string) string {
 		dayName = t.Format("Monday")
 	}
 
+	shortDayName := extractNestedString(localeData, "short_days", pyWeekday)
+	if shortDayName == "" {
+		shortDayName = t.Format("Mon")
+	}
+
+	monthName := extractNestedString(localeData, "months", monthKey)
+	if monthName == "" {
+		monthName = t.Format("January")
+	}
+
 	shortMonthName := extractNestedString(localeData, "short_months", monthKey)
 	if shortMonthName == "" {
 		shortMonthName = t.Format("Jan")
@@ -186,8 +196,15 @@ func FormatDateHeader(t time.Time, lang string) string {
 		template = "{day_name}, {short_month_name} {day_num}"
 	}
 
+	dayNumStr := fmt.Sprintf("%d", t.Day())
+	monthNumStr := fmt.Sprintf("%d", int(t.Month()))
+
 	res := strings.ReplaceAll(template, "{day_name}", dayName)
-	res = strings.ReplaceAll(res, "{day_num}", fmt.Sprintf("%d", t.Day()))
+	res = strings.ReplaceAll(res, "{short_day_name}", shortDayName)
+	res = strings.ReplaceAll(res, "{day_num}", dayNumStr)
+	res = strings.ReplaceAll(res, "{day}", dayNumStr)
+	res = strings.ReplaceAll(res, "{month_num}", monthNumStr)
+	res = strings.ReplaceAll(res, "{month_name}", monthName)
 	res = strings.ReplaceAll(res, "{short_month_name}", shortMonthName)
 	return res
 }
