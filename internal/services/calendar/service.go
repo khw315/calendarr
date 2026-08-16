@@ -83,23 +83,26 @@ func (s *Service) fetchConcurrent(ctx context.Context, client *http.Client, cfg 
 			}
 
 			mu.Lock()
-			defer mu.Unlock()
-
-			for _, ev := range events {
-				if cfg.DeduplicateEvents {
-					key := ev.DeduplicationKey(loc)
-					if seenKeys[key] {
-						continue
-					}
-					seenKeys[key] = true
-				}
-				allEvents = append(allEvents, ev)
-			}
+			s.appendUniqueEvents(&allEvents, events, cfg, loc, seenKeys)
+			mu.Unlock()
 		}(calURL)
 	}
 
 	wg.Wait()
 	return allEvents
+}
+
+func (s *Service) appendUniqueEvents(allEvents *[]*models.Event, events []*models.Event, cfg *models.Config, loc *time.Location, seenKeys map[string]bool) {
+	for _, ev := range events {
+		if cfg.DeduplicateEvents {
+			key := ev.DeduplicationKey(loc)
+			if seenKeys[key] {
+				continue
+			}
+			seenKeys[key] = true
+		}
+		*allEvents = append(*allEvents, ev)
+	}
 }
 
 func (s *Service) fetchFromURL(ctx context.Context, client *http.Client, calURL models.CalendarUrl, startDate, endDate time.Time, loc *time.Location) ([]*models.Event, error) {
