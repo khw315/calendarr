@@ -85,7 +85,7 @@ func (m *Manager) Save(updated *models.Config) error {
 
 	// Ensure directory exists
 	dir := filepath.Dir(m.configPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -102,7 +102,13 @@ func (m *Manager) Save(updated *models.Config) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(m.configPath, data, 0644); err != nil {
+	tmpPath := m.configPath + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0666); err == nil {
+		_ = os.Rename(tmpPath, m.configPath)
+	} else if err := os.WriteFile(m.configPath, data, 0666); err != nil {
+		if os.IsPermission(err) {
+			log.Printf("❌ Permission denied when writing to %s. Ensure the host directory has write permissions (e.g. 'chmod 777 ./calendarr/config' or 'chown -R 1000:1000 ./calendarr/config')", m.configPath)
+		}
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

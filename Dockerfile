@@ -30,11 +30,12 @@ LABEL org.opencontainers.image.documentation="https://github.com/khw315/calendar
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
 RUN apk add --no-cache ca-certificates tzdata && \
-    addgroup -S calendarr && adduser -S calendarr -G calendarr
+    addgroup -g 1000 -S calendarr && \
+    adduser -u 1000 -S calendarr -G calendarr
 
 COPY --from=go-builder /app/calendarr /app/calendarr
 
-# Create config and logs directories and set permissions
+# Create config and logs directories and set permissions for mounted volumes
 RUN mkdir -p /app/config /app/logs && \
     chown -R calendarr:calendarr /app && \
     chmod -R 775 /app/config /app/logs
