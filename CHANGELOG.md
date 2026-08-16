@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Dynamic localization support loading localized language names directly from the `"language_name"` key in embedded locale files (`locales/*.json`).
+- Embedded standard IANA timezone database (`_ "time/tzdata"`) serving 420+ timezones to the Web UI frontend timezone dropdown.
+- Custom `MarshalJSON` and `UnmarshalJSON` on `models.Config` supporting flat uppercase JSON keys bi-directionally with the React frontend settings form.
+- Explicit HTTP 200 OK status code headers across all API router endpoints.
+
+### Fixed
+- Fixed partial settings update in `handlePostConfig` wiping out un-modified configuration fields.
+- Fixed false `"Failed to save settings"` red error toast in React frontend by checking both `data.success` and `data.status === "success"`.
+- Fixed iCal feed parsing failures on parameter-rich `DTSTART`/`DTEND` properties using `vevent.GetStartAt()` and `vevent.GetEndAt()`.
+
 ## [2.0.2] - 2026-08-16
 
 ### Fixed

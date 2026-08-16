@@ -1,0 +1,88 @@
+{
+    "language_name": "Français",
+    "movies_heading": "FILMS",
+    "header_text": "Nouvelles Sorties",
+    "date_header": "{day_name} {day_num} {short_month_name}",
+    "mention_instruction": "Rejoignez ce rôle pour être notifié des nouvelles sorties !",
+    "timezone_message": "Toutes les heures sont affichées dans le fuseau {timezone}",
+    "no_new_releases_messages": [
+        "Aucune nouvelle sortie aujourd'hui — profitez de votre temps libre !"
+    ],
+    "no_day_content_messages": [
+        "Aucune sortie prévue pour cette journée."
+    ],
+    "subheader_templates": {
+        "tv": "{count} {label}",
+        "movie": "{count} {label}",
+        "premiere": "{count} {label}"
+    },
+    "subheader_labels": {
+        "tv": {
+            "singular": "nouvel épisode",
+            "plural": "nouveaux épisodes"
+        },
+        "movie": {
+            "singular": "sortie de film",
+            "plural": "sorties de films"
+        },
+        "premiere": {
+            "singular": "première de saison",
+            "plural": "premières de saison"
+        }
+    },
+    "list_join": {
+        "two": " et ",
+        "last": " et "
+    },
+    "comma_separator": ", ",
+    "days": {
+        "0": "Lundi",
+        "1": "Mardi",
+        "2": "Mercredi",
+        "3": "Jeudi",
+        "4": "Vendredi",
+        "5": "Samedi",
+        "6": "Dimanche"
+    },
+    "short_days": {
+        "0": "Lun",
+        "1": "Mar",
+        "2": "Mer",
+        "3": "Jeu",
+        "4": "Ven",
+        "5": "Sam",
+        "6": "Dim"
+    },
+    "months": {
+        "1": "Janvier",
+        "2": "Février",
+        "3": "Mars",
+        "4": "Avril",
+        "5": "Mai",
+        "6": "Juin",
+        "7": "Juillet",
+        "8": "Août",
+        "9": "Septembre",
+        "10": "Octobre",
+        "11": "Novembre",
+        "12": "Décembre"
+    },
+    "short_months": {
+        "1": "Janv.",
+        "2": "Févr.",
+        "3": "Mars",
+        "4": "Avr.",
+        "5": "Mai",
+        "6": "Juin",
+        "7": "Juil.",
+        "8": "Août",
+        "9": "Sept.",
+        "10": "Oct.",
+        "11": "Nov.",
+        "12": "Déc."
+    },
+    "footers": {
+        "discord": "Propulsé par Calendarr",
+        "slack": "Propulsé par Calendarr"
+    }
+}

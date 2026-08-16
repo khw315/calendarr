@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -101,12 +102,14 @@ func (r *Router) Setup() http.Handler {
 
 func (r *Router) handleGetStatus(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	status := r.schedSvc.GetStatus()
 	_ = json.NewEncoder(w).Encode(status)
 }
 
 func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	events := r.schedSvc.GetCachedEvents()
 	if events == nil {
 		events = []*models.Event{}
@@ -119,23 +122,21 @@ func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) handleGetConfig(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	cfg := r.cfgMgr.Get()
 	_ = json.NewEncoder(w).Encode(cfg)
 }
 
 func (r *Router) handleGetLanguages(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
-	langs := []map[string]string{
-		{"code": "EN", "name": "English"},
-		{"code": "ID", "name": "Bahasa Indonesia"},
-		{"code": "JA", "name": "日本語"},
-		{"code": "KO", "name": "한국어"},
-	}
+	w.WriteHeader(http.StatusOK)
+	langs := localization.GetLanguageList()
 	_ = json.NewEncoder(w).Encode(langs)
 }
 
 func (r *Router) handleGetSchedule(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	cfg := r.cfgMgr.Get()
 	status := r.schedSvc.GetStatus()
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -147,6 +148,7 @@ func (r *Router) handleGetSchedule(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	cfg := r.cfgMgr.Get()
 	events := r.schedSvc.GetCachedEvents()
 
@@ -218,6 +220,7 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) handleGetTimezones(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	allTZs := tzdata.GetTimezones()
 	tzs := make(map[string]string, len(allTZs))
 	for _, tz := range allTZs {
@@ -229,14 +232,23 @@ func (r *Router) handleGetTimezones(w http.ResponseWriter, req *http.Request) {
 func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 
-	var newCfg models.Config
-	if err := json.NewDecoder(req.Body).Decode(&newCfg); err != nil {
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Failed to read request body"})
+		return
+	}
+
+	// Copy current active configuration so partial updates preserve all non-modified fields
+	updatedCfg := *r.cfgMgr.Get()
+
+	if err := json.Unmarshal(bodyBytes, &updatedCfg); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request JSON payload"})
 		return
 	}
 
-	if err := r.cfgMgr.Save(&newCfg); err != nil {
+	if err := r.cfgMgr.Save(&updatedCfg); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
@@ -244,10 +256,12 @@ func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
 
 	r.schedSvc.UpdateSchedule()
 
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "success",
+		"success": true,
 		"message": "Configuration saved and schedule updated",
-		"config":  newCfg,
+		"config":  updatedCfg,
 	})
 }
 
@@ -258,6 +272,7 @@ func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
 		_, _ = r.schedSvc.TriggerRun(context.Background())
 	}()
 
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status":  "triggered",
 		"message": "Manual run triggered successfully in background",

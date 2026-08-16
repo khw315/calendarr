@@ -179,7 +179,7 @@ export default function Settings() {
                 body: JSON.stringify(changesToSubmit)
             })
             const data = await res.json()
-            if (res.ok && data.success) {
+            if (res.ok && (data.success || data.status === 'success')) {
                 showToast("Settings saved successfully!", 'success')
                 setOriginalConfig((prev: any) => ({ ...prev, ...changesToSubmit }))
             } else {

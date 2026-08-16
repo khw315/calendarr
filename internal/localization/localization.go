@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +18,11 @@ import (
 var localesFS embed.FS
 
 const DefaultLanguage = "EN"
+
+type LanguageInfo struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
 
 var (
 	translations = make(map[string]map[string]interface{})
@@ -63,6 +69,25 @@ func SupportedLanguages() []string {
 	var list []string
 	for k := range translations {
 		list = append(list, k)
+	}
+	return list
+}
+
+func GetLanguageList() []LanguageInfo {
+	once.Do(initTranslations)
+	codes := SupportedLanguages()
+	sort.Strings(codes)
+
+	var list []LanguageInfo
+	for _, code := range codes {
+		name := extractString(translations[code], "language_name")
+		if name == "" {
+			name = code
+		}
+		list = append(list, LanguageInfo{
+			Code: code,
+			Name: name,
+		})
 	}
 	return list
 }
