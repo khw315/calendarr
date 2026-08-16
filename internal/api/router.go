@@ -206,7 +206,7 @@ func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request)
 	now := time.Now().In(loc)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 	startDate := startOfDay.AddDate(0, 0, -days)
-	endDate := startOfDay.AddDate(0, 0, 1).Add(-1 * time.Nanosecond)
+	endDate := startOfDay.Add(-1 * time.Nanosecond)
 
 	var events []*models.Event
 	if r.calSvc != nil && len(cfg.CalendarURLs) > 0 {
@@ -219,7 +219,14 @@ func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request)
 		events = r.schedSvc.GetCachedEvents()
 	}
 
-	r.respondWithEventsDTO(w, cfg, loc, events)
+	var pastEvents []*models.Event
+	for _, ev := range events {
+		if ev.StartTime.Before(now) {
+			pastEvents = append(pastEvents, ev)
+		}
+	}
+
+	r.respondWithEventsDTO(w, cfg, loc, pastEvents)
 }
 
 func (r *Router) respondWithEventsDTO(w http.ResponseWriter, cfg *models.Config, loc *time.Location, events []*models.Event) {
