@@ -8,14 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.1] - 2026-08-16
 
 ### Fixed
-- Fixed container volume permission denied error on `/app/config/calendarr.json` when mounting host directories.
-- Quoted variable expansions in Dockerfile for SonarQube `docker:S6570` rule compliance.
+- Resolved container volume `permission denied` error on `/app/config/calendarr.json` when mounting host directories by configuring `chmod -R 775` permissions.
+- Quoted variable expansions in `Dockerfile` for SonarQube `docker:S6570` compliance.
+
+### Security
+- Resolved SonarQube `docker:S2612` security rule by restricting world-write permissions on `/app/config` and `/app/logs` volume directories.
 
 ### Performance
-- Optimized ARM64 Docker image build speeds up to 10x using native Go cross-compilation with `--platform=$BUILDPLATFORM` and `TARGETARCH`.
+- Accelerated ARM64 Docker image builds up to 10x using native Go cross-compilation with `--platform=$BUILDPLATFORM` and `TARGETARCH`.
 
 ### Documentation
-- Added standard GHCR OCI container labels (`title`, `source`, `documentation`, `licenses`).
+- Added standard GHCR OCI container labels (`org.opencontainers.image.title`, `source`, `documentation`, `licenses`).
 
 ## [2.0.0] - 2026-08-16
 
