@@ -43,10 +43,9 @@ export function useTheme() {
 
     const toggleTheme = () => {
         setMode(prev => {
-            const current = prev === 'system'
-                ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-                : prev
-            return current === 'light' ? 'dark' : 'light'
+            if (prev === 'system') return 'light'
+            if (prev === 'light') return 'dark'
+            return 'system'
         })
     }
 

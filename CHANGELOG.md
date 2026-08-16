@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 3-mode theme system (`system`, `dark`, `light`) in Web UI, supporting dynamic browser/OS preference (`prefers-color-scheme`), 3-way toggle button in header, and Theme Mode dropdown in Settings.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added
