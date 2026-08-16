@@ -27,16 +27,24 @@ func (s *Service) FetchEvents(ctx context.Context, cfg *models.Config, startDate
 		return nil, nil
 	}
 
-	client := &http.Client{
-		Timeout: time.Duration(cfg.HTTPTimeout) * time.Second,
+	timeoutSec := cfg.HTTPTimeout
+	if timeoutSec <= 0 {
+		timeoutSec = 30
 	}
+
+	client := &http.Client{
+		Timeout: time.Duration(timeoutSec) * time.Second,
+	}
+
+	fetchCtx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSec)*time.Second)
+	defer cancel()
 
 	loc := cfg.TimezoneLocation
 	if loc == nil {
 		loc = time.UTC
 	}
 
-	allEvents := s.fetchConcurrent(ctx, client, cfg, startDate, endDate, loc)
+	allEvents := s.fetchConcurrent(fetchCtx, client, cfg, startDate, endDate, loc)
 
 	// Sort events by StartTime ascending
 	sort.Slice(allEvents, func(i, j int) bool {

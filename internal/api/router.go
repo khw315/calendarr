@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"io/fs"
@@ -41,14 +42,30 @@ func (r *Router) Setup() http.Handler {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	// API Routes
-	router.Route("/api", func(api chi.Router) {
-		api.Get("/status", r.handleGetStatus)
-		api.Get("/events", r.handleGetEvents)
-		api.Get("/config", r.handleGetConfig)
-		api.Post("/config", r.handlePostConfig)
-		api.Post("/trigger", r.handlePostTrigger)
+	// Global CORS middleware for API endpoints & FE cross-origin access
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+			if req.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
 	})
+
+	// API Routes mounted cleanly under /api
+	apiRouter := chi.NewRouter()
+	apiRouter.Get("/status", r.handleGetStatus)
+	apiRouter.Get("/events", r.handleGetEvents)
+	apiRouter.Get("/config", r.handleGetConfig)
+	apiRouter.Post("/config", r.handlePostConfig)
+	apiRouter.Post("/trigger", r.handlePostTrigger)
+
+	router.Mount("/api", apiRouter)
 
 	// Static Web UI serving
 	publicSub, err := fs.Sub(r.embeddedFS, "public")
@@ -127,7 +144,7 @@ func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 
 	go func() {
-		_, _ = r.schedSvc.TriggerRun(req.Context())
+		_, _ = r.schedSvc.TriggerRun(context.Background())
 	}()
 
 	_ = json.NewEncoder(w).Encode(map[string]string{
