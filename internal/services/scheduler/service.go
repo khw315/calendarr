@@ -16,16 +16,16 @@ import (
 )
 
 type Service struct {
-	mu          sync.Mutex
-	cfgMgr      *config.Manager
-	calSvc      *calendar.Service
-	fmtSvc      *formatter.Service
-	platSvc     *platform.Service
-	cronRunner  *cron.Cron
-	entryID     cron.EntryID
-	lastRun     time.Time
-	lastStatus  string
-	lastErr     error
+	mu           sync.Mutex
+	cfgMgr       *config.Manager
+	calSvc       *calendar.Service
+	fmtSvc       *formatter.Service
+	platSvc      *platform.Service
+	cronRunner   *cron.Cron
+	entryID      cron.EntryID
+	lastRun      time.Time
+	lastStatus   string
+	lastErr      error
 	cachedEvents []*models.Event
 }
 
@@ -135,9 +135,17 @@ func (s *Service) TriggerRun(ctx context.Context) ([]*models.Event, error) {
 
 	now := time.Now().In(loc)
 	startDate := now
-	endDate := now.AddDate(0, 0, 7) // 7 days window
 
-	log.Printf("⚡ Executing calendar run from %s to %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
+	var endDate time.Time
+	if cfg.ScheduleSettings.ScheduleType == "DAILY" {
+		// For DAILY schedule type, set window to end of current day
+		endDate = time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
+	} else {
+		// 7 days window for WEEKLY / default
+		endDate = now.AddDate(0, 0, 7)
+	}
+
+	log.Printf("⚡ Executing calendar run (%s) from %s to %s", cfg.ScheduleSettings.ScheduleType, startDate.Format("2006-01-02 15:04"), endDate.Format("2006-01-02 15:04"))
 
 	events, err := s.calSvc.FetchEvents(ctx, cfg, startDate, endDate)
 

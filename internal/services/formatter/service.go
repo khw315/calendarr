@@ -67,6 +67,10 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 
 func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.DiscordPayload {
 	lang := cfg.Language
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
 
 	title := localization.GetText(lang, "header_text")
 	if title == "" {
@@ -76,11 +80,27 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		title = "Rilis Baru"
 	}
 
-	// Role mention header
-	content := ""
-	if cfg.DiscordMentionRoleID != "" {
-		content = fmt.Sprintf("<@&%s>", cfg.DiscordMentionRoleID)
+	// Role mention & content header
+	contentParts := []string{fmt.Sprintf("# %s", title)}
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+	if subheader != "" {
+		contentParts = append(contentParts, fmt.Sprintf("## %s", subheader))
 	}
+	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
+		contentParts = append(contentParts, fmt.Sprintf("(%s)", cfg.Timezone))
+	}
+	if cfg.DiscordMentionRoleID != "" {
+		mentionStr := fmt.Sprintf("<@&%s>", cfg.DiscordMentionRoleID)
+		if !cfg.DiscordHideMentionInstructions {
+			instruction := localization.GetText(lang, "mention_instruction")
+			if instruction != "" {
+				mentionStr += fmt.Sprintf("\n*%s*", instruction)
+			}
+		}
+		contentParts = append(contentParts, mentionStr)
+	}
+
+	content := strings.Join(contentParts, "\n\n")
 
 	if len(events) == 0 {
 		return &models.DiscordPayload{
@@ -95,26 +115,9 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		}
 	}
 
-	// Subheader
-	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
-	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
-		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
-	}
-
-	embed := models.DiscordEmbed{
-		Title:       title,
-		Description: subheader,
-		Color:       constants.DiscordColors["blue"],
-	}
-
-	// Group by date
+	// Group by day for Embeds
 	grouped := make(map[string][]*models.Event)
 	var dates []string
-
-	loc := cfg.TimezoneLocation
-	if loc == nil {
-		loc = time.UTC
-	}
 
 	for _, ev := range events {
 		dayKey := ev.DayKey(loc)
@@ -124,32 +127,43 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		grouped[dayKey] = append(grouped[dayKey], ev)
 	}
 
+	var embeds []models.DiscordEmbed
+
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
 		var lines []string
 
 		for _, ev := range dayEvents {
-			line := s.formatEventLine(ev, cfg, true, now)
+			line := s.formatEventLineDiscord(ev, cfg, now, loc)
 			lines = append(lines, line)
 		}
 
-		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
+		dayStartTime := dayEvents[0].StartTime.In(loc)
+		dateHeader := localization.FormatDateHeader(dayStartTime, lang)
+		embedColor := constants.DayColorsDiscord[dayStartTime.Weekday()]
+		if embedColor == 0 {
+			embedColor = constants.DiscordColors["blue"]
+		}
 
-		embed.Fields = append(embed.Fields, models.DiscordField{
-			Name:   fmt.Sprintf("📅 %s", dateHeader),
-			Value:  strings.Join(lines, "\n"),
-			Inline: false,
+		embeds = append(embeds, models.DiscordEmbed{
+			Title:       dateHeader,
+			Description: strings.Join(lines, "\n"),
+			Color:       embedColor,
 		})
 	}
 
 	return &models.DiscordPayload{
 		Content: content,
-		Embeds:  []models.DiscordEmbed{embed},
+		Embeds:  embeds,
 	}
 }
 
 func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.SlackPayload {
 	lang := cfg.Language
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
 
 	title := localization.GetText(lang, "header_text")
 	if title == "" {
@@ -205,12 +219,6 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 		},
 	}
 
-	// Group by day
-	loc := cfg.TimezoneLocation
-	if loc == nil {
-		loc = time.UTC
-	}
-
 	grouped := make(map[string][]*models.Event)
 	var dates []string
 
@@ -227,7 +235,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 		var lines []string
 
 		for _, ev := range dayEvents {
-			line := s.formatEventLine(ev, cfg, false, now)
+			line := s.formatEventLineSlack(ev, cfg, now, loc)
 			lines = append(lines, line)
 		}
 
@@ -247,41 +255,102 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 	}
 }
 
-func (s *Service) formatEventLine(ev *models.Event, cfg *models.Config, isDiscord bool, now time.Time) string {
-	timePrefix := s.formatTimePrefix(ev, cfg)
+func (s *Service) formatEventLineDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	if ev.IsMovie() {
+		return s.formatMovieEventDiscord(ev, cfg, now, loc)
+	}
+	return s.formatTVEventDiscord(ev, cfg, now, loc)
+}
+
+func (s *Service) formatTVEventDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	summary := ev.Summary
+	showName := summary
+	epNum := ""
+	epTitle := ""
+
+	parts := strings.Split(summary, " - ")
+	if len(parts) >= 3 {
+		showName = parts[0]
+		epNum = parts[1]
+		epTitle = strings.Join(parts[2:], " - ")
+	} else if len(parts) == 2 {
+		showName = parts[0]
+		epNum = parts[1]
+	}
+
+	formattedShow := fmt.Sprintf("**%s**", showName)
+	epDetails := ""
+	if epTitle != "" {
+		if epNum != "" {
+			epDetails = fmt.Sprintf(" - %s - *%s*", epNum, epTitle)
+		} else {
+			epDetails = fmt.Sprintf(" - *%s*", epTitle)
+		}
+	} else if epNum != "" {
+		epDetails = fmt.Sprintf(" - %s", epNum)
+	}
+
+	timeStr := ""
+	t := ev.StartTime.In(loc)
+	if !t.Before(now) {
+		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
+	} else if cfg.TimeSettings.DisplayTime {
+		if cfg.TimeSettings.Use24Hour {
+			timeStr = fmt.Sprintf(" — %s", t.Format("15:04"))
+		} else {
+			timeStr = fmt.Sprintf(" — %s", t.Format("03:04 PM"))
+		}
+	}
+
+	line := fmt.Sprintf("%s%s%s", formattedShow, epDetails, timeStr)
+	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
+		line = fmt.Sprintf("~~%s~~", line)
+	}
+	return line
+}
+
+func (s *Service) formatMovieEventDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	t := ev.StartTime.In(loc)
+	timeStr := ""
+	if !t.Before(now) {
+		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
+	} else if cfg.TimeSettings.DisplayTime {
+		if cfg.TimeSettings.Use24Hour {
+			timeStr = fmt.Sprintf(" — %s", t.Format("15:04"))
+		} else {
+			timeStr = fmt.Sprintf(" — %s", t.Format("03:04 PM"))
+		}
+	}
+
+	line := fmt.Sprintf("🎬  **%s**%s", ev.Summary, timeStr)
+	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
+		line = fmt.Sprintf("~~%s~~", line)
+	}
+	return line
+}
+
+func (s *Service) formatEventLineSlack(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	timePrefix := ""
+	if cfg.TimeSettings.DisplayTime {
+		t := ev.StartTime.In(loc)
+		if cfg.TimeSettings.Use24Hour {
+			timePrefix = fmt.Sprintf("`%s` ", t.Format("15:04"))
+		} else {
+			timePrefix = fmt.Sprintf("`%s` ", t.Format("03:04 PM"))
+		}
+	}
+
 	icon := "📺"
 	if ev.IsMovie() {
 		icon = "🎬"
 	}
 
-	title := s.formatTitleMarkup(ev.Summary, ev.IsPast(now), cfg.PassedEventHandling, isDiscord)
+	title := ev.Summary
+	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
+		title = fmt.Sprintf("~%s~", title)
+	} else {
+		title = fmt.Sprintf("*%s*", title)
+	}
+
 	return fmt.Sprintf("%s%s %s", timePrefix, icon, title)
-}
-
-func (s *Service) formatTimePrefix(ev *models.Event, cfg *models.Config) string {
-	if !cfg.TimeSettings.DisplayTime {
-		return ""
-	}
-	loc := cfg.TimezoneLocation
-	if loc == nil {
-		loc = time.UTC
-	}
-	t := ev.StartTime.In(loc)
-	if cfg.TimeSettings.Use24Hour {
-		return fmt.Sprintf("`%s` ", t.Format("15:04"))
-	}
-	return fmt.Sprintf("`%s` ", t.Format("03:04 PM"))
-}
-
-func (s *Service) formatTitleMarkup(summary string, isPast bool, handling string, isDiscord bool) string {
-	if isPast && handling == constants.PassedEventStrike {
-		if isDiscord {
-			return fmt.Sprintf("~~%s~~", summary)
-		}
-		return fmt.Sprintf("~%s~", summary)
-	}
-	if isDiscord {
-		return fmt.Sprintf("**%s**", summary)
-	}
-	return fmt.Sprintf("*%s*", summary)
 }

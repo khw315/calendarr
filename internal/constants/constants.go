@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 // Event Types
 const (
 	EventTypeTV    = "tv"
@@ -64,6 +66,16 @@ var DiscordColors = map[string]int{
 	"blue":   3447003,
 	"indigo": 10181046,
 	"violet": 9846527,
+}
+
+var DayColorsDiscord = map[time.Weekday]int{
+	time.Sunday:    0x9B59B6, // Purple
+	time.Monday:    0x3498DB, // Blue
+	time.Tuesday:   0x2ECC71, // Green
+	time.Wednesday: 0xF1C40F, // Yellow
+	time.Thursday:  0xE67E22, // Orange
+	time.Friday:    0xE74C3C, // Red
+	time.Saturday:  0x1ABC9C, // Teal
 }
 
 var SlackColors = map[string]string{
