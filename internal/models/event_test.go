@@ -38,12 +38,32 @@ func TestEventMethods(t *testing.T) {
 		t.Errorf("Expected Breaking Bad S01E01 to be recognized as premiere")
 	}
 
+	if !pastEv.IsTV() {
+		t.Errorf("Expected pastEv to be TV")
+	}
+
 	if !futureEv.IsMovie() {
 		t.Errorf("Expected futureEv to be movie")
+	}
+
+	dayKey := pastEv.DayKey(time.UTC)
+	if dayKey == "" {
+		t.Errorf("DayKey should not be empty")
 	}
 
 	key := pastEv.DeduplicationKey(time.UTC)
 	if key == "" {
 		t.Errorf("DeduplicationKey should not be empty")
+	}
+}
+
+func TestConfigToJSON(t *testing.T) {
+	cfg := DefaultConfig()
+	data, err := cfg.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON failed: %v", err)
+	}
+	if len(data) == 0 {
+		t.Errorf("Expected non-empty JSON byte slice")
 	}
 }

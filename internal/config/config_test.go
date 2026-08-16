@@ -38,10 +38,46 @@ func TestConfigManagerLoadAndSave(t *testing.T) {
 	if !cfg2.UseDiscord {
 		t.Errorf("Expected UseDiscord to be true")
 	}
+}
 
-	// Ensure file exists
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		t.Errorf("Config file was not created at %s", configPath)
+func TestConfigManagerInvalidTimezone(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "calendarr.json")
+
+	invalidJSON := []byte(`{"timezone": "Invalid/Timezone_Name"}`)
+	if err := os.WriteFile(configPath, invalidJSON, 0644); err != nil {
+		t.Fatalf("Failed to write invalid config file: %v", err)
+	}
+
+	mgr := NewManager(configPath)
+	cfg := mgr.Get()
+
+	if cfg.Timezone != "UTC" {
+		t.Errorf("Expected fallback timezone UTC for invalid timezone, got %s", cfg.Timezone)
+	}
+
+	// Test Save with invalid timezone
+	cfg.Timezone = "Invalid/Timezone_Name_2"
+	if err := mgr.Save(cfg); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+	if cfg.Timezone != "UTC" {
+		t.Errorf("Expected fallback to UTC after save, got %s", cfg.Timezone)
+	}
+}
+
+func TestConfigManagerInvalidJSON(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "calendarr.json")
+
+	if err := os.WriteFile(configPath, []byte(`{invalid json`), 0644); err != nil {
+		t.Fatalf("Failed to write corrupt config file: %v", err)
+	}
+
+	mgr := NewManager(configPath)
+	cfg := mgr.Get()
+	if cfg == nil {
+		t.Fatalf("Expected fallback config when unmarshal fails")
 	}
 }
 
