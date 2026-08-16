@@ -181,7 +181,7 @@ func (s *Service) parseVEvent(vevent *ics.VEvent, sourceType string, startDate, 
 		endTime = endTime.In(loc)
 	}
 
-	if startTime.Before(startDate.Add(-24*time.Hour)) || startTime.After(endDate) {
+	if startTime.Before(startDate) || startTime.After(endDate) {
 		return nil
 	}
 

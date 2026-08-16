@@ -134,15 +134,17 @@ func (s *Service) TriggerRun(ctx context.Context) ([]*models.Event, error) {
 	}
 
 	now := time.Now().In(loc)
-	startDate := now
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 
-	var endDate time.Time
+	var startDate, endDate time.Time
 	if cfg.ScheduleSettings.ScheduleType == "DAILY" {
-		// For DAILY schedule type, set window to end of current day
+		// For DAILY schedule type, set window from start to end of current day (00:00 - 23:59:59)
+		startDate = startOfDay
 		endDate = time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, loc)
 	} else {
-		// 7 days window for WEEKLY / default
-		endDate = now.AddDate(0, 0, 7)
+		// 7 days window for WEEKLY / default starting from start of today
+		startDate = startOfDay
+		endDate = startOfDay.AddDate(0, 0, 7).Add(-1 * time.Nanosecond)
 	}
 
 	log.Printf("⚡ Executing calendar run (%s) from %s to %s", cfg.ScheduleSettings.ScheduleType, startDate.Format("2006-01-02 15:04"), endDate.Format("2006-01-02 15:04"))
