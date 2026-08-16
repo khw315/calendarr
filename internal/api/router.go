@@ -70,7 +70,7 @@ func (r *Router) Setup() http.Handler {
 func (r *Router) handleGetStatus(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	status := r.schedSvc.GetStatus()
-	json.NewEncoder(w).Encode(status)
+	_ = json.NewEncoder(w).Encode(status)
 }
 
 func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
@@ -79,7 +79,7 @@ func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
 	if events == nil {
 		events = []*models.Event{}
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"events": events,
 		"count":  len(events),
 	})
@@ -88,7 +88,7 @@ func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
 func (r *Router) handleGetConfig(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	cfg := r.cfgMgr.Get()
-	json.NewEncoder(w).Encode(cfg)
+	_ = json.NewEncoder(w).Encode(cfg)
 }
 
 func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
@@ -97,19 +97,19 @@ func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
 	var newCfg models.Config
 	if err := json.NewDecoder(req.Body).Decode(&newCfg); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request JSON payload"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request JSON payload"})
 		return
 	}
 
 	if err := r.cfgMgr.Save(&newCfg); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	r.schedSvc.UpdateSchedule()
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "success",
 		"message": "Configuration saved and schedule updated",
 		"config":  newCfg,
@@ -123,7 +123,7 @@ func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
 		_, _ = r.schedSvc.TriggerRun(req.Context())
 	}()
 
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status":  "triggered",
 		"message": "Manual run triggered successfully in background",
 	})
