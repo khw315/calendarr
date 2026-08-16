@@ -1,8 +1,8 @@
 package localization
 
 import (
-	"embed"
 	"crypto/rand"
+	"embed"
 	"encoding/binary"
 	"encoding/json"
 	"log"
@@ -48,7 +48,12 @@ func initTranslations() {
 
 		translations[langCode] = localeMap
 	}
-	log.Printf("✅ Loaded %d localized languages (%v)", len(translations), SupportedLanguages())
+
+	var keys []string
+	for k := range translations {
+		keys = append(keys, k)
+	}
+	log.Printf("✅ Loaded %d localized languages (%v)", len(translations), keys)
 }
 
 func SupportedLanguages() []string {

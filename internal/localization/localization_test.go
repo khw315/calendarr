@@ -20,14 +20,14 @@ func TestLocalization(t *testing.T) {
 		t.Errorf("Expected default language %s for invalid lang, got %s", DefaultLanguage, normInvalid)
 	}
 
-	titleEN := GetText("EN", "title")
-	if titleEN == "" {
-		t.Errorf("Expected title in EN to be non-empty")
+	headerEN := GetText("EN", "header_text")
+	if headerEN == "" {
+		t.Errorf("Expected header_text in EN to be non-empty")
 	}
 
-	titleFallback := GetText("INVALID_LANG", "title")
-	if titleFallback == "" {
-		t.Errorf("Expected fallback title to be non-empty")
+	headerFallback := GetText("INVALID_LANG", "header_text")
+	if headerFallback == "" {
+		t.Errorf("Expected fallback header_text to be non-empty")
 	}
 
 	msgEN := GetRandomMessage("EN", "no_new_releases")
