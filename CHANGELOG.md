@@ -8,14 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.1] - 2026-08-16
 
 ### Fixed
-- Fixed container `permission denied` runtime error on `/app/config/calendarr.json` when mounting host volumes.
-- Quoted variable expansions in `Dockerfile` to satisfy SonarQube `docker:S6570` compliance rules.
+- Fixed container volume permission denied error on `/app/config/calendarr.json` when mounting host directories.
+- Quoted variable expansions in Dockerfile for SonarQube `docker:S6570` rule compliance.
 
 ### Performance
-- Optimized Docker `ARM64` multi-arch build speeds up to 10x using native Go cross-compilation (`--platform=$BUILDPLATFORM` and `TARGETARCH`).
+- Optimized ARM64 Docker image build speeds up to 10x using native Go cross-compilation with `--platform=$BUILDPLATFORM` and `TARGETARCH`.
 
-### Added
-- Added standard Open Container Initiative (OCI) image metadata labels (`title`, `source`, `documentation`, `licenses`) for GitHub Container Registry (GHCR).
+### Documentation
+- Added standard GHCR OCI container labels (`title`, `source`, `documentation`, `licenses`).
 
 ## [2.0.0] - 2026-08-16
 
