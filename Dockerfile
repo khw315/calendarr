@@ -29,7 +29,7 @@ LABEL org.opencontainers.image.source="https://github.com/khw315/calendarr"
 LABEL org.opencontainers.image.documentation="https://github.com/khw315/calendarr/blob/main/README.md"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
-RUN apk add --no-cache ca-certificates tzdata su-exec && \
+RUN apk add --no-cache ca-certificates su-exec tzdata && \
     addgroup -g 1000 -S calendarr && \
     adduser -u 1000 -S calendarr -G calendarr
 
