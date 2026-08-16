@@ -705,15 +705,51 @@ body {
     stroke: #000;
 }
 
+/* System Dark Mode Fallback */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --color-bg: #1a1a2e;
+        --color-surface: #16213e;
+        --color-border: #3a4a6b;
+
+        --color-primary: #e6c619;
+        --color-primary-dark: #d4a917;
+        --color-secondary: #00b8d4;
+        --color-success: #00c853;
+        --color-info: #448aff;
+        --color-warning: #ff8f00;
+        --color-danger: #ff1744;
+
+        --color-tv: #ff5722;
+        --color-movie: #e040fb;
+
+        --color-text: #f0f0f0;
+        --color-text-muted: #cccccc;
+        --color-text-dim: #555e73;
+
+        --shadow-solid: 4px 4px 0px 0px rgba(0, 0, 0, 0.4);
+        --shadow-solid-hover: 2px 2px 0px 0px rgba(0, 0, 0, 0.4);
+        --shadow-solid-lg: 8px 8px 0px 0px rgba(0, 0, 0, 0.4);
+        --shadow-solid-lg-hover: 4px 4px 0px 0px rgba(0, 0, 0, 0.4);
+    }
+}
+
 /* Footer */
 .footer {
-    padding: var(--spacing-xl) 0;
+    padding: var(--spacing-lg) 0;
     border-top: var(--border-width) solid var(--color-border);
     background: #000;
     color: #fff;
-    text-align: center;
     font-weight: 700;
     text-transform: uppercase;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
 }
 
 .footer a {
@@ -728,6 +764,21 @@ body {
     background: #fff;
     color: #000;
     padding: 0 4px;
+}
+
+.docker-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #0db7ed;
+    color: #000;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border: 2px solid #000;
+    box-shadow: 3px 3px 0 #ffffff;
+    border-radius: var(--radius-sm);
+    text-transform: lowercase;
+    letter-spacing: 0.5px;
 }
 
 /* Modals */

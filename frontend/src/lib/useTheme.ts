@@ -1,22 +1,54 @@
 import { useState, useEffect } from 'react'
 
-type Theme = 'light' | 'dark'
+export type ThemeMode = 'system' | 'light' | 'dark'
 
 export function useTheme() {
-    const [theme, setTheme] = useState<Theme>(() => {
-        const stored = localStorage.getItem('calendarr-theme')
-        if (stored === 'light' || stored === 'dark') return stored
-        // Respect system preference
-        if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
-        return 'light'
+    const [mode, setMode] = useState<ThemeMode>(() => {
+        const stored = localStorage.getItem('calendarr-theme') as ThemeMode
+        if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+        return 'system'
+    })
+
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (mode === 'dark') return 'dark'
+        if (mode === 'light') return 'light'
+        return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     })
 
     useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme)
-        localStorage.setItem('calendarr-theme', theme)
-    }, [theme])
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
-    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
+        const applyTheme = () => {
+            const active: 'light' | 'dark' = mode === 'system'
+                ? (mediaQuery.matches ? 'dark' : 'light')
+                : mode
+            setTheme(active)
+            document.documentElement.setAttribute('data-theme', active)
+        }
 
-    return { theme, toggleTheme }
+        applyTheme()
+        localStorage.setItem('calendarr-theme', mode)
+
+        const handleSystemChange = (e: MediaQueryListEvent) => {
+            if (mode === 'system') {
+                const active = e.matches ? 'dark' : 'light'
+                setTheme(active)
+                document.documentElement.setAttribute('data-theme', active)
+            }
+        }
+
+        mediaQuery.addEventListener('change', handleSystemChange)
+        return () => mediaQuery.removeEventListener('change', handleSystemChange)
+    }, [mode])
+
+    const toggleTheme = () => {
+        setMode(prev => {
+            const current = prev === 'system'
+                ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : prev
+            return current === 'light' ? 'dark' : 'light'
+        })
+    }
+
+    return { mode, theme, toggleTheme, setMode }
 }

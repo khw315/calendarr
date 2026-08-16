@@ -2,6 +2,9 @@ package constants
 
 import "time"
 
+// Application Version
+const Version = "v2.1.0"
+
 // Event Types
 const (
 	EventTypeTV    = "tv"
