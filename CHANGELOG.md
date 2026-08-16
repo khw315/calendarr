@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 3-mode theme system (`system`, `dark`, `light`) in Web UI, supporting dynamic browser/OS preference (`prefers-color-scheme`), 3-way toggle button in header, and Theme Mode dropdown in Settings.
+- **3-Mode Theme System (`system`, `dark`, `light`)**: Full Theme Mode selection across the Web UI, dynamically matching browser/OS preference (`prefers-color-scheme`).
+- **3-Way Header Theme Toggle**: Interactive header toggle button cycling smoothly through System (🖥️), Light (☀️), and Dark (🌙) modes with active status badge indicator.
+- **Settings Theme Selector**: Theme Mode select dropdown in `Settings.tsx` under *Display & Formatting*.
+- **Anti-Flash Theme Script**: Instant inline head script in `index.html` preventing theme flickering during initial page load.
 
 ## [2.1.0] - 2026-08-16
 
