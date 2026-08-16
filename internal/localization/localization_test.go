@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestLocalization(t *testing.T) {
+func TestSupportedLanguagesAndNormalize(t *testing.T) {
 	langs := SupportedLanguages()
 	if len(langs) == 0 {
 		t.Errorf("Expected supported languages to be loaded")
@@ -28,58 +28,49 @@ func TestLocalization(t *testing.T) {
 		t.Errorf("Expected EN in GetLanguageList")
 	}
 
-	normEN := NormalizeLanguage("en")
-	if normEN != "EN" {
-		t.Errorf("Expected EN, got %s", normEN)
+	if norm := NormalizeLanguage("en"); norm != "EN" {
+		t.Errorf("Expected EN, got %s", norm)
 	}
 
-	normInvalid := NormalizeLanguage("INVALID_LANG")
-	if normInvalid != DefaultLanguage {
-		t.Errorf("Expected default language %s for invalid lang, got %s", DefaultLanguage, normInvalid)
+	if norm := NormalizeLanguage("INVALID_LANG"); norm != DefaultLanguage {
+		t.Errorf("Expected default language %s for invalid lang, got %s", DefaultLanguage, norm)
 	}
+}
 
-	headerEN := GetText("EN", "header_text")
-	if headerEN == "" {
+func TestGetTextAndMessages(t *testing.T) {
+	if header := GetText("EN", "header_text"); header == "" {
 		t.Errorf("Expected header_text in EN to be non-empty")
 	}
 
-	headerFallback := GetText("INVALID_LANG", "header_text")
-	if headerFallback == "" {
+	if header := GetText("INVALID_LANG", "header_text"); header == "" {
 		t.Errorf("Expected fallback header_text to be non-empty")
 	}
 
-	msgEN := GetRandomMessage("EN", "no_new_releases")
-	if msgEN == "" {
+	if msg := GetRandomMessage("EN", "no_new_releases"); msg == "" {
 		t.Errorf("Expected random message to be non-empty")
 	}
 
-	msgFallback := GetRandomMessage("ID", "no_new_releases")
-	if msgFallback == "" {
+	if msg := GetRandomMessage("ID", "no_new_releases"); msg == "" {
 		t.Errorf("Expected random message in ID to be non-empty")
 	}
 
-	fbMsg1 := fallbackMessage("no_new_releases")
-	if fbMsg1 != "No new releases to share." {
-		t.Errorf("Unexpected fallback message: %s", fbMsg1)
+	if fb := fallbackMessage("no_new_releases"); fb != "No new releases to share." {
+		t.Errorf("Unexpected fallback message: %s", fb)
 	}
 
-	fbMsg2 := fallbackMessage("no_day_content")
-	if fbMsg2 != "No releases scheduled for this day." {
-		t.Errorf("Unexpected fallback message: %s", fbMsg2)
+	if fb := fallbackMessage("no_day_content"); fb != "No releases scheduled for this day." {
+		t.Errorf("Unexpected fallback message: %s", fb)
 	}
 
-	fbMsg3 := fallbackMessage("unknown_key")
-	if fbMsg3 != "" {
-		t.Errorf("Expected empty fallback for unknown key, got %s", fbMsg3)
+	if fb := fallbackMessage("unknown_key"); fb != "" {
+		t.Errorf("Expected empty fallback for unknown key, got %s", fb)
 	}
 
-	item := getRandomItem([]string{"item1"})
-	if item != "item1" {
+	if item := getRandomItem([]string{"item1"}); item != "item1" {
 		t.Errorf("Expected item1, got %s", item)
 	}
 
-	emptyItem := getRandomItem([]string{})
-	if emptyItem != "" {
+	if emptyItem := getRandomItem([]string{}); emptyItem != "" {
 		t.Errorf("Expected empty string for empty slice, got %s", emptyItem)
 	}
 }
@@ -87,73 +78,64 @@ func TestLocalization(t *testing.T) {
 func TestFormatDateHeader(t *testing.T) {
 	testTime := time.Date(2026, 8, 16, 12, 0, 0, 0, time.UTC)
 
-	headerEN := FormatDateHeader(testTime, "EN")
-	if headerEN == "" {
+	if header := FormatDateHeader(testTime, "EN"); header == "" {
 		t.Errorf("Expected non-empty date header for EN")
 	}
 
-	headerID := FormatDateHeader(testTime, "ID")
-	if headerID == "" {
+	if header := FormatDateHeader(testTime, "ID"); header == "" {
 		t.Errorf("Expected non-empty date header for ID")
 	}
 
-	headerFR := FormatDateHeader(testTime, "FR")
-	if headerFR == "" {
+	if header := FormatDateHeader(testTime, "FR"); header == "" {
 		t.Errorf("Expected non-empty date header for FR")
 	}
 
-	headerInvalid := FormatDateHeader(testTime, "INVALID")
-	if headerInvalid == "" {
+	if header := FormatDateHeader(testTime, "INVALID"); header == "" {
 		t.Errorf("Expected non-empty date header for fallback language")
 	}
 }
 
 func TestFormatSubheader(t *testing.T) {
 	// 1. Both TV and Movie (plural)
-	subBoth := FormatSubheader("EN", 2, 3)
-	if subBoth == "" {
+	if sub := FormatSubheader("EN", 2, 3); sub == "" {
 		t.Errorf("Expected non-empty subheader")
 	}
 
 	// 2. Singular TV & Movie
-	subSingular := FormatSubheader("EN", 1, 1)
-	if subSingular == "" {
+	if sub := FormatSubheader("EN", 1, 1); sub == "" {
 		t.Errorf("Expected non-empty subheader for singular items")
 	}
 
 	// 3. TV only
-	subTV := FormatSubheader("EN", 5, 0)
-	if subTV == "" {
+	if sub := FormatSubheader("EN", 5, 0); sub == "" {
 		t.Errorf("Expected non-empty subheader for TV only")
 	}
 
 	// 4. Movie only
-	subMovie := FormatSubheader("EN", 0, 4)
-	if subMovie == "" {
+	if sub := FormatSubheader("EN", 0, 4); sub == "" {
 		t.Errorf("Expected non-empty subheader for Movie only")
 	}
 
 	// 5. Zero items -> fallback random message
-	subZero := FormatSubheader("EN", 0, 0)
-	if subZero == "" {
+	if sub := FormatSubheader("EN", 0, 0); sub == "" {
 		t.Errorf("Expected fallback message when count is 0")
 	}
 }
 
 func TestHelpers(t *testing.T) {
 	// extractString
-	if str := extractString(nil, "key"); str != "" {
+	if extractString(nil, "key") != "" {
 		t.Errorf("Expected empty string for nil map")
 	}
-	if str := extractString(map[string]interface{}{"num": 123}, "num"); str != "" {
+	if extractString(map[string]interface{}{"num": 123}, "num") != "" {
 		t.Errorf("Expected empty string for non-string val")
 	}
 
 	// extractMessages
-	if msgs := extractMessages(nil, "key"); msgs != nil {
+	if extractMessages(nil, "key") != nil {
 		t.Errorf("Expected nil for nil map")
 	}
-	if msgs := extractMessages(map[string]interface{}{"key_messages": "not a slice"}, "key"); msgs != nil {
+	if extractMessages(map[string]interface{}{"key_messages": "not a slice"}, "key") != nil {
 		t.Errorf("Expected nil for non-slice value")
 	}
 
@@ -166,10 +148,10 @@ func TestHelpers(t *testing.T) {
 	}
 
 	// extractNestedString
-	if val := extractNestedString(nil, "section", "key"); val != "" {
+	if extractNestedString(nil, "section", "key") != "" {
 		t.Errorf("Expected empty string for nil map")
 	}
-	if val := extractNestedString(map[string]interface{}{"section": "invalid"}, "section", "key"); val != "" {
+	if extractNestedString(map[string]interface{}{"section": "invalid"}, "section", "key") != "" {
 		t.Errorf("Expected empty string for non-map section")
 	}
 }
