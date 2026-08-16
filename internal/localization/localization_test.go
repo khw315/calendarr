@@ -28,96 +28,96 @@ func TestSupportedLanguagesAndNormalize(t *testing.T) {
 		t.Errorf("Expected EN in GetLanguageList")
 	}
 
-	if norm := NormalizeLanguage("en"); norm != "EN" {
-		t.Errorf("Expected EN, got %s", norm)
+	if NormalizeLanguage("en") != "EN" {
+		t.Errorf("Expected EN")
 	}
 
-	if norm := NormalizeLanguage("INVALID_LANG"); norm != DefaultLanguage {
-		t.Errorf("Expected default language %s for invalid lang, got %s", DefaultLanguage, norm)
+	if NormalizeLanguage("INVALID_LANG") != DefaultLanguage {
+		t.Errorf("Expected default language %s for invalid lang", DefaultLanguage)
 	}
 }
 
 func TestGetTextAndMessages(t *testing.T) {
-	if header := GetText("EN", "header_text"); header == "" {
+	if GetText("EN", "header_text") == "" {
 		t.Errorf("Expected header_text in EN to be non-empty")
 	}
 
-	if header := GetText("INVALID_LANG", "header_text"); header == "" {
+	if GetText("INVALID_LANG", "header_text") == "" {
 		t.Errorf("Expected fallback header_text to be non-empty")
 	}
 
-	if msg := GetRandomMessage("EN", "no_new_releases"); msg == "" {
+	if GetRandomMessage("EN", "no_new_releases") == "" {
 		t.Errorf("Expected random message to be non-empty")
 	}
 
-	if msg := GetRandomMessage("ID", "no_new_releases"); msg == "" {
+	if GetRandomMessage("ID", "no_new_releases") == "" {
 		t.Errorf("Expected random message in ID to be non-empty")
 	}
 
-	if fb := fallbackMessage("no_new_releases"); fb != "No new releases to share." {
-		t.Errorf("Unexpected fallback message: %s", fb)
+	if fallbackMessage("no_new_releases") != "No new releases to share." {
+		t.Errorf("Unexpected fallback message")
 	}
 
-	if fb := fallbackMessage("no_day_content"); fb != "No releases scheduled for this day." {
-		t.Errorf("Unexpected fallback message: %s", fb)
+	if fallbackMessage("no_day_content") != "No releases scheduled for this day." {
+		t.Errorf("Unexpected fallback message")
 	}
 
-	if fb := fallbackMessage("unknown_key"); fb != "" {
-		t.Errorf("Expected empty fallback for unknown key, got %s", fb)
+	if fallbackMessage("unknown_key") != "" {
+		t.Errorf("Expected empty fallback for unknown key")
 	}
 
-	if item := getRandomItem([]string{"item1"}); item != "item1" {
-		t.Errorf("Expected item1, got %s", item)
+	if getRandomItem([]string{"item1"}) != "item1" {
+		t.Errorf("Expected item1")
 	}
 
-	if emptyItem := getRandomItem([]string{}); emptyItem != "" {
-		t.Errorf("Expected empty string for empty slice, got %s", emptyItem)
+	if getRandomItem([]string{}) != "" {
+		t.Errorf("Expected empty string for empty slice")
 	}
 }
 
 func TestFormatDateHeader(t *testing.T) {
 	testTime := time.Date(2026, 8, 16, 12, 0, 0, 0, time.UTC)
 
-	if header := FormatDateHeader(testTime, "EN"); header == "" {
+	if FormatDateHeader(testTime, "EN") == "" {
 		t.Errorf("Expected non-empty date header for EN")
 	}
 
-	if header := FormatDateHeader(testTime, "ID"); header == "" {
+	if FormatDateHeader(testTime, "ID") == "" {
 		t.Errorf("Expected non-empty date header for ID")
 	}
 
-	if header := FormatDateHeader(testTime, "FR"); header == "" {
+	if FormatDateHeader(testTime, "FR") == "" {
 		t.Errorf("Expected non-empty date header for FR")
 	}
 
-	if header := FormatDateHeader(testTime, "INVALID"); header == "" {
+	if FormatDateHeader(testTime, "INVALID") == "" {
 		t.Errorf("Expected non-empty date header for fallback language")
 	}
 }
 
 func TestFormatSubheader(t *testing.T) {
 	// 1. Both TV and Movie (plural)
-	if sub := FormatSubheader("EN", 2, 3); sub == "" {
+	if FormatSubheader("EN", 2, 3) == "" {
 		t.Errorf("Expected non-empty subheader")
 	}
 
 	// 2. Singular TV & Movie
-	if sub := FormatSubheader("EN", 1, 1); sub == "" {
+	if FormatSubheader("EN", 1, 1) == "" {
 		t.Errorf("Expected non-empty subheader for singular items")
 	}
 
 	// 3. TV only
-	if sub := FormatSubheader("EN", 5, 0); sub == "" {
+	if FormatSubheader("EN", 5, 0) == "" {
 		t.Errorf("Expected non-empty subheader for TV only")
 	}
 
 	// 4. Movie only
-	if sub := FormatSubheader("EN", 0, 4); sub == "" {
+	if FormatSubheader("EN", 0, 4) == "" {
 		t.Errorf("Expected non-empty subheader for Movie only")
 	}
 
 	// 5. Zero items -> fallback random message
-	if sub := FormatSubheader("EN", 0, 0); sub == "" {
+	if FormatSubheader("EN", 0, 0) == "" {
 		t.Errorf("Expected fallback message when count is 0")
 	}
 }
@@ -140,11 +140,11 @@ func TestHelpers(t *testing.T) {
 	}
 
 	// getSubheaderLabel
-	if lbl := getSubheaderLabel(nil, "tv", 1); lbl != "tv" {
-		t.Errorf("Expected 'tv' fallback for nil map, got %s", lbl)
+	if getSubheaderLabel(nil, "tv", 1) != "tv" {
+		t.Errorf("Expected 'tv' fallback for nil map")
 	}
-	if lbl := getSubheaderLabel(map[string]interface{}{"subheader_labels": "invalid"}, "tv", 1); lbl != "tv" {
-		t.Errorf("Expected 'tv' fallback for invalid subheader_labels, got %s", lbl)
+	if getSubheaderLabel(map[string]interface{}{"subheader_labels": "invalid"}, "tv", 1) != "tv" {
+		t.Errorf("Expected 'tv' fallback for invalid subheader_labels")
 	}
 
 	// extractNestedString
