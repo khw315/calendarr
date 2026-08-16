@@ -13,36 +13,36 @@ Calendarr is architected as an all-in-one, single-binary Go application with an 
 
 ```mermaid
 flowchart TD
-    subgraph Feeds [" Calendar Feeds "]
-        Sonarr[" Sonarr (TV iCal) "]
-        Radarr[" Radarr (Movies iCal) "]
+    subgraph Feeds[Calendar Feeds]
+        Sonarr[Sonarr TV iCal]
+        Radarr[Radarr Movies iCal]
     end
 
-    subgraph Core [" Calendarr Core Engine (Go 1.24) "]
-        Scheduler[" Scheduler (robfig/cron) "]
-        Fetcher[" iCal Fetcher & Parser "]
-        Formatter[" Event Formatter & Localizer "]
-        Router[" Chi REST API & SPA Server "]
+    subgraph Core[Calendarr Engine - Go 1.24]
+        Scheduler[robfig/cron Scheduler]
+        Fetcher[iCal Fetcher & Parser]
+        Formatter[Event Formatter & Localizer]
+        Router[Chi REST API & SPA Router]
     end
 
-    subgraph Storage [" Config & Embed "]
-        Config[" Config Manager (JSON) "]
-        WebUI[" Embedded React Web UI "]
+    subgraph Storage[Config & Assets]
+        Config[Config Manager]
+        WebUI[React Web UI]
     end
 
-    subgraph Outputs [" Notification Channels "]
-        Discord[" Discord Webhook "]
-        Slack[" Slack Webhook "]
+    subgraph Outputs[Notification Channels]
+        Discord[Discord Webhook]
+        Slack[Slack Webhook]
     end
 
-    Sonarr -->|iCal Feed| Fetcher
-    Radarr -->|iCal Feed| Fetcher
-    Scheduler -->|Trigger| Fetcher
+    Sonarr --> Fetcher
+    Radarr --> Fetcher
+    Scheduler --> Fetcher
     Fetcher --> Formatter
     Formatter --> Discord
     Formatter --> Slack
-    Config <--> Router
-    WebUI <--> Router
+    Router --> Config
+    Router --> WebUI
 ```
 
 ### Component Breakdown & Data Flow
