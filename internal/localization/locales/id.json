@@ -3,35 +3,35 @@
     "movies_heading": "FILM",
     "header_text": "Rilis Baru",
     "date_header": "{day_name}, {day_num} {short_month_name}",
-    "mention_instruction": "Jika ingin diberi tahu saat ada konten baru, bergabunglah dengan role ini!",
-    "timezone_message": "Semua waktu ditampilkan dalam {timezone}",
+    "mention_instruction": "Dapatkan notifikasi rilis terbaru dengan bergabung ke role ini!",
+    "timezone_message": "Semua waktu ditampilkan dalam zona {timezone}",
     "no_new_releases_messages": [
-        "Jadwal kosong; nikmati waktu luang.",
-        "Tidak ada rilis baru hari ini — waktu yang tepat untuk bersantai.",
-        "Belum ada acara di kalender saat ini.",
-        "Tidak ada rilis mendatang saat ini.",
-        "Jadwal kosong untuk saat ini; silakan beristirahat.",
-        "Tidak ada konten baru untuk dibagikan saat ini.",
-        "Nikmati harimu — tidak ada rilis yang dijadwalkan.",
-        "Kalender kosong; semoga waktu istirahatmu menyenangkan.",
-        "Tidak ada acara atau film baru hari ini; bersantailah dan nikmati.",
-        "Santai saja — tidak ada rilis yang direncanakan untuk saat ini.",
-        "Tidak ada rilis yang dijadwalkan saat ini.",
-        "Server sedang beristirahat."
+        "Jadwal rilis sedang kosong, saatnya bersantai!",
+        "Belum ada rilis baru hari ini — nikmati waktu luangmu.",
+        "Tidak ada tayangan baru di kalender saat ini.",
+        "Belum ada konten baru yang dijadwalkan.",
+        "Kalender rilis masih kosong, silakan beristirahat.",
+        "Tidak ada rilis terbaru untuk dibagikan saat ini.",
+        "Nikmati harimu — tidak ada jadwal tayang hari ini.",
+        "Jadwal kosong; semoga harimu menyenangkan!",
+        "Belum ada serial atau film baru saat ini.",
+        "Santai sejenak — belum ada jadwal rilis mendatang.",
+        "Tidak ada rilis yang dijadwalkan untuk periode ini.",
+        "Server sedang istirahat sejenak."
     ],
     "no_day_content_messages": [
         "Tidak ada rilis yang dijadwalkan untuk hari ini.",
-        "Hari ini belum ada rilis baru.",
-        "Kalender hari ini masih kosong.",
+        "Hari ini belum ada tayangan baru.",
+        "Jadwal rilis hari ini masih kosong.",
         "Tidak ada konten baru untuk hari ini.",
-        "Hari ini tidak ada rilis yang dijadwalkan.",
-        "Kalender menunjukkan tidak ada rilis baru untuk hari ini.",
-        "Nikmati harimu — tidak ada konten baru yang dijadwalkan.",
-        "Tidak ada acara atau film baru yang direncanakan untuk hari ini.",
-        "Silakan beristirahat — tidak ada yang dijadwalkan untuk hari ini.",
-        "Jadwal hari ini kosong; bersantailah dan nikmati.",
-        "Tidak ada rilis yang dijadwalkan saat ini.",
-        "Server sedang beristirahat."
+        "Hari ini tidak ada jadwal tayang baru.",
+        "Kalender menunjukkan tidak ada rilis baru hari ini.",
+        "Nikmati harimu — tidak ada rilis baru yang dijadwalkan hari ini.",
+        "Tidak ada tayangan serial atau film baru untuk hari ini.",
+        "Silakan beristirahat — tidak ada jadwal baru hari ini.",
+        "Jadwal hari ini kosong; bersantailah dan nikmati waktu luangmu.",
+        "Belum ada tayangan baru yang dijadwalkan.",
+        "Server sedang istirahat sejenak."
     ],
     "subheader_templates": {
         "tv": "{count} {label}",
@@ -44,12 +44,12 @@
             "plural": "episode terbaru"
         },
         "movie": {
-            "singular": "rilis film",
-            "plural": "rilis film"
+            "singular": "film terbaru",
+            "plural": "film terbaru"
         },
         "premiere": {
-            "singular": "penayangan perdana musim",
-            "plural": "penayangan perdana musim"
+            "singular": "perdana musim",
+            "plural": "perdana musim"
         }
     },
     "list_join": {
