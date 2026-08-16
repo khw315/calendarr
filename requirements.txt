@@ -1,0 +1,7 @@
+requests
+icalendar
+recurring-ical-events
+datetime
+pytz
+apscheduler
+flask
