@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.2] - 2026-08-16
 
 ### Fixed
-- Resolved host volume permission denied error on `/app/config/calendarr.json` by assigning UID 1000:1000 to the container runtime user and implementing atomic save with a `0666` umask permission mask.
-- Added informative diagnostic logging when host directory permissions prevent configuration writes.
+- Resolved host volume permission error on `/app/config/calendarr.json` by adding `entrypoint.sh` runtime permission correction with `su-exec` and assigning UID `1000:1000`.
+- Fixed API routing 404 errors by explicitly mounting `/api` subrouter on Chi router ahead of SPA static file fallback.
+- Fixed CORS issues when accessing `/api/config` and other endpoints from external IP addresses and web frontends.
+- Fixed `context canceled` errors during background calendar feed fetching over HTTP by using an independent background timeout context.
+- Quoted Dockerfile variables and sorted package names alphanumerically for SonarQube `docker:S6570`, `docker:S7018`, and `shell:S2612` rule compliance.
 
 ## [2.0.1] - 2026-08-16
 
