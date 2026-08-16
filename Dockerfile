@@ -36,8 +36,10 @@ RUN apk add --no-cache ca-certificates su-exec tzdata && \
 COPY --from=go-builder /app/calendarr /app/calendarr
 COPY entrypoint.sh /app/entrypoint.sh
 
-# Create config and logs directories and set permissions for mounted volumes
-RUN chmod +x /app/entrypoint.sh && \
+# Fix CRLF line endings for entrypoint.sh on Windows hosts and set permissions
+RUN tr -d '\r' < /app/entrypoint.sh > /tmp/entrypoint.sh && \
+    mv /tmp/entrypoint.sh /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
     mkdir -p /app/config /app/logs && \
     chown -R calendarr:calendarr /app && \
     chmod -R 775 /app/config /app/logs
