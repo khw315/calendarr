@@ -26,7 +26,7 @@ END:VCALENDAR`
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/calendar")
-		w.Write([]byte(sampleICS))
+		_, _ = w.Write([]byte(sampleICS))
 	}))
 	defer ts.Close()
 

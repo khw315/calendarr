@@ -34,7 +34,7 @@ func TestPlatformServiceDispatchSuccess(t *testing.T) {
 func TestPlatformServiceDispatchError(t *testing.T) {
 	tsErr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Error"))
+		_, _ = w.Write([]byte("Internal Error"))
 	}))
 	defer tsErr.Close()
 
