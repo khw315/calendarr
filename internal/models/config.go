@@ -99,3 +99,188 @@ func DefaultConfig() *Config {
 func (c *Config) ToJSON() ([]byte, error) {
 	return json.MarshalIndent(c, "", "  ")
 }
+
+func (c *Config) MarshalJSON() ([]byte, error) {
+	calURLs := c.CalendarURLs
+	if calURLs == nil {
+		calURLs = make([]CalendarUrl, 0)
+	}
+
+	m := map[string]interface{}{
+		// FE Uppercase Keys for React Settings.tsx compatibility
+		"APP_LANGUAGE":                       c.Language,
+		"USE_DISCORD":                        c.UseDiscord,
+		"DISCORD_WEBHOOK_URL":                c.DiscordWebhookURL,
+		"DISCORD_MENTION_ROLE_ID":            c.DiscordMentionRoleID,
+		"DISCORD_HIDE_MENTION_INSTRUCTIONS": c.DiscordHideMentionInstructions,
+		"DISCORD_TIMESTAMP_STYLE":           c.DiscordTimestampStyle,
+		"ENABLE_CUSTOM_DISCORD_FOOTER":       c.EnableCustomDiscordFooter,
+		"USE_SLACK":                          c.UseSlack,
+		"SLACK_WEBHOOK_URL":                  c.SlackWebhookURL,
+		"ENABLE_CUSTOM_SLACK_FOOTER":         c.EnableCustomSlackFooter,
+		"CALENDAR_URLS":                      calURLs,
+		"PASSED_EVENT_HANDLING":             c.PassedEventHandling,
+		"DEDUPLICATE_EVENTS":                 c.DeduplicateEvents,
+		"USE_24_HOUR":                        c.TimeSettings.Use24Hour,
+		"ADD_LEADING_ZERO":                   c.TimeSettings.AddLeadingZero,
+		"DISPLAY_TIME":                       c.TimeSettings.DisplayTime,
+		"SHOW_DATE_RANGE":                    c.ShowDateRange,
+		"SHOW_TIMEZONE_IN_SUBHEADER":         c.ShowTimezoneInSubheader,
+		"TZ":                                 c.Timezone,
+		"SCHEDULE_TYPE":                      c.ScheduleSettings.ScheduleType,
+		"SCHEDULE_DAY":                       c.ScheduleSettings.ScheduleDay,
+		"RUN_TIME":                           c.ScheduleSettings.RunTime,
+		"CRON_SCHEDULE":                      c.ScheduleSettings.CronSchedule,
+		"RUN_ON_STARTUP":                     c.ScheduleSettings.RunOnStartup,
+		"DEBUG":                              c.LoggingSettings.DebugMode,
+		"HTTP_TIMEOUT":                       c.HTTPTimeout,
+		"LOG_MAX_SIZE_MB":                    c.LoggingSettings.MaxSizeMB,
+		"LOG_BACKUP_COUNT":                   c.LoggingSettings.BackupCount,
+
+		// Standard snake_case & struct keys
+		"language":                          c.Language,
+		"use_discord":                       c.UseDiscord,
+		"discord_webhook_url":               c.DiscordWebhookURL,
+		"discord_mention_role_id":           c.DiscordMentionRoleID,
+		"discord_hide_mention_instructions": c.DiscordHideMentionInstructions,
+		"discord_timestamp_style":          c.DiscordTimestampStyle,
+		"enable_custom_discord_footer":      c.EnableCustomDiscordFooter,
+		"use_slack":                         c.UseSlack,
+		"slack_webhook_url":                 c.SlackWebhookURL,
+		"enable_custom_slack_footer":        c.EnableCustomSlackFooter,
+		"calendar_urls":                     calURLs,
+		"passed_event_handling":            c.PassedEventHandling,
+		"deduplicate_events":                c.DeduplicateEvents,
+		"show_date_range":                   c.ShowDateRange,
+		"show_timezone_in_subheader":        c.ShowTimezoneInSubheader,
+		"timezone":                          c.Timezone,
+		"http_timeout":                      c.HTTPTimeout,
+		"time_settings":                     c.TimeSettings,
+		"schedule_settings":                 c.ScheduleSettings,
+		"logging_settings":                  c.LoggingSettings,
+	}
+
+	return json.Marshal(m)
+}
+
+func (c *Config) UnmarshalJSON(data []byte) error {
+	type Alias Config
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil
+	}
+
+	if val, ok := raw["APP_LANGUAGE"].(string); ok && val != "" {
+		c.Language = val
+	}
+	if val, ok := raw["USE_DISCORD"].(bool); ok {
+		c.UseDiscord = val
+	}
+	if val, ok := raw["DISCORD_WEBHOOK_URL"].(string); ok {
+		c.DiscordWebhookURL = val
+	}
+	if val, ok := raw["DISCORD_MENTION_ROLE_ID"].(string); ok {
+		c.DiscordMentionRoleID = val
+	}
+	if val, ok := raw["DISCORD_HIDE_MENTION_INSTRUCTIONS"].(bool); ok {
+		c.DiscordHideMentionInstructions = val
+	}
+	if val, ok := raw["DISCORD_TIMESTAMP_STYLE"].(string); ok {
+		c.DiscordTimestampStyle = val
+	}
+	if val, ok := raw["ENABLE_CUSTOM_DISCORD_FOOTER"].(bool); ok {
+		c.EnableCustomDiscordFooter = val
+	}
+	if val, ok := raw["USE_SLACK"].(bool); ok {
+		c.UseSlack = val
+	}
+	if val, ok := raw["SLACK_WEBHOOK_URL"].(string); ok {
+		c.SlackWebhookURL = val
+	}
+	if val, ok := raw["ENABLE_CUSTOM_SLACK_FOOTER"].(bool); ok {
+		c.EnableCustomSlackFooter = val
+	}
+	if val, ok := raw["PASSED_EVENT_HANDLING"].(string); ok {
+		c.PassedEventHandling = val
+	}
+	if val, ok := raw["DEDUPLICATE_EVENTS"].(bool); ok {
+		c.DeduplicateEvents = val
+	}
+	if val, ok := raw["SHOW_DATE_RANGE"].(bool); ok {
+		c.ShowDateRange = val
+	}
+	if val, ok := raw["SHOW_TIMEZONE_IN_SUBHEADER"].(bool); ok {
+		c.ShowTimezoneInSubheader = val
+	}
+	if val, ok := raw["TZ"].(string); ok && val != "" {
+		c.Timezone = val
+	}
+
+	// TimeSettings
+	if val, ok := raw["USE_24_HOUR"].(bool); ok {
+		c.TimeSettings.Use24Hour = val
+	}
+	if val, ok := raw["ADD_LEADING_ZERO"].(bool); ok {
+		c.TimeSettings.AddLeadingZero = val
+	}
+	if val, ok := raw["DISPLAY_TIME"].(bool); ok {
+		c.TimeSettings.DisplayTime = val
+	}
+
+	// ScheduleSettings
+	if val, ok := raw["SCHEDULE_TYPE"].(string); ok && val != "" {
+		c.ScheduleSettings.ScheduleType = val
+	}
+	if val, ok := raw["SCHEDULE_DAY"].(string); ok && val != "" {
+		c.ScheduleSettings.ScheduleDay = val
+	}
+	if val, ok := raw["RUN_TIME"].(string); ok && val != "" {
+		c.ScheduleSettings.RunTime = val
+	}
+	if val, ok := raw["CRON_SCHEDULE"].(string); ok {
+		c.ScheduleSettings.CronSchedule = val
+	}
+	if val, ok := raw["RUN_ON_STARTUP"].(bool); ok {
+		c.ScheduleSettings.RunOnStartup = val
+	}
+
+	// Logging & Timeout
+	if val, ok := raw["DEBUG"].(bool); ok {
+		c.LoggingSettings.DebugMode = val
+	}
+	if val, ok := raw["HTTP_TIMEOUT"].(float64); ok {
+		c.HTTPTimeout = int(val)
+	}
+	if val, ok := raw["LOG_MAX_SIZE_MB"].(float64); ok {
+		c.LoggingSettings.MaxSizeMB = int(val)
+	}
+	if val, ok := raw["LOG_BACKUP_COUNT"].(float64); ok {
+		c.LoggingSettings.BackupCount = int(val)
+	}
+
+	// CALENDAR_URLS array from FE
+	if rawURLs, ok := raw["CALENDAR_URLS"].([]interface{}); ok {
+		var urls []CalendarUrl
+		for _, item := range rawURLs {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				u, _ := itemMap["url"].(string)
+				t, _ := itemMap["type"].(string)
+				if u != "" {
+					urls = append(urls, CalendarUrl{URL: u, Type: t})
+				}
+			}
+		}
+		c.CalendarURLs = urls
+	}
+
+	return nil
+}

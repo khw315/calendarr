@@ -9,12 +9,15 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/khw315/calendarr/internal/config"
+	"github.com/khw315/calendarr/internal/localization"
 	"github.com/khw315/calendarr/internal/models"
 	"github.com/khw315/calendarr/internal/services/scheduler"
+	"github.com/khw315/calendarr/internal/tzdata"
 )
 
 const (
@@ -62,6 +65,11 @@ func (r *Router) Setup() http.Handler {
 	apiRouter.Get("/status", r.handleGetStatus)
 	apiRouter.Get("/events", r.handleGetEvents)
 	apiRouter.Get("/config", r.handleGetConfig)
+	apiRouter.Get("/languages", r.handleGetLanguages)
+	apiRouter.Get("/schedule", r.handleGetSchedule)
+	apiRouter.Get("/releases", r.handleGetReleases)
+	apiRouter.Get("/past-releases", r.handleGetReleases)
+	apiRouter.Get("/timezones", r.handleGetTimezones)
 	apiRouter.Post("/config", r.handlePostConfig)
 	apiRouter.Post("/trigger", r.handlePostTrigger)
 
@@ -113,6 +121,109 @@ func (r *Router) handleGetConfig(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	cfg := r.cfgMgr.Get()
 	_ = json.NewEncoder(w).Encode(cfg)
+}
+
+func (r *Router) handleGetLanguages(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	langs := []map[string]string{
+		{"code": "EN", "name": "English"},
+		{"code": "ID", "name": "Bahasa Indonesia"},
+		{"code": "JA", "name": "日本語"},
+		{"code": "KO", "name": "한국어"},
+	}
+	_ = json.NewEncoder(w).Encode(langs)
+}
+
+func (r *Router) handleGetSchedule(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	cfg := r.cfgMgr.Get()
+	status := r.schedSvc.GetStatus()
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"schedule_type": cfg.ScheduleSettings.ScheduleType,
+		"next_run":      status["next_run"],
+		"timezone":      cfg.Timezone,
+	})
+}
+
+func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	cfg := r.cfgMgr.Get()
+	events := r.schedSvc.GetCachedEvents()
+
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	grouped := make(map[string][]*models.Event)
+	var dates []string
+
+	for _, ev := range events {
+		dayKey := ev.DayKey(loc)
+		if _, exists := grouped[dayKey]; !exists {
+			dates = append(dates, dayKey)
+		}
+		grouped[dayKey] = append(grouped[dayKey], ev)
+	}
+
+	type EventDTO struct {
+		Title        string `json:"title"`
+		Type         string `json:"type"`
+		StartTime    string `json:"start_time"`
+		EndTime      string `json:"end_time"`
+		Date         string `json:"date"`
+		Timestamp    int64  `json:"timestamp"`
+		EndTimestamp int64  `json:"end_timestamp"`
+	}
+
+	type DayDTO struct {
+		DayName string     `json:"day_name"`
+		Date    string     `json:"date"`
+		Events  []EventDTO `json:"events"`
+	}
+
+	var days []DayDTO
+	for _, dayKey := range dates {
+		dayEvents := grouped[dayKey]
+		var evDTOs []EventDTO
+		for _, ev := range dayEvents {
+			t := ev.StartTime.In(loc)
+			evType := "tv"
+			if ev.IsMovie() {
+				evType = "movie"
+			}
+			evDTOs = append(evDTOs, EventDTO{
+				Title:        ev.Summary,
+				Type:         evType,
+				StartTime:    t.Format("15:04"),
+				Date:         t.Format("2006-01-02"),
+				Timestamp:    t.Unix(),
+				EndTimestamp: ev.EndTime.In(loc).Unix(),
+			})
+		}
+		dayStartTime := dayEvents[0].StartTime.In(loc)
+		dateHeader := localization.FormatDateHeader(dayStartTime, cfg.Language)
+		days = append(days, DayDTO{
+			DayName: dateHeader,
+			Date:    dayKey,
+			Events:  evDTOs,
+		})
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"days":   days,
+		"events": events,
+	})
+}
+
+func (r *Router) handleGetTimezones(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+	allTZs := tzdata.GetTimezones()
+	tzs := make(map[string]string, len(allTZs))
+	for _, tz := range allTZs {
+		tzs[tz] = tz
+	}
+	_ = json.NewEncoder(w).Encode(tzs)
 }
 
 func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {

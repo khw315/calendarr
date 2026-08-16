@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/khw315/calendarr/internal/api"
 	"github.com/khw315/calendarr/internal/config"

@@ -164,17 +164,24 @@ func (s *Service) parseVEvent(vevent *ics.VEvent, sourceType string, startDate, 
 		return nil
 	}
 
-	startTime, err := s.extractTime(vevent, ics.ComponentPropertyDtStart, loc)
+	startTime, err := vevent.GetStartAt()
 	if err != nil {
-		return nil
+		startTime, err = s.extractTime(vevent, ics.ComponentPropertyDtStart, loc)
+		if err != nil {
+			return nil
+		}
+	} else if loc != nil {
+		startTime = startTime.In(loc)
 	}
 
-	endTime, err := s.extractTime(vevent, ics.ComponentPropertyDtEnd, loc)
+	endTime, err := vevent.GetEndAt()
 	if err != nil || endTime.Before(startTime) || endTime.Equal(startTime) {
 		endTime = startTime.Add(1 * time.Hour)
+	} else if loc != nil {
+		endTime = endTime.In(loc)
 	}
 
-	if startTime.Before(startDate) || startTime.After(endDate) {
+	if startTime.Before(startDate.Add(-24*time.Hour)) || startTime.After(endDate) {
 		return nil
 	}
 
@@ -202,14 +209,18 @@ func (s *Service) extractTime(vevent *ics.VEvent, propName ics.ComponentProperty
 	formats := []string{
 		"20060102T150405Z",
 		"20060102T150405",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05-07:00",
 		"20060102",
+		"2006-01-02",
 	}
 
 	var parsed time.Time
 	var parseErr error
 
+	val := strings.TrimSpace(prop.Value)
 	for _, f := range formats {
-		parsed, parseErr = time.Parse(f, prop.Value)
+		parsed, parseErr = time.Parse(f, val)
 		if parseErr == nil {
 			break
 		}
