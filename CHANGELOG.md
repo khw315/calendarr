@@ -5,11 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-08-16
+
 ### Added
 - **3-Mode Theme System (`system`, `dark`, `light`)**: Full Theme Mode selection across the Web UI, dynamically matching browser/OS preference (`prefers-color-scheme`).
-- **3-Way Header Theme Toggle**: Interactive header toggle button cycling smoothly through System (🖥️), Light (☀️), and Dark (🌙) modes with active status badge indicator.
+- **3-Way Header Theme Toggle**: Interactive header toggle button cycling smoothly through System, Light, and Dark modes with active status badge indicator.
 - **Settings Theme Selector**: Theme Mode select dropdown in `Settings.tsx` under *Display & Formatting*.
 - **Anti-Flash Theme Script**: Instant inline head script in `index.html` preventing theme flickering during initial page load.
+- **Documentation**: Added comprehensive component breakdown and system flow description under *Architecture & Data Flow* in `README.md`.
 
 ## [2.1.0] - 2026-08-16
 
@@ -95,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/khw315/calendarr/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/khw315/calendarr/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/khw315/calendarr/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/khw315/calendarr/compare/v2.0.0...v2.0.1
