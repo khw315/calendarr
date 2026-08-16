@@ -1,7 +1,0 @@
-Flask
-Flask-APScheduler
-requests
-icalendar
-recurring-ical-events
-pytz
-python-dotenv

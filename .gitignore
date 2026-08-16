@@ -1,15 +1,24 @@
+# Environment & Configuration
 .env
-.DS_STORE
-.venv
-logs
-**/*.pyc
-__pycache__
-**/.venv
-**/.venv/**
-**/.venv/
-.venv/*
-.venv/**
 !.env.example
 docker-compose.yml
-public/*
 test_log.txt
+config/
+logs/
+
+# Go Binaries & Coverage
+calendarr
+calendarr.exe
+coverage.out
+coverage
+
+# Frontend & Build Assets
+frontend/node_modules/
+frontend/dist/
+public/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

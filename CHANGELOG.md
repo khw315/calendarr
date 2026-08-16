@@ -5,9 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.0] 2026-03-20
+### Changed
+- Complete application rewrite from Python (Flask) to Golang (Go 1.24).
+- Embedded React Web UI static assets into single Go binary using `go:embed`.
+- Reduced Docker container size to ~25 MB using multi-stage Alpine build.
+- Added SonarQube scan configuration and Go CI/CD GitHub Actions workflows.
 
-### Added
+## [1.6.0] 2026-03-20
 
 - Web UI, API endpoints, and past releases view.
 - Settings UI and persistent configuration system.
