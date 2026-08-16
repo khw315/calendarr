@@ -29,19 +29,20 @@ LABEL org.opencontainers.image.source="https://github.com/khw315/calendarr"
 LABEL org.opencontainers.image.documentation="https://github.com/khw315/calendarr/blob/main/README.md"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
-RUN apk add --no-cache ca-certificates tzdata && \
+RUN apk add --no-cache ca-certificates tzdata su-exec && \
     addgroup -g 1000 -S calendarr && \
     adduser -u 1000 -S calendarr -G calendarr
 
 COPY --from=go-builder /app/calendarr /app/calendarr
+COPY entrypoint.sh /app/entrypoint.sh
 
 # Create config and logs directories and set permissions for mounted volumes
-RUN mkdir -p /app/config /app/logs && \
+RUN chmod +x /app/entrypoint.sh && \
+    mkdir -p /app/config /app/logs && \
     chown -R calendarr:calendarr /app && \
     chmod -R 775 /app/config /app/logs
 
-USER calendarr
-
 EXPOSE 5000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["/app/calendarr"]

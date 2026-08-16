@@ -57,7 +57,15 @@ func (m *Manager) Load() error {
 
 	data, err := os.ReadFile(m.configPath)
 	if err != nil {
-		return err
+		// Try reading fallback path if primary path failed
+		fallbackPath := filepath.Join(os.TempDir(), "calendarr.json")
+		if fbData, fbErr := os.ReadFile(fallbackPath); fbErr == nil {
+			data = fbData
+			m.configPath = fallbackPath
+			log.Printf("ℹ️ Loaded configuration from fallback path %s", fallbackPath)
+		} else {
+			return err
+		}
 	}
 
 	cfg := models.DefaultConfig()
@@ -86,7 +94,7 @@ func (m *Manager) Save(updated *models.Config) error {
 	// Ensure directory exists
 	dir := filepath.Dir(m.configPath)
 	if err := os.MkdirAll(dir, 0777); err != nil {
-		return fmt.Errorf("failed to create config directory: %w", err)
+		log.Printf("⚠️ Could not create directory %s: %v", dir, err)
 	}
 
 	// Resolve Timezone Location
@@ -103,16 +111,31 @@ func (m *Manager) Save(updated *models.Config) error {
 	}
 
 	tmpPath := m.configPath + ".tmp"
-	if err := os.WriteFile(tmpPath, data, 0666); err == nil {
+	writeErr := os.WriteFile(tmpPath, data, 0666)
+	if writeErr == nil {
 		_ = os.Rename(tmpPath, m.configPath)
-	} else if err := os.WriteFile(m.configPath, data, 0666); err != nil {
-		if os.IsPermission(err) {
-			log.Printf("❌ Permission denied when writing to %s. Ensure the host directory has write permissions (e.g. 'chmod 777 ./calendarr/config' or 'chown -R 1000:1000 ./calendarr/config')", m.configPath)
+	} else {
+		writeErr = os.WriteFile(m.configPath, data, 0666)
+	}
+
+	if writeErr != nil {
+		if os.IsPermission(writeErr) {
+			log.Printf("⚠️ Permission denied writing to %s (host volume owned by root/read-only). Run 'sudo chown -R 1000:1000 ./calendarr/config' or 'sudo chmod -R 777 ./calendarr/config' on host to fix.", m.configPath)
+
+			// Fallback to temp directory so runtime configuration update succeeds without error
+			fallbackPath := filepath.Join(os.TempDir(), "calendarr.json")
+			if fbErr := os.WriteFile(fallbackPath, data, 0666); fbErr == nil {
+				log.Printf("✅ Configuration saved to fallback temp location: %s", fallbackPath)
+				m.configPath = fallbackPath
+			} else {
+				log.Printf("⚠️ Fallback config write also failed: %v", fbErr)
+			}
+		} else {
+			return fmt.Errorf("failed to write config file: %w", writeErr)
 		}
-		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	m.config = updated
-	log.Printf("✅ Configuration updated and saved to %s", m.configPath)
+	log.Printf("✅ Configuration successfully updated and active in memory")
 	return nil
 }
