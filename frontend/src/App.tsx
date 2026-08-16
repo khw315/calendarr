@@ -28,7 +28,7 @@ interface DayGroup {
 
 export default function App() {
   const [days, setDays] = useState<DayGroup[]>([])
-  const [pastEvents, setPastEvents] = useState<EventItem[]>([])
+  const [pastDays, setPastDays] = useState<DayGroup[]>([])
   const [totalTv, setTotalTv] = useState<number | string>('-')
   const [totalMovies, setTotalMovies] = useState<number | string>('-')
   const [schedule, setSchedule] = useState({ type: '-', nextRun: '-', timezone: '-' })
@@ -69,7 +69,7 @@ export default function App() {
       const pastRes = await fetch(`${API_BASE}/api/past-releases?days=${pastRange}`)
       if (pastRes.ok) {
         const pastData = await pastRes.json()
-        setPastEvents(pastData.events || [])
+        setPastDays(pastData.days || [])
       }
     } catch (e) {
       console.error(e)
@@ -270,7 +270,6 @@ export default function App() {
                   <div key={i} className="day-group">
                     <div className="day-header">
                       {day.day_name}
-                      <span className="day-date">{day.date}</span>
                     </div>
                     <div className="events-list">
                       {day.events.map((ev, j) => {
@@ -339,7 +338,7 @@ export default function App() {
             {showPast && (
               <div className="past-content">
                 <div className="events-container">
-                  {pastEvents.length === 0 ? (
+                  {pastDays.length === 0 ? (
                     <div className="empty-state">
                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="3" y="6" width="18" height="15" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -348,52 +347,54 @@ export default function App() {
                       <p>No past releases in the last {pastRange} {pastRange === '1' ? 'day' : 'days'}</p>
                     </div>
                   ) : (
-                    <div className="day-group">
-                      <div className="events-list">
-                        {[...pastEvents].sort((a, b) => {
-                          const tA = a.timestamp || (a.start_time ? new Date(a.start_time).getTime() / 1000 : 0);
-                          const tB = b.timestamp || (b.start_time ? new Date(b.start_time).getTime() / 1000 : 0);
-                          return pastSort === 'newest' ? tB - tA : tA - tB;
-                        }).map((ev, j) => {
-                          const title = ev.title || ev.summary || 'Untitled';
-                          const rawType = ev.type || ev.source_type || 'tv';
-                          const isTv = rawType.toLowerCase() === 'tv';
-                          let dateDisplay = ev.date || '';
-                          let timeDisplay = ev.start_time || '';
+                    [...pastDays].sort((a, b) => {
+                      return pastSort === 'newest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+                    }).map((day, i) => (
+                      <div key={i} className="day-group">
+                        <div className="day-header">
+                          {day.day_name}
+                        </div>
+                        <div className="events-list">
+                          {[...day.events].sort((a, b) => {
+                            const tA = a.timestamp || 0;
+                            const tB = b.timestamp || 0;
+                            return pastSort === 'newest' ? tB - tA : tA - tB;
+                          }).map((ev, j) => {
+                            const title = ev.title || (ev as any).summary || 'Untitled';
+                            const rawType = ev.type || (ev as any).source_type || 'tv';
+                            const isTv = rawType.toLowerCase() === 'tv';
+                            let timeDisplay = ev.start_time || '';
 
-                          if (timeDisplay && timeDisplay.includes('T')) {
-                            try {
-                              const d = new Date(timeDisplay);
-                              if (!dateDisplay) {
-                                dateDisplay = d.toISOString().split('T')[0];
+                            if (timeDisplay && timeDisplay.includes('T')) {
+                              try {
+                                const d = new Date(timeDisplay);
+                                const hours = String(d.getHours()).padStart(2, '0');
+                                const mins = String(d.getMinutes()).padStart(2, '0');
+                                timeDisplay = `${hours}:${mins}`;
+                              } catch (e) {
+                                // ignore
                               }
-                              const hours = String(d.getHours()).padStart(2, '0');
-                              const mins = String(d.getMinutes()).padStart(2, '0');
-                              timeDisplay = `${hours}:${mins}`;
-                            } catch (e) {
-                              // ignore
                             }
-                          }
 
-                          return (
-                            <div key={j} className={`event-card brutal-card event-${isTv ? 'tv' : 'movie'} event-past`}>
-                              <span className="event-type">{isTv ? 'TV' : 'Movie'}</span>
-                              <div className="event-title">
-                                {title}
-                                {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
-                                {ev.is_series_finale && <span className="finale-badge">Series End</span>}
-                              </div>
-                              {(timeDisplay || dateDisplay) && (
-                                <div className="event-time">
-                                  {dateDisplay && <span className="time-text" style={{ marginRight: '8px' }}>{dateDisplay}</span>}
-                                  {timeDisplay && <span className="time-text">{timeDisplay}</span>}
+                            return (
+                              <div key={j} className={`event-card brutal-card event-${isTv ? 'tv' : 'movie'} event-past`}>
+                                <span className="event-type">{isTv ? 'TV' : 'Movie'}</span>
+                                <div className="event-title">
+                                  {title}
+                                  {ev.is_bulk && <span className="bulk-badge">{ev.episode_count} Episodes</span>}
+                                  {ev.is_series_finale && <span className="finale-badge">Series End</span>}
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                {timeDisplay && (
+                                  <div className="event-time">
+                                    <span className="time-text">{timeDisplay}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    ))
                   )}
                 </div>
               </div>
