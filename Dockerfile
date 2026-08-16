@@ -34,10 +34,10 @@ RUN apk add --no-cache ca-certificates tzdata && \
 
 COPY --from=go-builder /app/calendarr /app/calendarr
 
-# Create config and logs directories and set permissions for mounted volumes
+# Create config and logs directories and set permissions
 RUN mkdir -p /app/config /app/logs && \
     chown -R calendarr:calendarr /app && \
-    chmod -R 777 /app/config /app/logs
+    chmod -R 775 /app/config /app/logs
 
 USER calendarr
 
