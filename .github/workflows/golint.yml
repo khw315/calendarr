@@ -22,15 +22,15 @@ jobs:
           cache: true
 
       - name: Verify dependencies
-        run: go mod verify || true
+        run: go mod verify
 
       - name: Run go vet
-        run: go vet ./... || true
+        run: go vet ./...
 
       - name: Run unit tests
-        run: go test -v ./... || true
+        run: go test -v ./...
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@4696ba8babb6127d732c3c6dde519db15edab9ea
         with:
           version: v1.64.6
