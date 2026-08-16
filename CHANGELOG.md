@@ -5,6 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-16
+
+### Fixed
+- Fixed container `permission denied` runtime error on `/app/config/calendarr.json` when mounting host volumes.
+- Quoted variable expansions in `Dockerfile` to satisfy SonarQube `docker:S6570` compliance rules.
+
+### Performance
+- Optimized Docker `ARM64` multi-arch build speeds up to 10x using native Go cross-compilation (`--platform=$BUILDPLATFORM` and `TARGETARCH`).
+
+### Added
+- Added standard Open Container Initiative (OCI) image metadata labels (`title`, `source`, `documentation`, `licenses`) for GitHub Container Registry (GHCR).
+
 ## [2.0.0] - 2026-08-16
 
 ### Added
@@ -48,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/khw315/calendarr/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/khw315/calendarr/compare/v1.6.1...v2.0.0
 [1.6.0]: https://github.com/khw315/calendarr/compare/v1.5.0...v1.6.0
