@@ -1,9 +1,0 @@
-__init__
-app
-config
-constants
-data
-main
-models
-services
-utils
