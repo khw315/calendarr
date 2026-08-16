@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -13,6 +14,11 @@ import (
 	"github.com/khw315/calendarr/internal/config"
 	"github.com/khw315/calendarr/internal/models"
 	"github.com/khw315/calendarr/internal/services/scheduler"
+)
+
+const (
+	contentTypeHeader = "Content-Type"
+	contentTypeJSON   = "application/json"
 )
 
 type Router struct {
@@ -51,9 +57,10 @@ func (r *Router) Setup() http.Handler {
 	} else {
 		fileServer := http.FileServer(http.FS(publicSub))
 		router.Get("/*", func(w http.ResponseWriter, req *http.Request) {
-			path := strings.TrimPrefix(req.URL.Path, "/")
-			if path != "" {
-				if _, err := publicSub.Open(path); err == nil {
+			relPath := strings.TrimPrefix(req.URL.Path, "/")
+			cleanedPath := filepath.Clean(relPath)
+			if cleanedPath != "." && cleanedPath != "" && !strings.HasPrefix(cleanedPath, "..") {
+				if _, err := publicSub.Open(cleanedPath); err == nil {
 					fileServer.ServeHTTP(w, req)
 					return
 				}
@@ -68,13 +75,13 @@ func (r *Router) Setup() http.Handler {
 }
 
 func (r *Router) handleGetStatus(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	status := r.schedSvc.GetStatus()
 	_ = json.NewEncoder(w).Encode(status)
 }
 
 func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	events := r.schedSvc.GetCachedEvents()
 	if events == nil {
 		events = []*models.Event{}
@@ -86,13 +93,13 @@ func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) handleGetConfig(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
 	cfg := r.cfgMgr.Get()
 	_ = json.NewEncoder(w).Encode(cfg)
 }
 
 func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
 
 	var newCfg models.Config
 	if err := json.NewDecoder(req.Body).Decode(&newCfg); err != nil {
@@ -117,7 +124,7 @@ func (r *Router) handlePostConfig(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
 
 	go func() {
 		_, _ = r.schedSvc.TriggerRun(req.Context())

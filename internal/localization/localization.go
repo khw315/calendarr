@@ -2,9 +2,10 @@ package localization
 
 import (
 	"embed"
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -71,19 +72,19 @@ func NormalizeLanguage(lang string) string {
 func GetText(lang, key string) string {
 	once.Do(initTranslations)
 	lang = NormalizeLanguage(lang)
-	if data, ok := translations[lang]; ok {
-		if val, exists := data[key]; exists {
-			if strVal, isStr := val.(string); isStr {
-				return strVal
-			}
-		}
+	if strVal := extractString(translations[lang], key); strVal != "" {
+		return strVal
 	}
-	// Fallback to EN
-	if data, ok := translations[DefaultLanguage]; ok {
-		if val, exists := data[key]; exists {
-			if strVal, isStr := val.(string); isStr {
-				return strVal
-			}
+	return extractString(translations[DefaultLanguage], key)
+}
+
+func extractString(data map[string]interface{}, key string) string {
+	if data == nil {
+		return ""
+	}
+	if val, exists := data[key]; exists {
+		if strVal, isStr := val.(string); isStr {
+			return strVal
 		}
 	}
 	return ""
@@ -92,45 +93,64 @@ func GetText(lang, key string) string {
 func GetRandomMessage(lang, messageKey string) string {
 	once.Do(initTranslations)
 	lang = NormalizeLanguage(lang)
-	key := messageKey + "_messages"
 
-	var messages []string
-	if data, ok := translations[lang]; ok {
-		if rawMsgs, exists := data[key]; exists {
-			if sliceMsgs, isSlice := rawMsgs.([]interface{}); isSlice {
-				for _, m := range sliceMsgs {
-					if s, ok := m.(string); ok {
-						messages = append(messages, s)
-					}
-				}
-			}
-		}
-	}
-
+	messages := extractMessages(translations[lang], messageKey)
 	if len(messages) == 0 && lang != DefaultLanguage {
-		if data, ok := translations[DefaultLanguage]; ok {
-			if rawMsgs, exists := data[key]; exists {
-				if sliceMsgs, isSlice := rawMsgs.([]interface{}); isSlice {
-					for _, m := range sliceMsgs {
-						if s, ok := m.(string); ok {
-							messages = append(messages, s)
-						}
-					}
-				}
-			}
-		}
+		messages = extractMessages(translations[DefaultLanguage], messageKey)
 	}
 
 	if len(messages) == 0 {
-		switch messageKey {
-		case "no_new_releases":
-			return "No new releases to share."
-		case "no_day_content":
-			return "No releases scheduled for this day."
-		default:
-			return ""
-		}
+		return fallbackMessage(messageKey)
 	}
 
-	return messages[rand.Intn(len(messages))]
+	return getRandomItem(messages)
+}
+
+func extractMessages(data map[string]interface{}, messageKey string) []string {
+	if data == nil {
+		return nil
+	}
+	key := messageKey + "_messages"
+	rawMsgs, exists := data[key]
+	if !exists {
+		return nil
+	}
+
+	sliceMsgs, isSlice := rawMsgs.([]interface{})
+	if !isSlice {
+		return nil
+	}
+
+	var messages []string
+	for _, m := range sliceMsgs {
+		if s, ok := m.(string); ok {
+			messages = append(messages, s)
+		}
+	}
+	return messages
+}
+
+func fallbackMessage(messageKey string) string {
+	switch messageKey {
+	case "no_new_releases":
+		return "No new releases to share."
+	case "no_day_content":
+		return "No releases scheduled for this day."
+	default:
+		return ""
+	}
+}
+
+func getRandomItem(items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+	var b [8]byte
+	_, err := rand.Read(b[:])
+	if err != nil {
+		return items[0]
+	}
+	val := binary.LittleEndian.Uint64(b[:])
+	idx := int(val % uint64(len(items)))
+	return items[idx]
 }

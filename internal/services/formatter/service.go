@@ -228,41 +228,42 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 }
 
 func (s *Service) formatEventLine(ev *models.Event, cfg *models.Config, isDiscord bool, now time.Time) string {
-	timeStr := ""
-	if cfg.TimeSettings.DisplayTime {
-		loc := cfg.TimezoneLocation
-		if loc == nil {
-			loc = time.UTC
-		}
-		t := ev.StartTime.In(loc)
-		if cfg.TimeSettings.Use24Hour {
-			timeStr = fmt.Sprintf("`%s` ", t.Format("15:04"))
-		} else {
-			timeStr = fmt.Sprintf("`%s` ", t.Format("03:04 PM"))
-		}
-	}
-
+	timePrefix := s.formatTimePrefix(ev, cfg)
 	icon := "📺"
 	if ev.IsMovie() {
 		icon = "🎬"
 	}
 
-	title := ev.Summary
-	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
-		if isDiscord {
-			title = fmt.Sprintf("~~%s~~", title)
-		} else {
-			title = fmt.Sprintf("~%s~", title)
-		}
-	} else {
-		if isDiscord {
-			title = fmt.Sprintf("**%s**", title)
-		} else {
-			title = fmt.Sprintf("*%s*", title)
-		}
-	}
+	title := s.formatTitleMarkup(ev.Summary, ev.IsPast(now), cfg.PassedEventHandling, isDiscord)
+	return fmt.Sprintf("%s%s %s", timePrefix, icon, title)
+}
 
-	return fmt.Sprintf("%s%s %s", timeStr, icon, title)
+func (s *Service) formatTimePrefix(ev *models.Event, cfg *models.Config) string {
+	if !cfg.TimeSettings.DisplayTime {
+		return ""
+	}
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+	t := ev.StartTime.In(loc)
+	if cfg.TimeSettings.Use24Hour {
+		return fmt.Sprintf("`%s` ", t.Format("15:04"))
+	}
+	return fmt.Sprintf("`%s` ", t.Format("03:04 PM"))
+}
+
+func (s *Service) formatTitleMarkup(summary string, isPast bool, handling string, isDiscord bool) string {
+	if isPast && handling == constants.PassedEventStrike {
+		if isDiscord {
+			return fmt.Sprintf("~~%s~~", summary)
+		}
+		return fmt.Sprintf("~%s~", summary)
+	}
+	if isDiscord {
+		return fmt.Sprintf("**%s**", summary)
+	}
+	return fmt.Sprintf("*%s*", summary)
 }
 
 func (s *Service) buildSubheader(lang string, tvCount, movieCount int) string {

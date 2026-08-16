@@ -31,17 +31,29 @@ func (s *Service) FetchEvents(ctx context.Context, cfg *models.Config, startDate
 		Timeout: time.Duration(cfg.HTTPTimeout) * time.Second,
 	}
 
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	allEvents := s.fetchConcurrent(ctx, client, cfg, startDate, endDate, loc)
+
+	// Sort events by StartTime ascending
+	sort.Slice(allEvents, func(i, j int) bool {
+		return allEvents[i].StartTime.Before(allEvents[j].StartTime)
+	})
+
+	log.Printf("🗓️ Total events retrieved across feeds: %d", len(allEvents))
+	return allEvents, nil
+}
+
+func (s *Service) fetchConcurrent(ctx context.Context, client *http.Client, cfg *models.Config, startDate, endDate time.Time, loc *time.Location) []*models.Event {
 	var (
 		wg        sync.WaitGroup
 		mu        sync.Mutex
 		allEvents []*models.Event
 		seenKeys  = make(map[string]bool)
-		loc       = cfg.TimezoneLocation
 	)
-
-	if loc == nil {
-		loc = time.UTC
-	}
 
 	for _, calURL := range cfg.CalendarURLs {
 		if strings.TrimSpace(calURL.URL) == "" {
@@ -75,32 +87,11 @@ func (s *Service) FetchEvents(ctx context.Context, cfg *models.Config, startDate
 	}
 
 	wg.Wait()
-
-	// Sort events by StartTime ascending
-	sort.Slice(allEvents, func(i, j int) bool {
-		return allEvents[i].StartTime.Before(allEvents[j].StartTime)
-	})
-
-	log.Printf("🗓️ Total events retrieved across feeds: %d", len(allEvents))
-	return allEvents, nil
+	return allEvents
 }
 
 func (s *Service) fetchFromURL(ctx context.Context, client *http.Client, calURL models.CalendarUrl, startDate, endDate time.Time, loc *time.Location) ([]*models.Event, error) {
-	targetURL := calURL.URL
-
-	// Ensure pastDays and futureDays parameters exist
-	parsed, err := url.Parse(targetURL)
-	if err == nil {
-		q := parsed.Query()
-		if !q.Has("pastDays") {
-			q.Set("pastDays", "30")
-		}
-		if !q.Has("futureDays") {
-			q.Set("futureDays", "30")
-		}
-		parsed.RawQuery = q.Encode()
-		targetURL = parsed.String()
-	}
+	targetURL := s.buildTargetURL(calURL.URL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, targetURL, nil)
 	if err != nil {
@@ -128,67 +119,74 @@ func (s *Service) fetchFromURL(ctx context.Context, client *http.Client, calURL 
 	}
 
 	var results []*models.Event
-
 	for _, component := range cal.Components {
-		vevent, ok := component.(*ics.VEvent)
-		if !ok {
-			continue
+		if vevent, ok := component.(*ics.VEvent); ok {
+			if ev := s.parseVEvent(vevent, calURL.Type, startDate, endDate, loc); ev != nil {
+				results = append(results, ev)
+			}
 		}
-
-		summaryProp := vevent.GetProperty(ics.ComponentPropertySummary)
-		if summaryProp == nil || summaryProp.Value == "" {
-			continue
-		}
-
-		startTime, err := s.extractTime(vevent, ics.ComponentPropertyDtStart, loc)
-		if err != nil {
-			continue
-		}
-
-		endTime, err := s.extractTime(vevent, ics.ComponentPropertyDtEnd, loc)
-		if err != nil || endTime.Before(startTime) || endTime.Equal(startTime) {
-			endTime = startTime.Add(1 * time.Hour)
-		}
-
-		// Filter events outside requested window
-		if startTime.Before(startDate) || startTime.After(endDate) {
-			continue
-		}
-
-		uid := vevent.Id()
-
-		description := ""
-		if descProp := vevent.GetProperty(ics.ComponentPropertyDescription); descProp != nil {
-			description = descProp.Value
-		}
-
-		ev := &models.Event{
-			Summary:     summaryProp.Value,
-			StartTime:   startTime,
-			EndTime:     endTime,
-			SourceType:  calURL.Type,
-			UID:         uid,
-			Description: description,
-		}
-
-		results = append(results, ev)
 	}
 
 	return results, nil
 }
 
+func (s *Service) buildTargetURL(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	q := parsed.Query()
+	if !q.Has("pastDays") {
+		q.Set("pastDays", "30")
+	}
+	if !q.Has("futureDays") {
+		q.Set("futureDays", "30")
+	}
+	parsed.RawQuery = q.Encode()
+	return parsed.String()
+}
+
+func (s *Service) parseVEvent(vevent *ics.VEvent, sourceType string, startDate, endDate time.Time, loc *time.Location) *models.Event {
+	summaryProp := vevent.GetProperty(ics.ComponentPropertySummary)
+	if summaryProp == nil || summaryProp.Value == "" {
+		return nil
+	}
+
+	startTime, err := s.extractTime(vevent, ics.ComponentPropertyDtStart, loc)
+	if err != nil {
+		return nil
+	}
+
+	endTime, err := s.extractTime(vevent, ics.ComponentPropertyDtEnd, loc)
+	if err != nil || endTime.Before(startTime) || endTime.Equal(startTime) {
+		endTime = startTime.Add(1 * time.Hour)
+	}
+
+	if startTime.Before(startDate) || startTime.After(endDate) {
+		return nil
+	}
+
+	description := ""
+	if descProp := vevent.GetProperty(ics.ComponentPropertyDescription); descProp != nil {
+		description = descProp.Value
+	}
+
+	return &models.Event{
+		Summary:     summaryProp.Value,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		SourceType:  sourceType,
+		UID:         vevent.Id(),
+		Description: description,
+	}
+}
+
 func (s *Service) extractTime(vevent *ics.VEvent, propName ics.ComponentProperty, loc *time.Location) (time.Time, error) {
 	prop := vevent.GetProperty(propName)
-	if prop == nil {
-		return time.Time{}, fmt.Errorf("missing property %s", propName)
+	if prop == nil || prop.Value == "" {
+		return time.Time{}, fmt.Errorf("missing or empty property %s", propName)
 	}
 
-	val := prop.Value
-	if val == "" {
-		return time.Time{}, fmt.Errorf("empty property %s", propName)
-	}
-
-	// Try standard iCal time formats
 	formats := []string{
 		"20060102T150405Z",
 		"20060102T150405",
@@ -199,7 +197,7 @@ func (s *Service) extractTime(vevent *ics.VEvent, propName ics.ComponentProperty
 	var parseErr error
 
 	for _, f := range formats {
-		parsed, parseErr = time.Parse(f, val)
+		parsed, parseErr = time.Parse(f, prop.Value)
 		if parseErr == nil {
 			break
 		}
