@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import './index.css'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -48,7 +48,7 @@ export default function App() {
     return () => clearInterval(timer)
   }, [])
 
-  const fetchScheduleData = async () => {
+  const fetchScheduleData = useCallback(async () => {
     try {
       const schedRes = await fetch(`${API_BASE}/api/schedule`)
       if (schedRes.ok) {
@@ -59,24 +59,24 @@ export default function App() {
           timezone: schedData.timezone || 'UTC'
         })
       }
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // ignore
     }
-  }
+  }, [])
 
-  const fetchPastReleasesData = async () => {
+  const fetchPastReleasesData = useCallback(async () => {
     try {
       const pastRes = await fetch(`${API_BASE}/api/past-releases?days=${pastRange}`)
       if (pastRes.ok) {
         const pastData = await pastRes.json()
         setPastDays(pastData.days || [])
       }
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // ignore
     }
-  }
+  }, [pastRange])
 
-  const fetchUpcomingReleasesData = async () => {
+  const fetchUpcomingReleasesData = useCallback(async () => {
     setLoading(true)
     try {
       const eventsRes = await fetch(`${API_BASE}/api/releases?days=${range}`)
@@ -86,8 +86,8 @@ export default function App() {
         // Calculate splits
         let tvCount = 0;
         let movieCount = 0;
-        (eventsData.days || []).forEach((d: any) => {
-          (d.events || []).forEach((e: any) => {
+        (eventsData.days || []).forEach((d: DayGroup) => {
+          (d.events || []).forEach((e: EventItem) => {
             if (e.type === 'tv') tvCount += (e.episode_count || 1);
             if (e.type === 'movie') movieCount++;
           })
@@ -96,30 +96,30 @@ export default function App() {
         setTotalTv(tvCount)
         setTotalMovies(movieCount)
       }
-    } catch (e) {
-      console.error(e)
+    } catch {
+      // ignore
     } finally {
       setLoading(false)
     }
-  }
-
-  const fetchData = async () => {
-    fetchScheduleData()
-    fetchPastReleasesData()
-    fetchUpcomingReleasesData()
-  }
-
-  useEffect(() => {
-    fetchScheduleData()
-  }, [])
-
-  useEffect(() => {
-    fetchPastReleasesData()
-  }, [pastRange])
-
-  useEffect(() => {
-    fetchUpcomingReleasesData()
   }, [range])
+
+  const fetchData = useCallback(async () => {
+    fetchScheduleData()
+    fetchPastReleasesData()
+    fetchUpcomingReleasesData()
+  }, [fetchScheduleData, fetchPastReleasesData, fetchUpcomingReleasesData])
+
+  useEffect(() => {
+    fetchScheduleData()
+  }, [fetchScheduleData])
+
+  useEffect(() => {
+    fetchPastReleasesData()
+  }, [fetchPastReleasesData])
+
+  useEffect(() => {
+    fetchUpcomingReleasesData()
+  }, [fetchUpcomingReleasesData])
 
   const handleTrigger = async () => {
     setTriggering(true)
@@ -129,7 +129,7 @@ export default function App() {
       const data = await res.json()
       setTriggerStatus(data.message || 'Triggered successfully')
       setTimeout(fetchData, 2000)
-    } catch (e) {
+    } catch {
       setTriggerStatus('Failed to trigger')
     } finally {
       setTriggering(false)
@@ -360,8 +360,8 @@ export default function App() {
                             const tB = b.timestamp || 0;
                             return pastSort === 'newest' ? tB - tA : tA - tB;
                           }).map((ev, j) => {
-                            const title = ev.title || (ev as any).summary || 'Untitled';
-                            const rawType = ev.type || (ev as any).source_type || 'tv';
+                            const title = ev.title || ev.summary || 'Untitled';
+                            const rawType = ev.type || ev.source_type || 'tv';
                             const isTv = rawType.toLowerCase() === 'tv';
                             let timeDisplay = ev.start_time || '';
 
@@ -371,7 +371,7 @@ export default function App() {
                                 const hours = String(d.getHours()).padStart(2, '0');
                                 const mins = String(d.getMinutes()).padStart(2, '0');
                                 timeDisplay = `${hours}:${mins}`;
-                              } catch (e) {
+                              } catch {
                                 // ignore
                               }
                             }

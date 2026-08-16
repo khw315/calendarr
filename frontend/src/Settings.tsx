@@ -4,8 +4,45 @@ import Footer from './components/Footer'
 
 const API_BASE = ''
 
+interface CalendarUrlItem {
+    url: string
+    type: string
+}
+
+interface ConfigState {
+    APP_LANGUAGE?: string
+    USE_DISCORD?: boolean
+    DISCORD_WEBHOOK_URL?: string
+    DISCORD_MENTION_ROLE_ID?: string
+    DISCORD_HIDE_MENTION_INSTRUCTIONS?: boolean
+    DISCORD_TIMESTAMP_STYLE?: string
+    ENABLE_CUSTOM_DISCORD_FOOTER?: boolean
+    USE_SLACK?: boolean
+    SLACK_WEBHOOK_URL?: string
+    ENABLE_CUSTOM_SLACK_FOOTER?: boolean
+    CALENDAR_URLS?: CalendarUrlItem[]
+    PASSED_EVENT_HANDLING?: string
+    DEDUPLICATE_EVENTS?: boolean
+    USE_24_HOUR?: boolean
+    ADD_LEADING_ZERO?: boolean
+    DISPLAY_TIME?: boolean
+    SHOW_DATE_RANGE?: boolean
+    SHOW_TIMEZONE_IN_SUBHEADER?: boolean
+    TZ?: string
+    SCHEDULE_TYPE?: string
+    SCHEDULE_DAY?: string
+    RUN_TIME?: string
+    CRON_SCHEDULE?: string
+    RUN_ON_STARTUP?: boolean
+    DEBUG?: boolean
+    HTTP_TIMEOUT?: number
+    LOG_MAX_SIZE_MB?: number
+    LOG_BACKUP_COUNT?: number
+    [key: string]: unknown
+}
+
 export default function Settings() {
-    const [config, setConfig] = useState<any>({
+    const [config, setConfig] = useState<ConfigState>({
         APP_LANGUAGE: "EN",
         USE_DISCORD: false,
         DISCORD_WEBHOOK_URL: "",
@@ -35,7 +72,7 @@ export default function Settings() {
         LOG_MAX_SIZE_MB: 10,
         LOG_BACKUP_COUNT: 5
     })
-    const [originalConfig, setOriginalConfig] = useState<any>({})
+    const [originalConfig, setOriginalConfig] = useState<ConfigState>({})
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -60,8 +97,8 @@ export default function Settings() {
                 setConfig(data)
                 setOriginalConfig(JSON.parse(JSON.stringify(data)))
             }
-        } catch (e) {
-            console.error(e)
+        } catch {
+            // ignore
         } finally {
             setLoading(false)
         }
@@ -77,13 +114,14 @@ export default function Settings() {
                     .sort((a, b) => a.iana.localeCompare(b.iana))
                 setTimezones(sorted)
             }
-        } catch (e) {
-            console.error(e)
+        } catch {
             // Fallback to browser list
             try {
                 const tzs = Intl.supportedValuesOf('timeZone')
                 setTimezones(tzs.map(iana => ({ iana, label: iana })))
-            } catch {}
+            } catch {
+                setTimezones([])
+            }
         }
     }
 
@@ -94,8 +132,8 @@ export default function Settings() {
                 const data = await res.json()
                 setLanguages(data)
             }
-        } catch (e) {
-            console.error(e)
+        } catch {
+            // ignore
         }
     }
 
@@ -107,7 +145,7 @@ export default function Settings() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const target = e.target as HTMLInputElement;
         const value = target.type === 'checkbox' ? target.checked : target.value;
-        setConfig((prev: any) => ({
+        setConfig((prev: ConfigState) => ({
             ...prev,
             [target.name]: value
         }));
@@ -141,11 +179,11 @@ export default function Settings() {
         setSaving(true)
 
         // Calculate diff against originalConfig
-        const changesToSubmit: any = {};
+        const changesToSubmit: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(config)) {
             let isChanged = false;
             if (key === 'CALENDAR_URLS') {
-                const filteredUrls = (value as any[] || []).filter(u => u.url && u.url.trim() !== '')
+                const filteredUrls = ((value as CalendarUrlItem[]) || []).filter((u: CalendarUrlItem) => u.url && u.url.trim() !== '')
                 isChanged = JSON.stringify(filteredUrls) !== JSON.stringify(originalConfig[key] || []);
                 if (isChanged) changesToSubmit[key] = filteredUrls;
                 continue;
@@ -181,11 +219,11 @@ export default function Settings() {
             const data = await res.json()
             if (res.ok && (data.success || data.status === 'success')) {
                 showToast("Settings saved successfully!", 'success')
-                setOriginalConfig((prev: any) => ({ ...prev, ...changesToSubmit }))
+                setOriginalConfig((prev: ConfigState) => ({ ...prev, ...changesToSubmit }))
             } else {
                 showToast(data.error || "Failed to save settings", 'error')
             }
-        } catch (e) {
+        } catch {
             showToast("Failed to communicate with server.", 'error')
         } finally {
             setSaving(false)
@@ -199,14 +237,14 @@ export default function Settings() {
 
     // Calendar URLs handlers
     const handleAddCalendarUrl = () => {
-        setConfig((prev: any) => ({
+        setConfig((prev: ConfigState) => ({
             ...prev,
             CALENDAR_URLS: [...(prev.CALENDAR_URLS || []), { url: '', type: 'tv' }]
         }))
     }
 
     const handleRemoveCalendarUrl = (index: number) => {
-        setConfig((prev: any) => {
+        setConfig((prev: ConfigState) => {
             const newUrls = [...(prev.CALENDAR_URLS || [])]
             newUrls.splice(index, 1)
             return { ...prev, CALENDAR_URLS: newUrls }
@@ -214,9 +252,9 @@ export default function Settings() {
     }
 
     const handleCalendarUrlChange = (index: number, field: 'url' | 'type', value: string) => {
-        setConfig((prev: any) => {
+        setConfig((prev: ConfigState) => {
             const newUrls = [...(prev.CALENDAR_URLS || [])]
-            newUrls[index][field] = value
+            newUrls[index] = { ...newUrls[index], [field]: value }
             return { ...prev, CALENDAR_URLS: newUrls }
         })
     }
@@ -254,7 +292,7 @@ export default function Settings() {
                                         {(config.CALENDAR_URLS || []).length === 0 ? (
                                             <p style={{ color: 'var(--color-text-dim)', fontSize: '0.9em', marginBottom: '5px' }}>No calendar URLs added. Add one to get started.</p>
                                         ) : (
-                                            (config.CALENDAR_URLS || []).map((urlObj: any, index: number) => (
+                                            (config.CALENDAR_URLS || []).map((urlObj: CalendarUrlItem, index: number) => (
                                                 <div key={index} className="calendar-url-item">
                                                     <div className="calendar-url-inputs">
                                                         <input
