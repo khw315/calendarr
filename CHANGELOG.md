@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-08-24
+
 ### Fixed
 - Fixed Discord payload formatting for empty release schedules (`events_count == 0`) by setting `Embeds` to `nil`, preventing duplicate embed sidebar boxes from being sent alongside plain header content.
 
@@ -92,7 +94,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/khw315/calendarr/compare/v2.2.0...v2.2.1
+[2.2.0]: https://github.com/khw315/calendarr/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/khw315/calendarr/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/khw315/calendarr/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/khw315/calendarr/compare/v2.0.0...v2.0.1
