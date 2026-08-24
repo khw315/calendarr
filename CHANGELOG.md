@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed Discord payload formatting for empty release schedules (`events_count == 0`) by setting `Embeds` to `nil`, preventing duplicate embed sidebar boxes from being sent alongside plain header content.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added
