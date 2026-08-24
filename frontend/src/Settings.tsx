@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import { useTheme } from './lib/useTheme'
 
 const API_BASE = ''
 
@@ -80,6 +81,7 @@ export default function Settings() {
     // Custom Toast State (replacing showToast)
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
     const [timezones, setTimezones] = useState<{ iana: string; label: string }[]>([])
+    const { mode: themeMode, setMode: setThemeMode } = useTheme()
     const [languages, setLanguages] = useState<{ code: string, name: string }[]>([])
 
     useEffect(() => {
@@ -398,6 +400,20 @@ export default function Settings() {
                                     <h3>Display & Formatting</h3>
                                     <span className="details-arrow">▼</span>
                                 </summary>
+                                <div className="form-group">
+                                    <label htmlFor="set_THEME_MODE">Theme Mode</label>
+                                    <select
+                                        id="set_THEME_MODE"
+                                        name="THEME_MODE"
+                                        className="brutal-select"
+                                        value={themeMode}
+                                        onChange={(e) => setThemeMode(e.target.value as 'system' | 'light' | 'dark')}
+                                    >
+                                        <option value="system">System (Follow Browser/OS)</option>
+                                        <option value="light">Light Mode</option>
+                                        <option value="dark">Dark Mode</option>
+                                    </select>
+                                </div>
                                 <div className="form-group">
                                     <label htmlFor="set_APP_LANGUAGE">Language</label>
                                     <select id="set_APP_LANGUAGE" name="APP_LANGUAGE" className="brutal-select" value={config.APP_LANGUAGE || 'EN'} onChange={handleChange}>

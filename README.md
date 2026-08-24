@@ -9,39 +9,49 @@ A simple, ultra-lightweight Docker container built in **Go** that fetches upcomi
 
 ## Architecture & Data Flow
 
+Calendarr is architected as an all-in-one, single-binary Go application with an embedded React frontend and a concurrent worker engine.
+
 ```mermaid
 flowchart TD
-    subgraph Feeds [" Calendar Feeds "]
-        Sonarr[" Sonarr (TV iCal) "]
-        Radarr[" Radarr (Movies iCal) "]
+    subgraph Feeds[Calendar Feeds]
+        Sonarr[Sonarr TV iCal]
+        Radarr[Radarr Movies iCal]
     end
 
-    subgraph Core [" Calendarr Core Engine (Go 1.24) "]
-        Scheduler[" Scheduler (robfig/cron) "]
-        Fetcher[" iCal Fetcher & Parser "]
-        Formatter[" Event Formatter & Localizer "]
-        Router[" Chi REST API & SPA Server "]
+    subgraph Core[Calendarr Engine - Go 1.24]
+        Scheduler[robfig/cron Scheduler]
+        Fetcher[iCal Fetcher & Parser]
+        Formatter[Event Formatter & Localizer]
+        Router[Chi REST API & SPA Router]
     end
 
-    subgraph Storage [" Config & Embed "]
-        Config[" Config Manager (JSON) "]
-        WebUI[" Embedded React Web UI "]
+    subgraph Storage[Config & Assets]
+        Config[Config Manager]
+        WebUI[React Web UI]
     end
 
-    subgraph Outputs [" Notification Channels "]
-        Discord[" Discord Webhook "]
-        Slack[" Slack Webhook "]
+    subgraph Outputs[Notification Channels]
+        Discord[Discord Webhook]
+        Slack[Slack Webhook]
     end
 
-    Sonarr -->|iCal Feed| Fetcher
-    Radarr -->|iCal Feed| Fetcher
-    Scheduler -->|Trigger| Fetcher
+    Sonarr --> Fetcher
+    Radarr --> Fetcher
+    Scheduler --> Fetcher
     Fetcher --> Formatter
     Formatter --> Discord
     Formatter --> Slack
-    Config <--> Router
-    WebUI <--> Router
+    Router --> Config
+    Router --> WebUI
 ```
+
+### Component Breakdown & Data Flow
+
+1. **Calendar Ingestion (`iCal Fetcher & Parser`)**: Concurrently fetches iCal feeds from Sonarr (TV shows) and Radarr (Movies) over HTTP, parsing `VEVENT` components, handling parameter-rich `DTSTART`/`DTEND` timezones, and deduplicating cross-feed entries.
+2. **Core Scheduler (`robfig/cron/v3`)**: Controls execution triggers based on configured Daily, Weekly, or custom Cron schedules, as well as instant manual triggers from the Web UI.
+3. **Formatter & Localizer (`Event Formatter`)**: Transforms raw calendar events into rich, formatted Markdown payloads for Discord and Slack webhooks, applying dynamic localized date headers, timezone offsets, relative countdown timestamps (`<t:TIMESTAMP:R>`), and custom footers.
+4. **Chi REST Router & Embedded SPA (`go-chi/chi/v5`)**: Serves the REST API (`/api/releases`, `/api/past-releases`, `/api/config`, `/api/trigger`) and renders the embedded single-page React Web UI directly from binary memory (`//go:embed`).
+5. **Config Manager (`JSON Storage`)**: Provides atomic thread-safe reads and writes to persistent configuration files (`/app/config/calendarr.json`) mounted on host volumes.
 
 ---
 

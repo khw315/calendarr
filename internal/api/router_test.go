@@ -39,14 +39,6 @@ func TestAPIRoutes(t *testing.T) {
 		t.Errorf("Expected status 200 on /api/status, got %d", recStatus.Code)
 	}
 
-	// 1b. GET /api/version
-	reqVer := httptest.NewRequest(http.MethodGet, "/api/version", nil)
-	recVer := httptest.NewRecorder()
-	handler.ServeHTTP(recVer, reqVer)
-	if recVer.Code != http.StatusOK {
-		t.Errorf("Expected status 200 on /api/version, got %d", recVer.Code)
-	}
-
 	// 2. GET /api/events
 	reqEvents := httptest.NewRequest(http.MethodGet, "/api/events", nil)
 	recEvents := httptest.NewRecorder()

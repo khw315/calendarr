@@ -16,7 +16,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/khw315/calendarr/internal/config"
-	"github.com/khw315/calendarr/internal/constants"
 	"github.com/khw315/calendarr/internal/localization"
 	"github.com/khw315/calendarr/internal/models"
 	"github.com/khw315/calendarr/internal/services/calendar"
@@ -76,7 +75,6 @@ func (r *Router) Setup() http.Handler {
 	apiRouter.Get("/releases", r.handleGetReleases)
 	apiRouter.Get("/past-releases", r.handleGetPastReleases)
 	apiRouter.Get("/timezones", r.handleGetTimezones)
-	apiRouter.Get("/version", r.handleGetVersion)
 	apiRouter.Post("/config", r.handlePostConfig)
 	apiRouter.Post("/trigger", r.handlePostTrigger)
 
@@ -111,15 +109,6 @@ func (r *Router) handleGetStatus(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	status := r.schedSvc.GetStatus()
 	_ = json.NewEncoder(w).Encode(status)
-}
-
-func (r *Router) handleGetVersion(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set(contentTypeHeader, contentTypeJSON)
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]string{
-		"version":      constants.Version,
-		"docker_image": "khw315/calendarr:" + constants.Version,
-	})
 }
 
 func (r *Router) handleGetEvents(w http.ResponseWriter, req *http.Request) {

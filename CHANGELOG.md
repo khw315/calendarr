@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed Discord payload formatting for empty release schedules (`events_count == 0`) by setting `Embeds` to `nil`, preventing duplicate embed sidebar boxes from being sent alongside plain header content.
 
+## [2.2.0] - 2026-08-16
+
+### Added
+- **3-Mode Theme System (`system`, `dark`, `light`)**: Full Theme Mode selection across the Web UI, dynamically matching browser/OS preference (`prefers-color-scheme`).
+- **3-Way Header Theme Toggle**: Interactive header toggle button cycling smoothly through System, Light, and Dark modes with active status badge indicator.
+- **Settings Theme Selector**: Theme Mode select dropdown in `Settings.tsx` under *Display & Formatting*.
+- **Anti-Flash Theme Script**: Instant inline head script in `index.html` preventing theme flickering during initial page load.
+- **Documentation**: Added comprehensive component breakdown and system flow description under *Architecture & Data Flow* in `README.md`.
+
 ## [2.1.0] - 2026-08-16
 
 ### Added

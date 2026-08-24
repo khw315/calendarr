@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calendarr</title>
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('calendarr-theme');
+          var mode = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
+          var active = mode === 'system' 
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : mode;
+          document.documentElement.setAttribute('data-theme', active);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
