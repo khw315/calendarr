@@ -54,10 +54,9 @@ func TestFormatterService(t *testing.T) {
 		t.Errorf("Unexpected event counts: %v", res.Counts)
 	}
 
-	// Test empty events payload
 	emptyRes := svc.Format([]*models.Event{}, cfg, startDate, endDate)
-	if emptyRes.Discord == nil || len(emptyRes.Discord.Embeds) == 0 {
-		t.Errorf("Expected fallback Discord embed for empty events")
+	if emptyRes.Discord == nil || len(emptyRes.Discord.Embeds) != 0 {
+		t.Errorf("Expected 0 Discord embeds for empty events schedule, got %d", len(emptyRes.Discord.Embeds))
 	}
 	if emptyRes.Slack == nil || len(emptyRes.Slack.Blocks) == 0 {
 		t.Errorf("Expected fallback Slack blocks for empty events")

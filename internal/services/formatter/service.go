@@ -77,18 +77,12 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 		loc = time.UTC
 	}
 
-	title, content := s.buildDiscordHeaderContent(lang, tvCount, movieCount, cfg)
+	_, content := s.buildDiscordHeaderContent(lang, tvCount, movieCount, cfg)
 
 	if len(events) == 0 {
 		return &models.DiscordPayload{
 			Content: content,
-			Embeds: []models.DiscordEmbed{
-				{
-					Title:       title,
-					Description: localization.GetRandomMessage(lang, "no_new_releases"),
-					Color:       constants.DiscordColors["blue"],
-				},
-			},
+			Embeds:  nil,
 		}
 	}
 
