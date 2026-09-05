@@ -1,6 +1,6 @@
 import React from 'react'
 import { AllowedRange, ScheduleDTO } from '@/types/event'
-import { formatCountdown } from '@/lib/utils'
+import { formatCountdown } from '@/utils'
 
 interface StatsOverviewProps {
   range: AllowedRange

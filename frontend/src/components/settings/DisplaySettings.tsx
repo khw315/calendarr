@@ -1,6 +1,6 @@
 import React from 'react'
 import { ConfigState } from '@/types/config'
-import { ThemeMode } from '@/lib/useTheme'
+import { ThemeMode } from '@/hooks/useTheme'
 
 interface DisplaySettingsProps {
   config: ConfigState
@@ -20,7 +20,7 @@ export default function DisplaySettings({
   onChange
 }: DisplaySettingsProps) {
   return (
-    <details className="settings-group">
+    <details className="settings-group" name="settings-accordion">
       <summary>
         <h3>Display & Formatting</h3>
         <span className="details-arrow">▼</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ConfigState, CalendarUrlItem } from '@/types/config'
-import { useTheme, ThemeMode } from '@/lib/useTheme'
+import { useTheme, ThemeMode } from './useTheme'
 
 const API_BASE = ''
 

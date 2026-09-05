@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useTheme } from '../lib/useTheme'
+import { useTheme } from '@/hooks/useTheme'
 
 interface HeaderProps {
     activePage: 'dashboard' | 'settings';
