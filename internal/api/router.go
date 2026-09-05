@@ -47,7 +47,6 @@ func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, calSvc *cale
 func (r *Router) Setup() http.Handler {
 	router := chi.NewRouter()
 
-	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
 	// Global CORS middleware for API endpoints & FE cross-origin access
@@ -160,7 +159,7 @@ func (r *Router) getDaysQueryParam(req *http.Request) int {
 	return days
 }
 
-func (r *Router) fetchEventsForRange(req *http.Request, startDate, endDate time.Time) ([]*models.Event, *models.Config, *time.Location) {
+func (r *Router) fetchEventsForRange(req *http.Request, startDate, endDate time.Time) ([]*models.Event, *time.Location) {
 	cfg := r.cfgMgr.Get()
 	loc := cfg.TimezoneLocation
 	if loc == nil {
@@ -177,7 +176,7 @@ func (r *Router) fetchEventsForRange(req *http.Request, startDate, endDate time.
 	if events == nil {
 		events = r.schedSvc.GetCachedEvents()
 	}
-	return events, cfg, loc
+	return events, loc
 }
 
 func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
@@ -196,8 +195,8 @@ func (r *Router) handleGetReleases(w http.ResponseWriter, req *http.Request) {
 	startDate := startOfDay
 	endDate := startOfDay.AddDate(0, 0, days).Add(-1 * time.Nanosecond)
 
-	events, cfg, loc := r.fetchEventsForRange(req, startDate, endDate)
-	r.respondWithEventsDTO(w, cfg, loc, events)
+	events, loc := r.fetchEventsForRange(req, startDate, endDate)
+	r.respondWithEventsDTO(w, loc, events)
 }
 
 func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request) {
@@ -216,7 +215,7 @@ func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request)
 	startDate := startOfDay.AddDate(0, 0, -days)
 	endDate := startOfDay.Add(-1 * time.Nanosecond)
 
-	events, cfg, loc := r.fetchEventsForRange(req, startDate, endDate)
+	events, loc := r.fetchEventsForRange(req, startDate, endDate)
 
 	var pastEvents []*models.Event
 	for _, ev := range events {
@@ -225,10 +224,10 @@ func (r *Router) handleGetPastReleases(w http.ResponseWriter, req *http.Request)
 		}
 	}
 
-	r.respondWithEventsDTO(w, cfg, loc, pastEvents)
+	r.respondWithEventsDTO(w, loc, pastEvents)
 }
 
-func (r *Router) respondWithEventsDTO(w http.ResponseWriter, cfg *models.Config, loc *time.Location, events []*models.Event) {
+func (r *Router) respondWithEventsDTO(w http.ResponseWriter, loc *time.Location, events []*models.Event) {
 	grouped := make(map[string][]*models.Event)
 	var dates []string
 

@@ -5,6 +5,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-09-05
+
+### Added
+- **Exclusive Settings Accordions**: Settings panels now automatically collapse when another is opened, keeping configuration views neat and focused.
+- **Collapsed Source Configuration**: Source Configuration starts collapsed by default for an organized overview when opening Settings.
+- **Timezone-Aware Live Countdown**: Real-time countdown on the Next Run card that accurately reflects the scheduler's configured timezone.
+- **"Aired" Status Badges**: Added an "Aired" badge on event cards for completed broadcasts, distinct from the active "On Air" indicator.
+
+### Changed
+- **Next.js 15 Architecture**: Upgraded frontend to Next.js App Router and Bun for faster page transitions and standalone Go binary embedding.
+- **Flicker-Free Theme Loading**: Synchronous pre-hydration theme initialization that eliminates screen flashing during dark/light mode load or refresh.
+- **Modular Frontend Utilities**: Organized helper functions into single-responsibility modules (`utils`, `hooks`, `types`) with centralized theme constants.
+
+### Fixed
+- **Clean Container Logs**: Disabled verbose HTTP request logging for page and API hits, keeping container logs focused on scheduler runs and notifications.
+- **API Router Parameter Cleanup**: Removed unused configuration parameters from internal event response serialization.
+
 ## [2.2.2] - 2026-09-05
 
 ### Fixed
@@ -117,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.2.2...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/khw315/calendarr/compare/v2.2.2...v2.3.0
 [2.2.2]: https://github.com/khw315/calendarr/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/khw315/calendarr/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/khw315/calendarr/compare/v2.1.0...v2.2.0

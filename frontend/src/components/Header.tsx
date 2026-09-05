@@ -1,4 +1,7 @@
-import { useTheme } from '../lib/useTheme'
+'use client'
+
+import Link from 'next/link'
+import { useTheme } from '@/hooks/useTheme'
 
 interface HeaderProps {
     activePage: 'dashboard' | 'settings';
@@ -29,8 +32,8 @@ export default function Header({ activePage }: Readonly<HeaderProps>) {
                         <h1>Calendarr</h1>
                     </div>
                     <nav className="nav">
-                        <a href="#/" className="nav-link" style={activePage === 'dashboard' ? activeStyle : undefined}>Dashboard</a>
-                        <a href="#/settings" className="nav-link" style={activePage === 'settings' ? activeStyle : undefined}>Settings</a>
+                        <Link href="/" className="nav-link" style={activePage === 'dashboard' ? activeStyle : undefined}>Dashboard</Link>
+                        <Link href="/settings/" className="nav-link" style={activePage === 'settings' ? activeStyle : undefined}>Settings</Link>
                         <button className="theme-toggle" onClick={toggleTheme} title={getTooltip()} aria-label={getTooltip()}>
                             {mode === 'system' ? (
                                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
