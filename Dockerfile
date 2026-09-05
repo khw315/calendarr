@@ -2,7 +2,7 @@
 FROM --platform="$BUILDPLATFORM" oven/bun:1-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/bun.lock* ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 COPY frontend/ ./
 RUN bun run build
 
