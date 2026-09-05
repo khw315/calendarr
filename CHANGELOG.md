@@ -5,13 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-09-05
+
 ### Added
 - **Accordion Settings View**: Settings sections now automatically collapse when another section is opened, keeping your configuration neat and easy to navigate.
 - **Tidier Default Settings**: The "Source Configuration" section now starts collapsed by default for a cleaner overview when opening Settings.
+- **Real-Time Next Run Countdown**: Added live countdown timer in the Next Run card that accurately reflects scheduled run time in your configured timezone.
+- **Aired Badges**: Added visual "Aired" status badge to completed releases on event cards.
 
 ### Changed
+- **Modernized Web Interface**: Upgraded the web application architecture to Next.js 15 for faster load times and smoother navigation between Dashboard and Settings.
 - **Flicker-Free Theme Loading**: Improved dark and light theme initialization so there is no screen flash or stutter when loading or refreshing the app.
-- **Upgraded Web Interface**: Enhanced the web application engine for faster load times and smoother navigation between Dashboard and Settings.
 
 ### Fixed
 - **Cleaner Server Logs**: Removed routine page visits and asset requests from application logs, keeping your container logs focused on important schedule events and notifications.
