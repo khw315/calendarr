@@ -50,7 +50,7 @@ flowchart TD
 1. **Calendar Ingestion (`iCal Fetcher & Parser`)**: Concurrently fetches iCal feeds from Sonarr (TV shows) and Radarr (Movies) over HTTP, parsing `VEVENT` components, handling parameter-rich `DTSTART`/`DTEND` timezones, and deduplicating cross-feed entries.
 2. **Core Scheduler (`robfig/cron/v3`)**: Controls execution triggers based on configured Daily, Weekly, or custom Cron schedules, as well as instant manual triggers from the Web UI.
 3. **Formatter & Localizer (`Event Formatter`)**: Transforms raw calendar events into rich, formatted Markdown payloads for Discord and Slack webhooks, applying dynamic localized date headers, timezone offsets, relative countdown timestamps (`<t:TIMESTAMP:R>`), and custom footers.
-4. **Chi REST Router & Embedded SPA (`go-chi/chi/v5`)**: Serves the REST API (`/api/releases`, `/api/past-releases`, `/api/config`, `/api/trigger`) and renders the embedded single-page React Web UI directly from binary memory (`//go:embed`).
+4. **Chi REST Router & Embedded SPA (`go-chi/chi/v5`)**: Serves the REST API (`/api/releases`, `/api/past-releases`, `/api/config`, `/api/trigger`) and renders the embedded Next.js static Web UI directly from binary memory (`//go:embed`).
 5. **Config Manager (`JSON Storage`)**: Provides atomic thread-safe reads and writes to persistent configuration files (`/app/config/calendarr.json`) mounted on host volumes.
 
 ---
@@ -58,7 +58,7 @@ flowchart TD
 ## Key Features
 
 - **High-Performance Go Engine**: Rewritten in Go 1.24 using `go-chi/chi/v5` for REST API routing and `robfig/cron/v3` for concurrent background scheduling.
-- **Embedded Web UI**: A bold Neobrutalist dashboard built with React + TypeScript embedded directly into the Go binary (`//go:embed`). No secondary node server required.
+- **Embedded Web UI**: A bold Neobrutalist dashboard built with Next.js, React, TypeScript, and Bun embedded directly into the Go binary (`//go:embed`). No secondary node server required.
 - **Consolidated Feed**: Combines multiple Sonarr and Radarr calendar iCal feeds concurrently into one clean summary.
 - **Smart Grouping**: Groups upcoming shows and movies intelligently by day of the week with TV vs. Movie badges.
 - **Flexible Scheduling**: Choose Daily summaries, Weekly recaps, or custom Cron expressions with optional run-on-startup.

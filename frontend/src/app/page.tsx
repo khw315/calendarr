@@ -1,7 +1,8 @@
+'use client'
+
 import { useEffect, useState, useCallback } from 'react'
-import './index.css'
-import Header from './components/Header'
-import Footer from './components/Footer'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 const API_BASE = ''
 const ALLOWED_RANGES: readonly string[] = ['1', '3', '7', '14']
@@ -28,7 +29,7 @@ interface DayGroup {
   events: EventItem[]
 }
 
-export default function App() {
+export default function DashboardPage() {
   const [days, setDays] = useState<DayGroup[]>([])
   const [pastDays, setPastDays] = useState<DayGroup[]>([])
   const [totalTv, setTotalTv] = useState<number | string>('-')

@@ -19,6 +19,8 @@ calendarr.exe
 
 # Frontend / Web UI
 frontend/node_modules/
+frontend/.next/
+frontend/out/
 frontend/dist/
 public/
 

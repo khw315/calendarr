@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Migrated frontend architecture from Vite/React SPA to Next.js 15 (App Router with static export) and Bun runtime/package manager.
+- Updated multi-stage `Dockerfile` to build frontend using `oven/bun:1-alpine` with `--frozen-lockfile`.
+- Implemented file-based routing (`/` for Dashboard and `/settings/` for Settings) with Next.js static HTML export and clean zero-runtime embed into the standalone Go binary.
+
 ## [2.2.2] - 2026-09-05
 
 ### Fixed

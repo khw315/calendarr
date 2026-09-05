@@ -6,15 +6,20 @@ const ALLOWED_THEMES: readonly ThemeMode[] = ['system', 'light', 'dark']
 
 export function useTheme() {
     const [mode, setMode] = useState<ThemeMode>(() => {
-        const stored = localStorage.getItem('calendarr-theme') as ThemeMode
-        if (ALLOWED_THEMES.includes(stored)) return stored
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('calendarr-theme') as ThemeMode
+            if (ALLOWED_THEMES.includes(stored)) return stored
+        }
         return 'system'
     })
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         if (mode === 'dark') return 'dark'
         if (mode === 'light') return 'light'
-        return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        if (typeof window !== 'undefined') {
+            return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        return 'light'
     })
 
     useEffect(() => {

@@ -1,10 +1,10 @@
 # Stage 1: Build Frontend Web UI (Native Build Platform)
-FROM --platform="$BUILDPLATFORM" node:20-slim AS frontend-builder
+FROM --platform="$BUILDPLATFORM" oven/bun:1-alpine AS frontend-builder
 WORKDIR /app/frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci --ignore-scripts
+COPY frontend/package.json frontend/bun.lock* ./
+RUN bun install --frozen-lockfile
 COPY frontend/ ./
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Build Go Static Binary (Native Build Platform + Go Cross Compilation)
 FROM --platform="$BUILDPLATFORM" golang:1.24-alpine AS go-builder
