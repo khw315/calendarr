@@ -4,6 +4,8 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 
 const API_BASE = ''
+const ALLOWED_RANGES: readonly string[] = ['1', '3', '7', '14']
+const ALLOWED_PAST_SORTS: readonly string[] = ['newest', 'oldest']
 
 interface EventItem {
   title?: string
@@ -66,7 +68,8 @@ export default function App() {
 
   const fetchPastReleasesData = useCallback(async () => {
     try {
-      const pastRes = await fetch(`${API_BASE}/api/past-releases?days=${pastRange}`)
+      const validDays = ALLOWED_RANGES.includes(pastRange) ? pastRange : '3'
+      const pastRes = await fetch(`${API_BASE}/api/past-releases?days=${encodeURIComponent(validDays)}`)
       if (pastRes.ok) {
         const pastData = await pastRes.json()
         setPastDays(pastData.days || [])
@@ -79,7 +82,8 @@ export default function App() {
   const fetchUpcomingReleasesData = useCallback(async () => {
     setLoading(true)
     try {
-      const eventsRes = await fetch(`${API_BASE}/api/releases?days=${range}`)
+      const validDays = ALLOWED_RANGES.includes(range) ? range : '1'
+      const eventsRes = await fetch(`${API_BASE}/api/releases?days=${encodeURIComponent(validDays)}`)
       if (eventsRes.ok) {
         const eventsData = await eventsRes.json()
         setDays(eventsData.days || [])
@@ -236,7 +240,9 @@ export default function App() {
                       range === '14' ? 'Releases Next 14 Days' : 'Upcoming Releases'}
               </h2>
               <div className="section-actions">
-                <select className="range-selector" value={range} onChange={e => setRange(e.target.value)}>
+                <select className="range-selector" value={range} onChange={e => {
+                  if (ALLOWED_RANGES.includes(e.target.value)) setRange(e.target.value)
+                }}>
                   <option value="1">Today</option>
                   <option value="3">Next 3 Days</option>
                   <option value="7">Next 7 Days</option>
@@ -315,11 +321,15 @@ export default function App() {
               <div className="section-actions">
                 {showPast && (
                   <>
-                    <select className="range-selector" value={pastSort} onChange={e => setPastSort(e.target.value)}>
+                    <select className="range-selector" value={pastSort} onChange={e => {
+                      if (ALLOWED_PAST_SORTS.includes(e.target.value)) setPastSort(e.target.value)
+                    }}>
                       <option value="newest">Newest to Oldest</option>
                       <option value="oldest">Oldest to Newest</option>
                     </select>
-                    <select className="range-selector" value={pastRange} onChange={e => setPastRange(e.target.value)}>
+                    <select className="range-selector" value={pastRange} onChange={e => {
+                      if (ALLOWED_RANGES.includes(e.target.value)) setPastRange(e.target.value)
+                    }}>
                       <option value="1">Last 1 Day</option>
                       <option value="3">Last 3 Days</option>
                       <option value="7">Last 7 Days</option>

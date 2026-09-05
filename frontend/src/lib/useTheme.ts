@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
 
+const ALLOWED_THEMES: readonly ThemeMode[] = ['system', 'light', 'dark']
+
 export function useTheme() {
     const [mode, setMode] = useState<ThemeMode>(() => {
         const stored = localStorage.getItem('calendarr-theme') as ThemeMode
-        if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+        if (ALLOWED_THEMES.includes(stored)) return stored
         return 'system'
     })
 
@@ -27,7 +29,9 @@ export function useTheme() {
         }
 
         applyTheme()
-        localStorage.setItem('calendarr-theme', mode)
+        if (ALLOWED_THEMES.includes(mode)) {
+            localStorage.setItem('calendarr-theme', mode)
+        }
 
         const handleSystemChange = (e: MediaQueryListEvent) => {
             if (mode === 'system') {
