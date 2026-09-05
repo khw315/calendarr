@@ -29,6 +29,29 @@ export default function SettingsPage() {
     handleDiscard
   } = useSettings()
 
+  React.useEffect(() => {
+    if (loading) return
+    const form = document.getElementById('settingsForm')
+    if (!form) return
+
+    const detailsList = form.querySelectorAll<HTMLDetailsElement>('details.settings-group')
+    const handleToggle = (e: Event) => {
+      const target = e.target as HTMLDetailsElement
+      if (target.open) {
+        detailsList.forEach((d) => {
+          if (d !== target && d.open) {
+            d.open = false
+          }
+        })
+      }
+    }
+
+    detailsList.forEach((d) => d.addEventListener('toggle', handleToggle))
+    return () => {
+      detailsList.forEach((d) => d.removeEventListener('toggle', handleToggle))
+    }
+  }, [loading])
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>

@@ -8,7 +8,7 @@ interface AdvancedSettingsProps {
 
 export default function AdvancedSettings({ config, onChange }: AdvancedSettingsProps) {
   return (
-    <details className="settings-group">
+    <details className="settings-group" name="settings-accordion">
       <summary>
         <h3>Advanced Settings</h3>
         <span className="details-arrow">▼</span>

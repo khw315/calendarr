@@ -33,7 +33,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
   return (
     <>
       {/* Discord Integration */}
-      <details className="settings-group">
+      <details className="settings-group" name="settings-accordion">
         <summary>
           <h3>Discord Integration</h3>
           <span className="details-arrow">▼</span>
@@ -136,7 +136,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
       </details>
 
       {/* Slack Integration */}
-      <details className="settings-group">
+      <details className="settings-group" name="settings-accordion">
         <summary>
           <h3>Slack Integration</h3>
           <span className="details-arrow">▼</span>

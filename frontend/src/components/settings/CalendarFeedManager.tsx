@@ -15,7 +15,7 @@ export default function CalendarFeedManager({
   onUpdateFeed
 }: CalendarFeedManagerProps) {
   return (
-    <details className="settings-group" open>
+    <details className="settings-group" name="settings-accordion">
       <summary>
         <h3>Source Configuration</h3>
         <span className="details-arrow">▼</span>

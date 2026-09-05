@@ -8,7 +8,7 @@ interface ScheduleSettingsProps {
 
 export default function ScheduleSettings({ config, onChange }: ScheduleSettingsProps) {
   return (
-    <details className="settings-group">
+    <details className="settings-group" name="settings-accordion">
       <summary>
         <h3>Scheduling</h3>
         <span className="details-arrow">▼</span>
