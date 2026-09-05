@@ -53,9 +53,9 @@ export default function StatsOverview({
     return `${tvText}${separator}${movieText}`
   }
 
-  const nextRunCountdown = formatCountdown(schedule.nextRun, currentTime)
+  const nextRunCountdown = formatCountdown(schedule.nextRun, schedule.timezone, currentTime)
   const nextRunTooltip = schedule.nextRun && schedule.nextRun !== '-' && schedule.nextRun !== 'Not scheduled'
-    ? new Date(schedule.nextRun).toLocaleString()
+    ? `${schedule.nextRun.replace('Z', '')} (${schedule.timezone || 'UTC'})`
     : undefined
 
   return (
