@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import '../index.css'
-import { antiFlashScript } from '@/lib/antiFlashScript'
+import { AntiFlashScript } from '@/components/common/AntiFlashScript'
 
 export const metadata: Metadata = {
   title: 'Calendarr',
@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
+        <AntiFlashScript />
       </head>
       <body>
         <div id="root">
