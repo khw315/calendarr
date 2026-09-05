@@ -1,6 +1,7 @@
 package formatter
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -46,6 +47,10 @@ func TestFormatterService(t *testing.T) {
 		t.Errorf("Expected Discord payload with embeds")
 	}
 
+	if !strings.Contains(res.Discord.Content, "# New Releases") {
+		t.Errorf("Expected '# New Releases' in Discord content when events are present, got: %s", res.Discord.Content)
+	}
+
 	if res.Slack == nil || len(res.Slack.Blocks) == 0 {
 		t.Errorf("Expected Slack payload with blocks")
 	}
@@ -58,7 +63,16 @@ func TestFormatterService(t *testing.T) {
 	if emptyRes.Discord == nil || len(emptyRes.Discord.Embeds) != 0 {
 		t.Errorf("Expected 0 Discord embeds for empty events schedule, got %d", len(emptyRes.Discord.Embeds))
 	}
+	if strings.Contains(emptyRes.Discord.Content, "New Releases") {
+		t.Errorf("Expected 'New Releases' to be omitted when schedule is empty, got: %s", emptyRes.Discord.Content)
+	}
+	if !strings.HasPrefix(emptyRes.Discord.Content, "# ") {
+		t.Errorf("Expected empty release message as H1 header, got: %s", emptyRes.Discord.Content)
+	}
 	if emptyRes.Slack == nil || len(emptyRes.Slack.Blocks) == 0 {
 		t.Errorf("Expected fallback Slack blocks for empty events")
+	}
+	if emptyRes.Slack.Blocks[0].Text.Text == "New Releases" || emptyRes.Slack.Blocks[0].Text.Text == "" {
+		t.Errorf("Expected fallback localized message instead of 'New Releases' in Slack header, got: %s", emptyRes.Slack.Blocks[0].Text.Text)
 	}
 }

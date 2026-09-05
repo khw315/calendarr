@@ -59,8 +59,8 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 		"total_count": len(activeEvents),
 	}
 
-	discordPayload := s.buildDiscordPayload(activeEvents, cfg, startDate, endDate, tvCount, movieCount, now)
-	slackPayload := s.buildSlackPayload(activeEvents, cfg, startDate, endDate, tvCount, movieCount, now)
+	discordPayload := s.buildDiscordPayload(activeEvents, cfg, tvCount, movieCount, now)
+	slackPayload := s.buildSlackPayload(activeEvents, cfg, tvCount, movieCount, now)
 
 	return &FormattedResult{
 		Discord: discordPayload,
@@ -70,7 +70,7 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	}
 }
 
-func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.DiscordPayload {
+func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.DiscordPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
@@ -103,10 +103,16 @@ func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount int
 		title = "Rilis Baru"
 	}
 
-	contentParts := []string{fmt.Sprintf("# %s", title)}
-	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
-	if subheader != "" {
-		contentParts = append(contentParts, fmt.Sprintf("## %s", subheader))
+	var contentParts []string
+	if tvCount == 0 && movieCount == 0 {
+		emptyMessage := localization.GetRandomMessage(lang, "no_new_releases")
+		contentParts = append(contentParts, fmt.Sprintf("# %s", emptyMessage))
+	} else {
+		contentParts = append(contentParts, fmt.Sprintf("# %s", title))
+		subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+		if subheader != "" {
+			contentParts = append(contentParts, fmt.Sprintf("## %s", subheader))
+		}
 	}
 	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
 		contentParts = append(contentParts, fmt.Sprintf("(%s)", cfg.Timezone))
@@ -163,7 +169,7 @@ func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Co
 	return embeds
 }
 
-func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, startDate, endDate time.Time, tvCount, movieCount int, now time.Time) *models.SlackPayload {
+func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.SlackPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
@@ -185,13 +191,6 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 					Type: "header",
 					Text: &models.SlackText{
 						Type: "plain_text",
-						Text: title,
-					},
-				},
-				{
-					Type: "section",
-					Text: &models.SlackText{
-						Type: "mrkdwn",
 						Text: localization.GetRandomMessage(lang, "no_new_releases"),
 					},
 				},
