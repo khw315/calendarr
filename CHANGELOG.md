@@ -8,17 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.3.0] - 2026-09-05
 
 ### Added
-- **Accordion Settings View**: Settings sections now automatically collapse when another section is opened, keeping your configuration neat and easy to navigate.
-- **Tidier Default Settings**: The "Source Configuration" section now starts collapsed by default for a cleaner overview when opening Settings.
-- **Real-Time Next Run Countdown**: Added live countdown timer in the Next Run card that accurately reflects scheduled run time in your configured timezone.
-- **Aired Badges**: Added visual "Aired" status badge to completed releases on event cards.
+- **Interactive Exclusive Accordion Settings**: Restructured configuration settings into dedicated collapsible panels where opening any section automatically collapses all other sections, preventing long scrolling pages and creating a focused, organized configuration experience.
+- **Collapsed Default View for Source Configuration**: Configured the "Source Configuration" calendar URL management panel to start collapsed by default, giving users an immediate clean overview of all configuration categories upon opening the Settings view.
+- **Timezone-Aware Live Next Run Countdown**: Implemented a dynamic real-time countdown timer directly on the Dashboard's "Next Run" statistics card that updates second-by-second and accurately calculates remaining time based on the scheduler's target timezone (e.g. `Asia/Jakarta`, `UTC`).
+- **"Aired" Release Status Badges**: Added a high-contrast "Aired" status badge to event release cards for media items that have already completed broadcast, positioned consistently alongside the active "On Air" indicator to provide instant visual clarity between upcoming and concluded releases.
 
 ### Changed
-- **Modernized Web Interface**: Upgraded the web application architecture to Next.js 15 for faster load times and smoother navigation between Dashboard and Settings.
-- **Flicker-Free Theme Loading**: Improved dark and light theme initialization so there is no screen flash or stutter when loading or refreshing the app.
+- **Modernized Web Architecture**: Re-architected the frontend application using Next.js 15 App Router and the Bun runtime, providing seamless client-side page transitions between Dashboard and Settings while preserving zero-runtime standalone Go binary embedding.
+- **Flicker-Free Client Theme Initialization**: Enhanced theme initialization with pre-hydration execution, ensuring dark and light modes apply instantaneously before the DOM renders to completely eliminate screen flashes and visual stutter on initial load and refresh.
+- **Modular Frontend Utilities**: Reorganized shared helper functions into dedicated single-responsibility modules (`cn`, `countdown`, `antiFlashScript`) with centralized theme types and constants for greater maintainability and extensibility.
 
 ### Fixed
-- **Cleaner Server Logs**: Removed routine page visits and asset requests from application logs, keeping your container logs focused on important schedule events and notifications.
+- **Clean Container Access Logs**: Silenced high-frequency HTTP request logging for routine frontend page loads, asset chunks, and API status polls in the Go backend router, keeping Docker container logs tidy and focused on critical scheduling cycles and notification dispatches.
+- **Internal API Router Parameter Cleanup**: Removed unused configuration parameters from internal DTO serialization helpers in the API routing layer.
 
 ## [2.2.2] - 2026-09-05
 
