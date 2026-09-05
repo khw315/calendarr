@@ -6,20 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Exclusive Settings Accordions**: Enabled HTML5 `name="settings-accordion"` grouping with progressive enhancement for mutually exclusive settings sections, setting "Source Configuration" closed by default.
-- **Dedicated `<AntiFlashScript />` Component**: Extracted head script into a standalone component preventing light/dark theme flickering on initial load.
-- **Centralized Theme Constants**: Centralized `THEME_STORAGE_KEY`, `THEME_ATTRIBUTE`, and `THEME_MODES` in `src/types/theme.ts`.
+- **Accordion Settings View**: Settings sections now automatically collapse when another section is opened, keeping your configuration neat and easy to navigate.
+- **Tidier Default Settings**: The "Source Configuration" section now starts collapsed by default for a cleaner overview when opening Settings.
 
 ### Changed
-- Reorganized frontend utility functions into dedicated modules under `src/utils/` (`cn.ts`, `countdown.ts`, `antiFlashScript.ts`, and barrel export `index.ts`).
-- Relocated `useTheme` hook into `src/hooks/` and cleanly removed the deprecated `src/lib/` folder.
-- Refactored `antiFlashScript` from a raw hardcoded string template into a type-safe parameterized function (`themeInitializer`).
-- Migrated frontend architecture from Vite/React SPA to Next.js 15 (App Router with static export) and Bun runtime/package manager.
-- Updated multi-stage `Dockerfile` to build frontend using `oven/bun:1-alpine` with `--frozen-lockfile`.
-- Implemented file-based routing (`/` for Dashboard and `/settings/` for Settings) with Next.js static HTML export and clean zero-runtime embed into the standalone Go binary.
+- **Flicker-Free Theme Loading**: Improved dark and light theme initialization so there is no screen flash or stutter when loading or refreshing the app.
+- **Upgraded Web Interface**: Enhanced the web application engine for faster load times and smoother navigation between Dashboard and Settings.
 
 ### Fixed
-- Silenced noisy HTTP request access logs in the Go backend router (`internal/api/router.go`) for frontend assets and API endpoints.
+- **Cleaner Server Logs**: Removed routine page visits and asset requests from application logs, keeping your container logs focused on important schedule events and notifications.
 
 ## [2.2.2] - 2026-09-05
 
