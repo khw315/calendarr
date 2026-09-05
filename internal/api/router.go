@@ -47,7 +47,6 @@ func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, calSvc *cale
 func (r *Router) Setup() http.Handler {
 	router := chi.NewRouter()
 
-	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
 	// Global CORS middleware for API endpoints & FE cross-origin access
