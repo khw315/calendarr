@@ -461,7 +461,6 @@ body {
     text-transform: uppercase;
     margin-bottom: var(--spacing-md);
     color: var(--color-text);
-    display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     background: #fff;
@@ -724,7 +723,6 @@ body {
 }
 
 .footer a:hover {
-    color: var(--color-secondary);
     background: #fff;
     color: #000;
     padding: 0 4px;

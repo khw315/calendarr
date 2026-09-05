@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-09-05
+
+### Fixed
+- Omitted "New Releases" header (`header_text`) in Discord and Slack payloads when there are no scheduled releases (`tv_count == 0 && movie_count == 0`), rendering only the localized empty state message (e.g. *"No scheduled releases at this time."*).
+- Cleaned up unused `startDate` and `endDate` parameters from internal formatter payload builders.
+- Resolved SonarCloud security and maintainability issues:
+  - Sanitized and validated theme mode before persisting to browser `localStorage` (`tssecurity:S8475`).
+  - Validated API query parameters (`range`, `pastRange`) against allowlists to prevent client-side request forgery (`tssecurity:S8476`).
+  - Made heading element accessible with explicit children in `CardTitle` (`typescript:S6850`).
+  - Removed duplicate CSS properties (`display` and `color`) in `index.css` (`css:S4656`).
+  - Pinned GitHub Action `MaximilianAnzinger/issue-labeler` to full commit SHA hash (`githubactions:S7637`).
+  - Excluded binary images and disabled unused PL/SQL sensor in Sonar analysis configuration.
+
+
 ## [2.2.1] - 2026-08-24
 
 ### Fixed
@@ -103,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/khw315/calendarr/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/khw315/calendarr/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/khw315/calendarr/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/khw315/calendarr/compare/v2.0.2...v2.1.0
