@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Made heading element accessible with explicit children in `CardTitle` (`typescript:S6850`).
   - Removed duplicate CSS properties (`display` and `color`) in `index.css` (`css:S4656`).
   - Pinned GitHub Action `MaximilianAnzinger/issue-labeler` to full commit SHA hash (`githubactions:S7637`).
+  - Excluded binary images and disabled unused PL/SQL sensor in Sonar analysis configuration.
 
 
 ## [2.2.1] - 2026-08-24
