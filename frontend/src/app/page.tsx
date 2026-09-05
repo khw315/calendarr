@@ -280,13 +280,17 @@ export default function DashboardPage() {
                     </div>
                     <div className="events-list">
                       {day.events.map((ev, j) => {
-                        const isAiring = ev.timestamp && ev.end_timestamp && currentTime >= ev.timestamp && currentTime < ev.end_timestamp;
+                        const isAiring = Boolean(ev.timestamp && ev.end_timestamp && ev.end_timestamp > ev.timestamp && currentTime >= ev.timestamp && currentTime < ev.end_timestamp);
+                        const isAired = Boolean((ev.end_timestamp && ev.timestamp && ev.end_timestamp > ev.timestamp)
+                          ? currentTime >= ev.end_timestamp
+                          : (ev.timestamp && currentTime >= ev.timestamp));
                         const startsIn = ev.timestamp ? ev.timestamp - currentTime : -1;
-                        const isStartingSoon = startsIn > 0 && startsIn <= 3600;
+                        const isStartingSoon = !isAiring && !isAired && startsIn > 0 && startsIn <= 3600;
 
                         return (
-                          <div key={j} className={`event-card brutal-card event-${ev.type} ${isAiring ? 'airing' : ''}`}>
+                          <div key={j} className={`event-card brutal-card event-${ev.type} ${isAiring ? 'airing' : isAired ? 'aired' : ''}`}>
                             {isAiring && <span className="airing-badge">ON AIR</span>}
+                            {isAired && <span className="aired-badge">AIRED</span>}
                             <span className="event-type">{ev.type === 'tv' ? 'TV' : 'Movie'}</span>
                             <div className="event-title">
                               {ev.title}
@@ -389,6 +393,7 @@ export default function DashboardPage() {
 
                             return (
                               <div key={j} className={`event-card brutal-card event-${isTv ? 'tv' : 'movie'} event-past`}>
+                                <span className="aired-badge">AIRED</span>
                                 <span className="event-type">{isTv ? 'TV' : 'Movie'}</span>
                                 <div className="event-title">
                                   {title}

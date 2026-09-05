@@ -588,11 +588,11 @@ body {
     }
 }
 
-.airing-badge {
+.airing-badge,
+.aired-badge {
     position: absolute;
     top: -12px;
     right: 12px;
-    background: var(--color-danger);
     color: #fff;
     font-size: 0.8rem;
     font-weight: 900;
@@ -602,6 +602,14 @@ body {
     transform: rotate(3deg);
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.airing-badge {
+    background: var(--color-danger);
+}
+
+.aired-badge {
+    background: #475569;
 }
 
 .bulk-badge {
@@ -1092,9 +1100,14 @@ details.settings-group[open] summary .details-arrow {
     color: var(--color-text-muted);
 }
 
-[data-theme="dark"] .airing-badge {
+[data-theme="dark"] .airing-badge,
+[data-theme="dark"] .aired-badge {
     border-color: var(--color-border);
     box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .aired-badge {
+    background: #334155;
 }
 
 [data-theme="dark"] .countdown-active {
