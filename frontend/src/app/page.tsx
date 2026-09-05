@@ -60,6 +60,7 @@ export default function DashboardPage() {
             totalTv={totalTv}
             totalMovies={totalMovies}
             schedule={schedule}
+            currentTime={currentTime}
             triggering={triggering}
             triggerStatus={triggerStatus}
             onTrigger={handleTrigger}

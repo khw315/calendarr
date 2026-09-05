@@ -1,11 +1,13 @@
 import React from 'react'
 import { AllowedRange, ScheduleDTO } from '@/types/event'
+import { formatCountdown } from '@/lib/utils'
 
 interface StatsOverviewProps {
   range: AllowedRange
   totalTv: number | string
   totalMovies: number | string
   schedule: ScheduleDTO
+  currentTime?: number
   triggering: boolean
   triggerStatus: string | null
   onTrigger: () => void
@@ -16,6 +18,7 @@ export default function StatsOverview({
   totalTv,
   totalMovies,
   schedule,
+  currentTime,
   triggering,
   triggerStatus,
   onTrigger
@@ -50,6 +53,11 @@ export default function StatsOverview({
     return `${tvText}${separator}${movieText}`
   }
 
+  const nextRunCountdown = formatCountdown(schedule.nextRun, currentTime)
+  const nextRunTooltip = schedule.nextRun && schedule.nextRun !== '-' && schedule.nextRun !== 'Not scheduled'
+    ? new Date(schedule.nextRun).toLocaleString()
+    : undefined
+
   return (
     <div className="stats-grid">
       {/* 1. Total Shows/Movies */}
@@ -69,7 +77,10 @@ export default function StatsOverview({
       </div>
 
       {/* 2. Next Scheduled Run */}
-      <div className="stat-card brutal-card brutal-interactive">
+      <div
+        className="stat-card brutal-card brutal-interactive"
+        title={nextRunTooltip}
+      >
         <div className="stat-icon stat-icon-success">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
@@ -78,7 +89,7 @@ export default function StatsOverview({
         </div>
         <div className="stat-content">
           <div className="stat-label">Next Run</div>
-          <div className="stat-value">{schedule.nextRun}</div>
+          <div className="stat-value">{nextRunCountdown}</div>
         </div>
       </div>
 
