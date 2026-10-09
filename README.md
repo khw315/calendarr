@@ -1,5 +1,5 @@
 > [!NOTE]
-> This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr), rewritten from Python into **Go 1.24** for minimal resource usage (~25MB Docker image), high concurrency, and instant execution.
+> This repository is a fork of [jordanlambrecht/calendarr](https://github.com/jordanlambrecht/calendarr), rewritten from Python into **Go 1.27.2** for minimal resource usage (~25MB Docker image), high concurrency, and instant execution.
 
 # Calendarr
 
@@ -18,7 +18,7 @@ flowchart TD
         Radarr[Radarr Movies iCal]
     end
 
-    subgraph Core[Calendarr Engine - Go 1.24]
+    subgraph Core[Calendarr Engine - Go 1.27.2]
         Scheduler[robfig/cron Scheduler]
         Fetcher[iCal Fetcher & Parser]
         Formatter[Event Formatter & Localizer]
