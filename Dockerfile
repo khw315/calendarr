@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN bun run build
 
 # Stage 2: Build Go Static Binary (Native Build Platform + Go Cross Compilation)
-FROM --platform="$BUILDPLATFORM" golang:1.24-alpine AS go-builder
+FROM --platform="$BUILDPLATFORM" golang:1.27-alpine AS go-builder
 ARG TARGETOS
 ARG TARGETARCH
 

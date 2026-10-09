@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-10-10
+
+### Security
+- **Go Standard Library Vulnerabilities**: Upgraded Go toolchain to `1.27.2` to resolve 10 security vulnerabilities reported by `govulncheck` in the Go standard library (`net/http`, `mime/multipart`, `crypto/tls`, `net/textproto`, and `os`).
+
+### Documentation
+- **Agent Guidelines & Architecture**: Added comprehensive [AGENTS.md](AGENTS.md) defining engineering standards, architecture, Go idioms, webhook domain constraints, and pre-commit quality gates.
+- **README Alignment**: Updated project README to reference Go 1.27.2 across architecture diagrams and container descriptions.
+
 ## [2.4.1] - 2026-10-10
 
 ### Fixed
@@ -148,7 +157,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.4.1...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.4.2...HEAD
+[2.4.2]: https://github.com/khw315/calendarr/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/khw315/calendarr/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/khw315/calendarr/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/khw315/calendarr/compare/v2.2.2...v2.3.0
