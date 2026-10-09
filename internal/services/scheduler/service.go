@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/khw315/calendarr/internal/config"
 	"github.com/khw315/calendarr/internal/models"
 	"github.com/khw315/calendarr/internal/services/calendar"
 	"github.com/khw315/calendarr/internal/services/formatter"
 	"github.com/khw315/calendarr/internal/services/platform"
+	"github.com/robfig/cron/v3"
 )
 
 type Service struct {

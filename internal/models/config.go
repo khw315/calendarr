@@ -35,26 +35,26 @@ type LoggingSettings struct {
 }
 
 type Config struct {
-	DiscordWebhookURL               string           `json:"discord_webhook_url,omitempty"`
-	SlackWebhookURL                 string           `json:"slack_webhook_url,omitempty"`
-	UseDiscord                      bool             `json:"use_discord"`
-	UseSlack                        bool             `json:"use_slack"`
-	ShowDateRange                   bool             `json:"show_date_range"`
-	ShowTimezoneInSubheader         bool             `json:"show_timezone_in_subheader"`
-	DeduplicateEvents               bool             `json:"deduplicate_events"`
-	DiscordMentionRoleID            string           `json:"discord_mention_role_id,omitempty"`
+	DiscordWebhookURL              string           `json:"discord_webhook_url,omitempty"`
+	SlackWebhookURL                string           `json:"slack_webhook_url,omitempty"`
+	UseDiscord                     bool             `json:"use_discord"`
+	UseSlack                       bool             `json:"use_slack"`
+	ShowDateRange                  bool             `json:"show_date_range"`
+	ShowTimezoneInSubheader        bool             `json:"show_timezone_in_subheader"`
+	DeduplicateEvents              bool             `json:"deduplicate_events"`
+	DiscordMentionRoleID           string           `json:"discord_mention_role_id,omitempty"`
 	DiscordHideMentionInstructions bool             `json:"discord_hide_mention_instructions"`
-	DiscordTimestampStyle           string           `json:"discord_timestamp_style,omitempty"`
-	CalendarURLs                    []CalendarUrl    `json:"calendar_urls"`
-	PassedEventHandling             string           `json:"passed_event_handling"`
-	TimeSettings                    TimeSettings     `json:"time_settings"`
-	ScheduleSettings                ScheduleSettings `json:"schedule_settings"`
-	LoggingSettings                 LoggingSettings  `json:"logging_settings"`
-	Timezone                        string           `json:"timezone"`
-	HTTPTimeout                     int              `json:"http_timeout"`
-	EnableCustomDiscordFooter       bool             `json:"enable_custom_discord_footer"`
-	EnableCustomSlackFooter         bool             `json:"enable_custom_slack_footer"`
-	Language                        string           `json:"language"`
+	DiscordTimestampStyle          string           `json:"discord_timestamp_style,omitempty"`
+	CalendarURLs                   []CalendarUrl    `json:"calendar_urls"`
+	PassedEventHandling            string           `json:"passed_event_handling"`
+	TimeSettings                   TimeSettings     `json:"time_settings"`
+	ScheduleSettings               ScheduleSettings `json:"schedule_settings"`
+	LoggingSettings                LoggingSettings  `json:"logging_settings"`
+	Timezone                       string           `json:"timezone"`
+	HTTPTimeout                    int              `json:"http_timeout"`
+	EnableCustomDiscordFooter      bool             `json:"enable_custom_discord_footer"`
+	EnableCustomSlackFooter        bool             `json:"enable_custom_slack_footer"`
+	Language                       string           `json:"language"`
 
 	// Derived fields
 	TimezoneLocation *time.Location `json:"-"`
@@ -108,34 +108,34 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 
 	m := map[string]interface{}{
 		// FE Uppercase Keys for React Settings.tsx compatibility
-		"APP_LANGUAGE":                       c.Language,
-		"USE_DISCORD":                        c.UseDiscord,
-		"DISCORD_WEBHOOK_URL":                c.DiscordWebhookURL,
-		"DISCORD_MENTION_ROLE_ID":            c.DiscordMentionRoleID,
+		"APP_LANGUAGE":                      c.Language,
+		"USE_DISCORD":                       c.UseDiscord,
+		"DISCORD_WEBHOOK_URL":               c.DiscordWebhookURL,
+		"DISCORD_MENTION_ROLE_ID":           c.DiscordMentionRoleID,
 		"DISCORD_HIDE_MENTION_INSTRUCTIONS": c.DiscordHideMentionInstructions,
 		"DISCORD_TIMESTAMP_STYLE":           c.DiscordTimestampStyle,
-		"ENABLE_CUSTOM_DISCORD_FOOTER":       c.EnableCustomDiscordFooter,
-		"USE_SLACK":                          c.UseSlack,
-		"SLACK_WEBHOOK_URL":                  c.SlackWebhookURL,
-		"ENABLE_CUSTOM_SLACK_FOOTER":         c.EnableCustomSlackFooter,
-		"CALENDAR_URLS":                      calURLs,
+		"ENABLE_CUSTOM_DISCORD_FOOTER":      c.EnableCustomDiscordFooter,
+		"USE_SLACK":                         c.UseSlack,
+		"SLACK_WEBHOOK_URL":                 c.SlackWebhookURL,
+		"ENABLE_CUSTOM_SLACK_FOOTER":        c.EnableCustomSlackFooter,
+		"CALENDAR_URLS":                     calURLs,
 		"PASSED_EVENT_HANDLING":             c.PassedEventHandling,
-		"DEDUPLICATE_EVENTS":                 c.DeduplicateEvents,
-		"USE_24_HOUR":                        c.TimeSettings.Use24Hour,
-		"ADD_LEADING_ZERO":                   c.TimeSettings.AddLeadingZero,
-		"DISPLAY_TIME":                       c.TimeSettings.DisplayTime,
-		"SHOW_DATE_RANGE":                    c.ShowDateRange,
-		"SHOW_TIMEZONE_IN_SUBHEADER":         c.ShowTimezoneInSubheader,
-		"TZ":                                 c.Timezone,
-		"SCHEDULE_TYPE":                      c.ScheduleSettings.ScheduleType,
-		"SCHEDULE_DAY":                       c.ScheduleSettings.ScheduleDay,
-		"RUN_TIME":                           c.ScheduleSettings.RunTime,
-		"CRON_SCHEDULE":                      c.ScheduleSettings.CronSchedule,
-		"RUN_ON_STARTUP":                     c.ScheduleSettings.RunOnStartup,
-		"DEBUG":                              c.LoggingSettings.DebugMode,
-		"HTTP_TIMEOUT":                       c.HTTPTimeout,
-		"LOG_MAX_SIZE_MB":                    c.LoggingSettings.MaxSizeMB,
-		"LOG_BACKUP_COUNT":                   c.LoggingSettings.BackupCount,
+		"DEDUPLICATE_EVENTS":                c.DeduplicateEvents,
+		"USE_24_HOUR":                       c.TimeSettings.Use24Hour,
+		"ADD_LEADING_ZERO":                  c.TimeSettings.AddLeadingZero,
+		"DISPLAY_TIME":                      c.TimeSettings.DisplayTime,
+		"SHOW_DATE_RANGE":                   c.ShowDateRange,
+		"SHOW_TIMEZONE_IN_SUBHEADER":        c.ShowTimezoneInSubheader,
+		"TZ":                                c.Timezone,
+		"SCHEDULE_TYPE":                     c.ScheduleSettings.ScheduleType,
+		"SCHEDULE_DAY":                      c.ScheduleSettings.ScheduleDay,
+		"RUN_TIME":                          c.ScheduleSettings.RunTime,
+		"CRON_SCHEDULE":                     c.ScheduleSettings.CronSchedule,
+		"RUN_ON_STARTUP":                    c.ScheduleSettings.RunOnStartup,
+		"DEBUG":                             c.LoggingSettings.DebugMode,
+		"HTTP_TIMEOUT":                      c.HTTPTimeout,
+		"LOG_MAX_SIZE_MB":                   c.LoggingSettings.MaxSizeMB,
+		"LOG_BACKUP_COUNT":                  c.LoggingSettings.BackupCount,
 
 		// Standard snake_case & struct keys
 		"language":                          c.Language,
@@ -143,13 +143,13 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"discord_webhook_url":               c.DiscordWebhookURL,
 		"discord_mention_role_id":           c.DiscordMentionRoleID,
 		"discord_hide_mention_instructions": c.DiscordHideMentionInstructions,
-		"discord_timestamp_style":          c.DiscordTimestampStyle,
+		"discord_timestamp_style":           c.DiscordTimestampStyle,
 		"enable_custom_discord_footer":      c.EnableCustomDiscordFooter,
 		"use_slack":                         c.UseSlack,
 		"slack_webhook_url":                 c.SlackWebhookURL,
 		"enable_custom_slack_footer":        c.EnableCustomSlackFooter,
 		"calendar_urls":                     calURLs,
-		"passed_event_handling":            c.PassedEventHandling,
+		"passed_event_handling":             c.PassedEventHandling,
 		"deduplicate_events":                c.DeduplicateEvents,
 		"show_date_range":                   c.ShowDateRange,
 		"show_timezone_in_subheader":        c.ShowTimezoneInSubheader,

@@ -25,20 +25,21 @@ const (
 const (
 	BulkThresholdUpcoming = 2
 	BulkThresholdPast     = 4
+	BulkThresholdDiscord  = 2
 )
 
 // Defaults
 const (
-	DefaultConfigPath                      = "/app/config/calendarr.json"
-	DefaultLocalConfigPath                 = "config/calendarr.json"
-	DefaultLogDir                          = "/app/logs"
-	DefaultLogFile                         = "calendarr.log"
-	DefaultRunTime                         = "09:00"
-	DefaultScheduleType                    = "WEEKLY"
-	DefaultScheduleDay                     = "1" // Monday
+	DefaultConfigPath                     = "/app/config/calendarr.json"
+	DefaultLocalConfigPath                = "config/calendarr.json"
+	DefaultLogDir                         = "/app/logs"
+	DefaultLogFile                        = "calendarr.log"
+	DefaultRunTime                        = "09:00"
+	DefaultScheduleType                   = "WEEKLY"
+	DefaultScheduleDay                    = "1" // Monday
 	DefaultPassedEventHandling            = PassedEventDisplay
-	MaxDiscordEmbedsPerRequest           = 10
-	DiscordEmbedPayloadThreshold         = 5800
+	MaxDiscordEmbedsPerRequest            = 10
+	DiscordEmbedPayloadThreshold          = 5800
 	DefaultUseDiscord                     = false
 	DefaultUseSlack                       = false
 	DefaultShowDateRange                  = false
