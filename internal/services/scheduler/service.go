@@ -105,24 +105,24 @@ func (s *Service) buildCronExpr(sched models.ScheduleSettings) string {
 		runTime = "09:00"
 	}
 
-	var hour, min int
-	_, err := fmt.Sscanf(runTime, "%d:%d", &hour, &min)
+	var hour, minute int
+	_, err := fmt.Sscanf(runTime, "%d:%d", &hour, &minute)
 	if err != nil {
 		hour = 9
-		min = 0
+		minute = 0
 	}
 
 	switch sched.ScheduleType {
 	case "DAILY":
-		return fmt.Sprintf("%d %d * * *", min, hour)
+		return fmt.Sprintf("%d %d * * *", minute, hour)
 	case "WEEKLY":
 		day := sched.ScheduleDay
 		if day == "" {
 			day = "1" // Monday
 		}
-		return fmt.Sprintf("%d %d * * %s", min, hour, day)
+		return fmt.Sprintf("%d %d * * %s", minute, hour, day)
 	default:
-		return fmt.Sprintf("%d %d * * *", min, hour)
+		return fmt.Sprintf("%d %d * * *", minute, hour)
 	}
 }
 
