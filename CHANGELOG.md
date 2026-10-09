@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-10
+
 ### Added
 - **Bulk TV Series Release Grouping**: Automatically group TV series releasing more than 2 episodes on the same day into a single consolidated Discord notification entry (e.g. `**Show Name** — <t:TIMESTAMP:STYLE> 🎉`), preventing channel clutter during batch or season drops. Series releasing 1 or 2 episodes continue to display individual episode details.
 - **Season Premiere Indicator**: Added the `🎉` celebration emoji suffix to Discord notification entries for season premiere episodes (`S01E01`, `1x01`, etc.) across both individual and bulk release lines.
@@ -141,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/khw315/calendarr/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/khw315/calendarr/compare/v2.2.2...v2.3.0
 [2.2.2]: https://github.com/khw315/calendarr/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/khw315/calendarr/compare/v2.2.0...v2.2.1
