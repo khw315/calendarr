@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Bulk TV Series Release Grouping**: Automatically group TV series releasing more than 2 episodes on the same day into a single consolidated Discord notification entry (e.g. `**Show Name** — <t:TIMESTAMP:STYLE> 🎉`), preventing channel clutter during batch or season drops. Series releasing 1 or 2 episodes continue to display individual episode details.
+- **Season Premiere Indicator**: Added the `🎉` celebration emoji suffix to Discord notification entries for season premiere episodes (`S01E01`, `1x01`, etc.) across both individual and bulk release lines.
+
+### Changed
+- **Dependency Updates**: Upgraded Go modules `github.com/arran4/golang-ical` to `v0.3.7` and `github.com/go-chi/chi/v5` to `v5.3.2`.
+
 ## [2.3.0] - 2026-09-05
 
 ### Added
