@@ -67,7 +67,7 @@ func (s *Service) postWebhook(ctx context.Context, client *http.Client, platform
 	if err != nil {
 		return fmt.Errorf("%s HTTP POST failed: %w", platformName, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)

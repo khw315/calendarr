@@ -117,7 +117,7 @@ func (s *Service) fetchFromURL(ctx context.Context, client *http.Client, calURL 
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("calendar returned non-200 HTTP status: %d", resp.StatusCode)
