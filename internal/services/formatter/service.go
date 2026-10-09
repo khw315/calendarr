@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -131,7 +132,12 @@ func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount int
 	return title, strings.Join(contentParts, "\n\n")
 }
 
-func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Config, now time.Time, loc *time.Location, lang string) []models.DiscordEmbed {
+type showGroup struct {
+	showName string
+	events   []*models.Event
+}
+
+func groupEventsByDay(events []*models.Event, loc *time.Location) ([]string, map[string][]*models.Event) {
 	grouped := make(map[string][]*models.Event)
 	var dates []string
 
@@ -142,16 +148,64 @@ func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Co
 		}
 		grouped[dayKey] = append(grouped[dayKey], ev)
 	}
+	return dates, grouped
+}
 
+func groupTVShows(dayEvents []*models.Event) map[string]*showGroup {
+	tvShowMap := make(map[string]*showGroup)
+	for _, ev := range dayEvents {
+		if ev.IsMovie() {
+			continue
+		}
+		showName, _, _ := parseTVEventSummary(ev.Summary)
+		norm := strings.ToLower(showName)
+		if group, exists := tvShowMap[norm]; exists {
+			group.events = append(group.events, ev)
+		} else {
+			tvShowMap[norm] = &showGroup{
+				showName: showName,
+				events:   []*models.Event{ev},
+			}
+		}
+	}
+	return tvShowMap
+}
+
+func (s *Service) formatDayDiscordLines(dayEvents []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) []string {
+	tvShowMap := groupTVShows(dayEvents)
+	var lines []string
+	renderedBulkShows := make(map[string]bool)
+
+	for _, ev := range dayEvents {
+		if ev.IsMovie() {
+			lines = append(lines, s.formatMovieEventDiscord(ev, cfg, now, loc))
+			continue
+		}
+
+		showName, _, _ := parseTVEventSummary(ev.Summary)
+		norm := strings.ToLower(showName)
+		group := tvShowMap[norm]
+
+		if group != nil && len(group.events) > constants.BulkThresholdDiscord {
+			if !renderedBulkShows[norm] {
+				renderedBulkShows[norm] = true
+				lines = append(lines, s.formatBulkTVEventDiscord(group.showName, group.events, cfg, now, loc))
+			}
+			continue
+		}
+
+		lines = append(lines, s.formatTVEventDiscord(ev, cfg, now, loc))
+	}
+	return lines
+}
+
+func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Config, now time.Time, loc *time.Location, lang string) []models.DiscordEmbed {
+	dates, grouped := groupEventsByDay(events, loc)
 	var embeds []models.DiscordEmbed
+
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
-		var lines []string
-
-		for _, ev := range dayEvents {
-			line := s.formatEventLineDiscord(ev, cfg, now, loc)
-			lines = append(lines, line)
-		}
+		lines := s.formatDayDiscordLines(dayEvents, cfg, now, loc)
 
 		dayStartTime := dayEvents[0].StartTime.In(loc)
 		dateHeader := localization.FormatDateHeader(dayStartTime, lang)
@@ -223,16 +277,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 		},
 	}
 
-	grouped := make(map[string][]*models.Event)
-	var dates []string
-
-	for _, ev := range events {
-		dayKey := ev.DayKey(loc)
-		if _, exists := grouped[dayKey]; !exists {
-			dates = append(dates, dayKey)
-		}
-		grouped[dayKey] = append(grouped[dayKey], ev)
-	}
+	dates, grouped := groupEventsByDay(events, loc)
 
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
@@ -259,28 +304,74 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 	}
 }
 
-func (s *Service) formatEventLineDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
-	if ev.IsMovie() {
-		return s.formatMovieEventDiscord(ev, cfg, now, loc)
+var tvShowSeasonEpRegex = regexp.MustCompile(`(?i)\s+(?:s\d+e\d+|\d+x\d+)\b`)
+
+func parseTVEventSummary(summary string) (showName, epNum, epTitle string) {
+	parts := strings.Split(summary, " - ")
+	if len(parts) >= 3 {
+		return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), strings.TrimSpace(strings.Join(parts[2:], " - "))
+	} else if len(parts) == 2 {
+		return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), ""
 	}
-	return s.formatTVEventDiscord(ev, cfg, now, loc)
+
+	if loc := tvShowSeasonEpRegex.FindStringIndex(summary); loc != nil {
+		show := strings.TrimSpace(summary[:loc[0]])
+		ep := strings.TrimSpace(summary[loc[0]:])
+		return show, ep, ""
+	}
+
+	return strings.TrimSpace(summary), "", ""
+}
+
+func (s *Service) formatTimeDiscord(startTime time.Time, cfg *models.Config, now time.Time, loc *time.Location) string {
+	t := startTime.In(loc)
+	timeStyle := cfg.DiscordTimestampStyle
+	if timeStyle == "" && !t.Before(now) {
+		timeStyle = "R"
+	}
+
+	if timeStyle != "" {
+		return fmt.Sprintf(" — <t:%d:%s>", t.Unix(), timeStyle)
+	} else if cfg.TimeSettings.DisplayTime {
+		if cfg.TimeSettings.Use24Hour {
+			return fmt.Sprintf(" — %s", t.Format(timeFormat24Hour))
+		}
+		return fmt.Sprintf(" — %s", t.Format(timeFormat12Hour))
+	}
+	return ""
+}
+
+func (s *Service) formatBulkTVEventDiscord(showName string, group []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	if len(group) == 0 {
+		return ""
+	}
+	first := group[0]
+	formattedShow := fmt.Sprintf("**%s**", showName)
+	timeStr := s.formatTimeDiscord(first.StartTime, cfg, now, loc)
+
+	isPremiere := false
+	allPast := true
+	for _, ev := range group {
+		if ev.IsPremiere() {
+			isPremiere = true
+		}
+		if !ev.IsPast(now) {
+			allPast = false
+		}
+	}
+
+	line := fmt.Sprintf("%s%s", formattedShow, timeStr)
+	if isPremiere {
+		line += " 🎉"
+	}
+	if allPast && cfg.PassedEventHandling == constants.PassedEventStrike {
+		line = fmt.Sprintf("~~%s~~", line)
+	}
+	return line
 }
 
 func (s *Service) formatTVEventDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
-	summary := ev.Summary
-	showName := summary
-	epNum := ""
-	epTitle := ""
-
-	parts := strings.Split(summary, " - ")
-	if len(parts) >= 3 {
-		showName = parts[0]
-		epNum = parts[1]
-		epTitle = strings.Join(parts[2:], " - ")
-	} else if len(parts) == 2 {
-		showName = parts[0]
-		epNum = parts[1]
-	}
+	showName, epNum, epTitle := parseTVEventSummary(ev.Summary)
 
 	formattedShow := fmt.Sprintf("**%s**", showName)
 	epDetails := ""
@@ -294,19 +385,12 @@ func (s *Service) formatTVEventDiscord(ev *models.Event, cfg *models.Config, now
 		epDetails = fmt.Sprintf(" - %s", epNum)
 	}
 
-	timeStr := ""
-	t := ev.StartTime.In(loc)
-	if !t.Before(now) {
-		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
-	} else if cfg.TimeSettings.DisplayTime {
-		if cfg.TimeSettings.Use24Hour {
-			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat24Hour))
-		} else {
-			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat12Hour))
-		}
-	}
+	timeStr := s.formatTimeDiscord(ev.StartTime, cfg, now, loc)
 
 	line := fmt.Sprintf("%s%s%s", formattedShow, epDetails, timeStr)
+	if ev.IsPremiere() {
+		line += " 🎉"
+	}
 	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
 		line = fmt.Sprintf("~~%s~~", line)
 	}
@@ -314,17 +398,7 @@ func (s *Service) formatTVEventDiscord(ev *models.Event, cfg *models.Config, now
 }
 
 func (s *Service) formatMovieEventDiscord(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
-	t := ev.StartTime.In(loc)
-	timeStr := ""
-	if !t.Before(now) {
-		timeStr = fmt.Sprintf(" — <t:%d:R>", t.Unix())
-	} else if cfg.TimeSettings.DisplayTime {
-		if cfg.TimeSettings.Use24Hour {
-			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat24Hour))
-		} else {
-			timeStr = fmt.Sprintf(" — %s", t.Format(timeFormat12Hour))
-		}
-	}
+	timeStr := s.formatTimeDiscord(ev.StartTime, cfg, now, loc)
 
 	line := fmt.Sprintf("🎬  **%s**%s", ev.Summary, timeStr)
 	if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventStrike {
