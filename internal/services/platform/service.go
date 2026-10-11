@@ -405,13 +405,13 @@ func (s *Service) postNtfy(ctx context.Context, client *http.Client, serverURL, 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("NTFY HTTP POST failed: %w", err)
+		return fmt.Errorf("ntfy HTTP POST failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("NTFY returned status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("ntfy returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	return nil
@@ -449,13 +449,13 @@ func (s *Service) postTelegram(ctx context.Context, client *http.Client, botToke
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Telegram HTTP POST failed: %w", err)
+		return fmt.Errorf("telegram HTTP POST failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Telegram returned status %d: %s", resp.StatusCode, string(respBody))
+		return fmt.Errorf("telegram returned status %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	return nil
@@ -487,7 +487,7 @@ func (s *Service) SendTestWithOptions(ctx context.Context, req models.TestWebhoo
 		payload := s.buildNtfyTestPayload()
 		serverURL, topic := s.resolveNtfyTarget(req)
 		if topic == "" {
-			return fmt.Errorf("NTFY topic cannot be empty")
+			return fmt.Errorf("ntfy topic cannot be empty")
 		}
 		return s.postNtfy(ctx, client, serverURL, topic, req.Token, req.Priority, payload)
 	case "telegram":
