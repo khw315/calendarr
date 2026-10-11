@@ -165,7 +165,7 @@ func (s *Service) TriggerRun(ctx context.Context) ([]*models.Event, error) {
 	s.mu.Unlock()
 
 	formatted := s.fmtSvc.Format(events, cfg, startDate, endDate)
-	_ = s.platSvc.Dispatch(ctx, cfg, formatted.Discord, formatted.Slack)
+	_ = s.platSvc.DispatchPayloads(ctx, cfg, formatted.ToNotificationPayloads())
 
 	return events, nil
 }
