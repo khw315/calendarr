@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ConfigState } from '@/types/config'
+import { apiService } from '@/services/api'
 
 interface NotificationSettingsProps {
   config: ConfigState
@@ -30,6 +31,30 @@ export function getDiscordTimestampExample(style: string): string {
 }
 
 export default function NotificationSettings({ config, onChange }: NotificationSettingsProps) {
+  const [testingPlatform, setTestingPlatform] = useState<string | null>(null)
+  const [testStatus, setTestStatus] = useState<Record<string, { type: 'success' | 'error'; message: string } | null>>({})
+
+  const handleTestWebhook = async (platform: string, url: string) => {
+    if (!url) return
+    setTestingPlatform(platform)
+    setTestStatus((prev) => ({ ...prev, [platform]: null }))
+    try {
+      const res = await apiService.testWebhook(platform, url)
+      setTestStatus((prev) => ({
+        ...prev,
+        [platform]: { type: 'success', message: res.message || 'Test notification sent!' }
+      }))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Test failed'
+      setTestStatus((prev) => ({
+        ...prev,
+        [platform]: { type: 'error', message: msg }
+      }))
+    } finally {
+      setTestingPlatform(null)
+    }
+  }
+
   return (
     <>
       {/* Discord Integration */}
@@ -60,6 +85,29 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 value={config.DISCORD_WEBHOOK_URL || ''}
                 onChange={onChange}
               />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="brutal-btn"
+                  style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.DISCORD_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                  disabled={!config.DISCORD_WEBHOOK_URL || testingPlatform === 'discord'}
+                  onClick={() => handleTestWebhook('discord', config.DISCORD_WEBHOOK_URL || '')}
+                >
+                  {testingPlatform === 'discord' ? 'Testing...' : 'Test Discord Webhook'}
+                </button>
+                {testStatus['discord'] && (
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: testStatus['discord'].type === 'success' ? '#16a34a' : '#dc2626'
+                    }}
+                  >
+                    {testStatus['discord'].type === 'success' ? '✅ ' : '❌ '}
+                    {testStatus['discord'].message}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="form-group">
               <label htmlFor="set_DISCORD_MENTION_ROLE_ID">Discord Mention Role ID</label>
@@ -163,6 +211,29 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 value={config.SLACK_WEBHOOK_URL || ''}
                 onChange={onChange}
               />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="brutal-btn"
+                  style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.SLACK_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                  disabled={!config.SLACK_WEBHOOK_URL || testingPlatform === 'slack'}
+                  onClick={() => handleTestWebhook('slack', config.SLACK_WEBHOOK_URL || '')}
+                >
+                  {testingPlatform === 'slack' ? 'Testing...' : 'Test Slack Webhook'}
+                </button>
+                {testStatus['slack'] && (
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: testStatus['slack'].type === 'success' ? '#16a34a' : '#dc2626'
+                    }}
+                  >
+                    {testStatus['slack'].type === 'success' ? '✅ ' : '❌ '}
+                    {testStatus['slack'].message}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="form-group checkbox-group">
               <input
