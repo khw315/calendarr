@@ -104,3 +104,104 @@ func TestConfigMarshalAndUnmarshalAll(t *testing.T) {
 		t.Errorf("Expected 1 calendar URL, got %d", len(updated.CalendarURLs))
 	}
 }
+
+func TestConfigWebhookChannels(t *testing.T) {
+	t.Run("Discord distinct channels configured", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.DiscordWebhookURL = "https://discord.com/default"
+		cfg.DiscordTVWebhookURL = "https://discord.com/tv"
+		cfg.DiscordMovieWebhookURL = "https://discord.com/movie"
+
+		if !cfg.HasDistinctDiscordChannels() {
+			t.Errorf("Expected HasDistinctDiscordChannels to be true")
+		}
+		if got := cfg.GetDiscordTVWebhookURL(); got != "https://discord.com/tv" {
+			t.Errorf("Expected TV webhook URL, got %q", got)
+		}
+		if got := cfg.GetDiscordMovieWebhookURL(); got != "https://discord.com/movie" {
+			t.Errorf("Expected Movie webhook URL, got %q", got)
+		}
+	})
+
+	t.Run("Discord fallback to default webhook", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.DiscordWebhookURL = "https://discord.com/default"
+
+		if cfg.HasDistinctDiscordChannels() {
+			t.Errorf("Expected HasDistinctDiscordChannels to be false")
+		}
+		if got := cfg.GetDiscordTVWebhookURL(); got != "https://discord.com/default" {
+			t.Errorf("Expected fallback to default webhook URL, got %q", got)
+		}
+		if got := cfg.GetDiscordMovieWebhookURL(); got != "https://discord.com/default" {
+			t.Errorf("Expected fallback to default webhook URL, got %q", got)
+		}
+	})
+
+	t.Run("Slack distinct channels configured", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.SlackWebhookURL = "https://slack.com/default"
+		cfg.SlackTVWebhookURL = "https://slack.com/tv"
+		cfg.SlackMovieWebhookURL = "https://slack.com/movie"
+
+		if !cfg.HasDistinctSlackChannels() {
+			t.Errorf("Expected HasDistinctSlackChannels to be true")
+		}
+		if got := cfg.GetSlackTVWebhookURL(); got != "https://slack.com/tv" {
+			t.Errorf("Expected TV webhook URL, got %q", got)
+		}
+		if got := cfg.GetSlackMovieWebhookURL(); got != "https://slack.com/movie" {
+			t.Errorf("Expected Movie webhook URL, got %q", got)
+		}
+	})
+
+	t.Run("Slack fallback to default webhook", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.SlackWebhookURL = "https://slack.com/default"
+
+		if cfg.HasDistinctSlackChannels() {
+			t.Errorf("Expected HasDistinctSlackChannels to be false")
+		}
+		if got := cfg.GetSlackTVWebhookURL(); got != "https://slack.com/default" {
+			t.Errorf("Expected fallback to default webhook URL, got %q", got)
+		}
+		if got := cfg.GetSlackMovieWebhookURL(); got != "https://slack.com/default" {
+			t.Errorf("Expected fallback to default webhook URL, got %q", got)
+		}
+	})
+
+	t.Run("JSON unmarshal with distinct webhook URLs", func(t *testing.T) {
+		jsonStr := `{
+			"DISCORD_TV_WEBHOOK_URL": "https://discord.com/custom_tv",
+			"DISCORD_MOVIE_WEBHOOK_URL": "https://discord.com/custom_movie",
+			"SLACK_TV_WEBHOOK_URL": "https://slack.com/custom_tv",
+			"SLACK_MOVIE_WEBHOOK_URL": "https://slack.com/custom_movie"
+		}`
+
+		cfg := DefaultConfig()
+		if err := json.Unmarshal([]byte(jsonStr), cfg); err != nil {
+			t.Fatalf("Failed to unmarshal distinct URLs: %v", err)
+		}
+
+		if cfg.DiscordTVWebhookURL != "https://discord.com/custom_tv" {
+			t.Errorf("Unexpected DiscordTVWebhookURL: %q", cfg.DiscordTVWebhookURL)
+		}
+		if cfg.DiscordMovieWebhookURL != "https://discord.com/custom_movie" {
+			t.Errorf("Unexpected DiscordMovieWebhookURL: %q", cfg.DiscordMovieWebhookURL)
+		}
+		if cfg.SlackTVWebhookURL != "https://slack.com/custom_tv" {
+			t.Errorf("Unexpected SlackTVWebhookURL: %q", cfg.SlackTVWebhookURL)
+		}
+		if cfg.SlackMovieWebhookURL != "https://slack.com/custom_movie" {
+			t.Errorf("Unexpected SlackMovieWebhookURL: %q", cfg.SlackMovieWebhookURL)
+		}
+
+		data, err := json.Marshal(cfg)
+		if err != nil {
+			t.Fatalf("Failed to marshal config: %v", err)
+		}
+		if len(data) == 0 {
+			t.Errorf("Expected non-empty JSON data")
+		}
+	})
+}

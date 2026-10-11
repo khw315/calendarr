@@ -229,4 +229,50 @@ func TestPlatformServiceDispatchPayloads(t *testing.T) {
 			t.Errorf("Expected combinedHitCount 2 (1 Discord + 1 Slack), got %d", combinedHitCount)
 		}
 	})
+
+	t.Run("Segregated dispatch error paths", func(t *testing.T) {
+		ts500 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer ts500.Close()
+
+		cfg := models.DefaultConfig()
+		cfg.UseDiscord = true
+		cfg.DiscordTVWebhookURL = ts500.URL
+		cfg.DiscordMovieWebhookURL = ts500.URL
+		cfg.UseSlack = true
+		cfg.SlackTVWebhookURL = ts500.URL
+		cfg.SlackMovieWebhookURL = ts500.URL
+
+		payloads := models.NotificationPayloads{
+			DiscordTV:    &models.DiscordPayload{Content: "TV", Embeds: []models.DiscordEmbed{{Title: "TV"}}},
+			DiscordMovie: &models.DiscordPayload{Content: "Movie", Embeds: []models.DiscordEmbed{{Title: "Movie"}}},
+			SlackTV:      &models.SlackPayload{Text: "TV", Blocks: []models.SlackBlock{{Type: "section"}, {Type: "section"}}},
+			SlackMovie:   &models.SlackPayload{Text: "Movie", Blocks: []models.SlackBlock{{Type: "section"}, {Type: "section"}}},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err == nil {
+			t.Errorf("Expected errors during segregated dispatch when endpoints return 500")
+		}
+	})
+
+	t.Run("Helper functions nil and empty edge cases", func(t *testing.T) {
+		if svc.shouldSendDiscordPayload(nil, true) {
+			t.Errorf("Expected shouldSendDiscordPayload to return false for nil payload")
+		}
+		if svc.shouldSendSlackPayload(nil, true) {
+			t.Errorf("Expected shouldSendSlackPayload to return false for nil payload")
+		}
+		if got := svc.dispatchTarget(ctx, http.DefaultClient, "Test", "", nil); got != "" {
+			t.Errorf("Expected empty string for empty url and nil payload, got %q", got)
+		}
+		emptyPayloads := models.NotificationPayloads{}
+		if svc.hasDiscordReleases(emptyPayloads) {
+			t.Errorf("Expected hasDiscordReleases to return false for empty payloads")
+		}
+		if svc.hasSlackReleases(emptyPayloads) {
+			t.Errorf("Expected hasSlackReleases to return false for empty payloads")
+		}
+	})
 }
