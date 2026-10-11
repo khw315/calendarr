@@ -2,8 +2,10 @@ package platform
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/khw315/calendarr/internal/models"
@@ -15,19 +17,29 @@ func TestPlatformServiceDispatchSuccess(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	svc := NewService()
+	svc := &Service{telegramBaseURL: ts.URL}
 	cfg := models.DefaultConfig()
 	cfg.UseDiscord = true
 	cfg.DiscordWebhookURL = ts.URL
 	cfg.UseSlack = true
 	cfg.SlackWebhookURL = ts.URL
+	cfg.UseNtfy = true
+	cfg.NtfyServerURL = ts.URL
+	cfg.NtfyTopic = "test-topic"
+	cfg.UseTelegram = true
+	cfg.TelegramBotToken = "test-bot-token"
+	cfg.TelegramChatID = "987654321"
 
-	discordPayload := &models.DiscordPayload{Content: "Test Discord"}
-	slackPayload := &models.SlackPayload{Text: "Test Slack"}
+	payloads := models.NotificationPayloads{
+		DiscordCombined:  &models.DiscordPayload{Content: "Test Discord"},
+		SlackCombined:    &models.SlackPayload{Text: "Test Slack"},
+		NtfyCombined:     &models.NtfyPayload{Title: "Test", Message: "Test Ntfy", HasReleases: true},
+		TelegramCombined: &models.TelegramPayload{Text: "Test Telegram", HasReleases: true},
+	}
 
-	err := svc.Dispatch(context.Background(), cfg, discordPayload, slackPayload)
+	err := svc.DispatchPayloads(context.Background(), cfg, payloads)
 	if err != nil {
-		t.Fatalf("Dispatch failed: %v", err)
+		t.Fatalf("DispatchPayloads failed: %v", err)
 	}
 }
 
@@ -38,17 +50,27 @@ func TestPlatformServiceDispatchError(t *testing.T) {
 	}))
 	defer tsErr.Close()
 
-	svc := NewService()
+	svc := &Service{telegramBaseURL: tsErr.URL}
 	cfg := models.DefaultConfig()
 	cfg.UseDiscord = true
 	cfg.DiscordWebhookURL = tsErr.URL
 	cfg.UseSlack = true
 	cfg.SlackWebhookURL = tsErr.URL
+	cfg.UseNtfy = true
+	cfg.NtfyServerURL = tsErr.URL
+	cfg.NtfyTopic = "test-topic"
+	cfg.UseTelegram = true
+	cfg.TelegramBotToken = "test-bot-token"
+	cfg.TelegramChatID = "987654321"
 
-	discordPayload := &models.DiscordPayload{Content: "Test Discord"}
-	slackPayload := &models.SlackPayload{Text: "Test Slack"}
+	payloads := models.NotificationPayloads{
+		DiscordCombined:  &models.DiscordPayload{Content: "Test Discord"},
+		SlackCombined:    &models.SlackPayload{Text: "Test Slack"},
+		NtfyCombined:     &models.NtfyPayload{Title: "Test", Message: "Test Ntfy", HasReleases: true},
+		TelegramCombined: &models.TelegramPayload{Text: "Test Telegram", HasReleases: true},
+	}
 
-	err := svc.Dispatch(context.Background(), cfg, discordPayload, slackPayload)
+	err := svc.DispatchPayloads(context.Background(), cfg, payloads)
 	if err == nil {
 		t.Errorf("Expected dispatch error when webhooks return 500")
 	}
@@ -66,7 +88,7 @@ func TestPlatformServiceSendTest(t *testing.T) {
 	}))
 	defer tsErr.Close()
 
-	svc := NewService()
+	svc := &Service{telegramBaseURL: tsSuccess.URL}
 	ctx := context.Background()
 
 	t.Run("Discord Success", func(t *testing.T) {
@@ -80,6 +102,57 @@ func TestPlatformServiceSendTest(t *testing.T) {
 		err := svc.SendTest(ctx, "slack", tsSuccess.URL)
 		if err != nil {
 			t.Errorf("Expected successful Slack test send, got: %v", err)
+		}
+	})
+
+	t.Run("Ntfy Success with options", func(t *testing.T) {
+		err := svc.SendTestWithOptions(ctx, models.TestWebhookRequest{
+			Platform:  "ntfy",
+			ServerURL: tsSuccess.URL,
+			Topic:     "alerts",
+		})
+		if err != nil {
+			t.Errorf("Expected successful Ntfy test send, got: %v", err)
+		}
+	})
+
+	t.Run("Ntfy Success via WebhookURL fallback", func(t *testing.T) {
+		err := svc.SendTestWithOptions(ctx, models.TestWebhookRequest{
+			Platform:   "ntfy",
+			WebhookURL: tsSuccess.URL + "/my-topic",
+		})
+		if err != nil {
+			t.Errorf("Expected successful Ntfy test send with WebhookURL, got: %v", err)
+		}
+	})
+
+	t.Run("Telegram Success", func(t *testing.T) {
+		err := svc.SendTestWithOptions(ctx, models.TestWebhookRequest{
+			Platform: "telegram",
+			Token:    "12345:ABCDE",
+			ChatID:   "998877",
+		})
+		if err != nil {
+			t.Errorf("Expected successful Telegram test send, got: %v", err)
+		}
+	})
+
+	t.Run("Ntfy Missing Topic", func(t *testing.T) {
+		err := svc.SendTestWithOptions(ctx, models.TestWebhookRequest{
+			Platform: "ntfy",
+		})
+		if err == nil {
+			t.Errorf("Expected error for missing Ntfy topic, got nil")
+		}
+	})
+
+	t.Run("Telegram Missing Token or ChatID", func(t *testing.T) {
+		err := svc.SendTestWithOptions(ctx, models.TestWebhookRequest{
+			Platform: "telegram",
+			Token:    "token-only",
+		})
+		if err == nil {
+			t.Errorf("Expected error for missing Telegram ChatID, got nil")
 		}
 	})
 
@@ -257,6 +330,97 @@ func TestPlatformServiceDispatchPayloads(t *testing.T) {
 		}
 	})
 
+	t.Run("Distinct NTFY Topics with both TV and Movie payloads", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		tsNtfy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case strings.Contains(r.URL.Path, "tv-topic"):
+				tvHitCount++
+			case strings.Contains(r.URL.Path, "movie-topic"):
+				movieHitCount++
+			default:
+				combinedHitCount++
+			}
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer tsNtfy.Close()
+
+		cfg := models.DefaultConfig()
+		cfg.UseNtfy = true
+		cfg.NtfyServerURL = tsNtfy.URL
+		cfg.NtfyTopic = "combined-topic"
+		cfg.NtfyTVTopic = "tv-topic"
+		cfg.NtfyMovieTopic = "movie-topic"
+
+		payloads := models.NotificationPayloads{
+			NtfyCombined: &models.NtfyPayload{Title: "Combined", Message: "Combined", HasReleases: true},
+			NtfyTV:       &models.NtfyPayload{Title: "TV", Message: "TV Show", HasReleases: true},
+			NtfyMovie:    &models.NtfyPayload{Title: "Movie", Message: "Movie Title", HasReleases: true},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if tvHitCount != 1 {
+			t.Errorf("Expected tvHitCount 1, got %d", tvHitCount)
+		}
+		if movieHitCount != 1 {
+			t.Errorf("Expected movieHitCount 1, got %d", movieHitCount)
+		}
+		if combinedHitCount != 0 {
+			t.Errorf("Expected combinedHitCount 0, got %d", combinedHitCount)
+		}
+	})
+
+	t.Run("Distinct Telegram Channels with both TV and Movie payloads", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		tsTg := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var body struct {
+				ChatID string `json:"chat_id"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			switch body.ChatID {
+			case "tv-chat":
+				tvHitCount++
+			case "movie-chat":
+				movieHitCount++
+			default:
+				combinedHitCount++
+			}
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer tsTg.Close()
+
+		svcTg := &Service{telegramBaseURL: tsTg.URL}
+		cfg := models.DefaultConfig()
+		cfg.UseTelegram = true
+		cfg.TelegramBotToken = "bot-token"
+		cfg.TelegramChatID = "default-chat"
+		cfg.TelegramTVChatID = "tv-chat"
+		cfg.TelegramMovieChatID = "movie-chat"
+
+		payloads := models.NotificationPayloads{
+			TelegramCombined: &models.TelegramPayload{Text: "Combined", HasReleases: true},
+			TelegramTV:       &models.TelegramPayload{Text: "TV Show", HasReleases: true},
+			TelegramMovie:    &models.TelegramPayload{Text: "Movie Title", HasReleases: true},
+		}
+
+		err := svcTg.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if tvHitCount != 1 {
+			t.Errorf("Expected tvHitCount 1, got %d", tvHitCount)
+		}
+		if movieHitCount != 1 {
+			t.Errorf("Expected movieHitCount 1, got %d", movieHitCount)
+		}
+		if combinedHitCount != 0 {
+			t.Errorf("Expected combinedHitCount 0, got %d", combinedHitCount)
+		}
+	})
+
 	t.Run("Helper functions nil and empty edge cases", func(t *testing.T) {
 		if svc.shouldSendDiscordPayload(nil, true) {
 			t.Errorf("Expected shouldSendDiscordPayload to return false for nil payload")
@@ -264,8 +428,20 @@ func TestPlatformServiceDispatchPayloads(t *testing.T) {
 		if svc.shouldSendSlackPayload(nil, true) {
 			t.Errorf("Expected shouldSendSlackPayload to return false for nil payload")
 		}
+		if svc.shouldSendNtfyPayload(nil, true) {
+			t.Errorf("Expected shouldSendNtfyPayload to return false for nil payload")
+		}
+		if svc.shouldSendTelegramPayload(nil, true) {
+			t.Errorf("Expected shouldSendTelegramPayload to return false for nil payload")
+		}
 		if got := svc.dispatchTarget(ctx, http.DefaultClient, "Test", "", nil); got != "" {
 			t.Errorf("Expected empty string for empty url and nil payload, got %q", got)
+		}
+		if got := svc.dispatchTargetNtfy(ctx, http.DefaultClient, "Test", "", models.DefaultConfig(), nil); got != "" {
+			t.Errorf("Expected empty string for empty topic and nil payload, got %q", got)
+		}
+		if got := svc.dispatchTargetTelegram(ctx, http.DefaultClient, "Test", "", models.DefaultConfig(), nil); got != "" {
+			t.Errorf("Expected empty string for empty chat ID and nil payload, got %q", got)
 		}
 		emptyPayloads := models.NotificationPayloads{}
 		if svc.hasDiscordReleases(emptyPayloads) {
@@ -273,6 +449,17 @@ func TestPlatformServiceDispatchPayloads(t *testing.T) {
 		}
 		if svc.hasSlackReleases(emptyPayloads) {
 			t.Errorf("Expected hasSlackReleases to return false for empty payloads")
+		}
+		if svc.hasNtfyReleases(emptyPayloads) {
+			t.Errorf("Expected hasNtfyReleases to return false for empty payloads")
+		}
+		if svc.hasTelegramReleases(emptyPayloads) {
+			t.Errorf("Expected hasTelegramReleases to return false for empty payloads")
+		}
+
+		serverURL, topic := svc.resolveNtfyTarget(models.TestWebhookRequest{WebhookURL: "https://custom.ntfy.sh/demo-topic"})
+		if serverURL != "https://custom.ntfy.sh" || topic != "demo-topic" {
+			t.Errorf("Unexpected resolveNtfyTarget result: %s, %s", serverURL, topic)
 		}
 	})
 }
