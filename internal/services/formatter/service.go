@@ -23,24 +23,36 @@ func NewService() *Service {
 }
 
 type FormattedResult struct {
-	Discord      *models.DiscordPayload
-	DiscordTV    *models.DiscordPayload
-	DiscordMovie *models.DiscordPayload
-	Slack        *models.SlackPayload
-	SlackTV      *models.SlackPayload
-	SlackMovie   *models.SlackPayload
-	Events       []*models.Event
-	Counts       map[string]int
+	Discord       *models.DiscordPayload
+	DiscordTV     *models.DiscordPayload
+	DiscordMovie  *models.DiscordPayload
+	Slack         *models.SlackPayload
+	SlackTV       *models.SlackPayload
+	SlackMovie    *models.SlackPayload
+	Ntfy          *models.NtfyPayload
+	NtfyTV        *models.NtfyPayload
+	NtfyMovie     *models.NtfyPayload
+	Telegram      *models.TelegramPayload
+	TelegramTV    *models.TelegramPayload
+	TelegramMovie *models.TelegramPayload
+	Events        []*models.Event
+	Counts        map[string]int
 }
 
 func (r *FormattedResult) ToNotificationPayloads() models.NotificationPayloads {
 	return models.NotificationPayloads{
-		DiscordCombined: r.Discord,
-		DiscordTV:       r.DiscordTV,
-		DiscordMovie:    r.DiscordMovie,
-		SlackCombined:   r.Slack,
-		SlackTV:         r.SlackTV,
-		SlackMovie:      r.SlackMovie,
+		DiscordCombined:  r.Discord,
+		DiscordTV:        r.DiscordTV,
+		DiscordMovie:     r.DiscordMovie,
+		SlackCombined:    r.Slack,
+		SlackTV:          r.SlackTV,
+		SlackMovie:       r.SlackMovie,
+		NtfyCombined:     r.Ntfy,
+		NtfyTV:           r.NtfyTV,
+		NtfyMovie:        r.NtfyMovie,
+		TelegramCombined: r.Telegram,
+		TelegramTV:       r.TelegramTV,
+		TelegramMovie:    r.TelegramMovie,
 	}
 }
 
@@ -87,15 +99,29 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	slackTVPayload := s.buildSlackPayload(tvEvents, cfg, tvCount, 0, now)
 	slackMoviePayload := s.buildSlackPayload(movieEvents, cfg, 0, movieCount, now)
 
+	ntfyPayload := s.buildNtfyPayload(activeEvents, cfg, tvCount, movieCount, now)
+	ntfyTVPayload := s.buildNtfyPayload(tvEvents, cfg, tvCount, 0, now)
+	ntfyMoviePayload := s.buildNtfyPayload(movieEvents, cfg, 0, movieCount, now)
+
+	telegramPayload := s.buildTelegramPayload(activeEvents, cfg, tvCount, movieCount, now)
+	telegramTVPayload := s.buildTelegramPayload(tvEvents, cfg, tvCount, 0, now)
+	telegramMoviePayload := s.buildTelegramPayload(movieEvents, cfg, 0, movieCount, now)
+
 	return &FormattedResult{
-		Discord:      discordPayload,
-		DiscordTV:    discordTVPayload,
-		DiscordMovie: discordMoviePayload,
-		Slack:        slackPayload,
-		SlackTV:      slackTVPayload,
-		SlackMovie:   slackMoviePayload,
-		Events:       activeEvents,
-		Counts:       counts,
+		Discord:       discordPayload,
+		DiscordTV:     discordTVPayload,
+		DiscordMovie:  discordMoviePayload,
+		Slack:         slackPayload,
+		SlackTV:       slackTVPayload,
+		SlackMovie:    slackMoviePayload,
+		Ntfy:          ntfyPayload,
+		NtfyTV:        ntfyTVPayload,
+		NtfyMovie:     ntfyMoviePayload,
+		Telegram:      telegramPayload,
+		TelegramTV:    telegramTVPayload,
+		TelegramMovie: telegramMoviePayload,
+		Events:        activeEvents,
+		Counts:        counts,
 	}
 }
 
@@ -459,4 +485,316 @@ func (s *Service) formatEventLineSlack(ev *models.Event, cfg *models.Config, now
 	}
 
 	return fmt.Sprintf("%s%s %s", timePrefix, icon, title)
+}
+
+func escapeHTML(s string) string {
+	return strings.NewReplacer(
+		"&", "&amp;",
+		"<", "&lt;",
+		">", "&gt;",
+	).Replace(s)
+}
+
+func (s *Service) buildNtfyPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.NtfyPayload {
+	lang := cfg.Language
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	title := localization.GetText(lang, "header_text")
+	if title == "" {
+		title = localization.GetText(lang, "title")
+	}
+	if title == "" {
+		title = "New Releases"
+	}
+
+	priority := cfg.NtfyPriority
+	if priority <= 0 {
+		priority = 3
+	}
+
+	if len(events) == 0 {
+		return &models.NtfyPayload{
+			Title:       title,
+			Message:     localization.GetRandomMessage(lang, "no_new_releases"),
+			Priority:    priority,
+			Tags:        []string{"calendar"},
+			HasReleases: false,
+		}
+	}
+
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
+		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
+	}
+
+	tags := []string{"calendar"}
+	if tvCount > 0 {
+		tags = append(tags, "tv")
+	}
+	if movieCount > 0 {
+		tags = append(tags, "film")
+	}
+
+	for _, ev := range events {
+		if ev.IsPremiere() {
+			tags = append(tags, "tada")
+			break
+		}
+	}
+
+	dates, grouped := groupEventsByDay(events, loc)
+	var sections []string
+	sections = append(sections, fmt.Sprintf("**%s**", subheader))
+
+	for _, dayKey := range dates {
+		dayEvents := grouped[dayKey]
+		lines := s.formatDayNtfyLines(dayEvents, cfg, now, loc)
+		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
+		sections = append(sections, fmt.Sprintf("### 🗓️ %s\n%s", dateHeader, strings.Join(lines, "\n")))
+	}
+
+	return &models.NtfyPayload{
+		Title:       title,
+		Message:     strings.Join(sections, "\n\n"),
+		Priority:    priority,
+		Tags:        tags,
+		HasReleases: true,
+	}
+}
+
+func (s *Service) formatDayNtfyLines(dayEvents []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) []string {
+	tvShowMap := groupTVShows(dayEvents)
+	var lines []string
+	renderedBulkShows := make(map[string]bool)
+
+	for _, ev := range dayEvents {
+		if ev.IsMovie() {
+			lines = append(lines, s.formatMovieEventNtfy(ev, cfg, now, loc))
+			continue
+		}
+
+		showName, _, _ := parseTVEventSummary(ev.Summary)
+		norm := strings.ToLower(showName)
+		group := tvShowMap[norm]
+
+		if group != nil && len(group.events) > constants.BulkThresholdDiscord {
+			if !renderedBulkShows[norm] {
+				renderedBulkShows[norm] = true
+				lines = append(lines, s.formatBulkTVEventNtfy(group.showName, group.events, cfg, now, loc))
+			}
+			continue
+		}
+
+		lines = append(lines, s.formatTVEventNtfy(ev, cfg, now, loc))
+	}
+	return lines
+}
+
+func (s *Service) formatBulkTVEventNtfy(showName string, group []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	if len(group) == 0 {
+		return ""
+	}
+	first := group[0]
+	timeStr := s.formatEventTimeSimple(first.StartTime, cfg, loc)
+	isPremiere := false
+	for _, ev := range group {
+		if ev.IsPremiere() {
+			isPremiere = true
+			break
+		}
+	}
+
+	line := fmt.Sprintf("- **%s** (%d episodes)", showName, len(group))
+	if timeStr != "" {
+		line += fmt.Sprintf(" `%s`", timeStr)
+	}
+	if isPremiere {
+		line += " 🎉"
+	}
+	return line
+}
+
+func (s *Service) formatTVEventNtfy(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	showName, epNum, epTitle := parseTVEventSummary(ev.Summary)
+	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
+
+	epDetails := ""
+	if epTitle != "" {
+		if epNum != "" {
+			epDetails = fmt.Sprintf(" - %s - *%s*", epNum, epTitle)
+		} else {
+			epDetails = fmt.Sprintf(" - *%s*", epTitle)
+		}
+	} else if epNum != "" {
+		epDetails = fmt.Sprintf(" - %s", epNum)
+	}
+
+	line := fmt.Sprintf("- **%s**%s", showName, epDetails)
+	if timeStr != "" {
+		line += fmt.Sprintf(" `%s`", timeStr)
+	}
+	if ev.IsPremiere() {
+		line += " 🎉"
+	}
+	return line
+}
+
+func (s *Service) formatMovieEventNtfy(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
+	line := fmt.Sprintf("- 🎬 **%s**", ev.Summary)
+	if timeStr != "" {
+		line += fmt.Sprintf(" `%s`", timeStr)
+	}
+	return line
+}
+
+func (s *Service) buildTelegramPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.TelegramPayload {
+	lang := cfg.Language
+	loc := cfg.TimezoneLocation
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	title := localization.GetText(lang, "header_text")
+	if title == "" {
+		title = localization.GetText(lang, "title")
+	}
+	if title == "" {
+		title = "New Releases"
+	}
+
+	if len(events) == 0 {
+		text := fmt.Sprintf("<b>📅 %s</b>\n\n<i>%s</i>", escapeHTML(title), escapeHTML(localization.GetRandomMessage(lang, "no_new_releases")))
+		return &models.TelegramPayload{
+			Text:                  text,
+			ParseMode:             "HTML",
+			DisableNotification:   cfg.TelegramSilentNotification,
+			DisableWebPagePreview: true,
+			HasReleases:           false,
+		}
+	}
+
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
+		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
+	}
+
+	var sections []string
+	sections = append(sections, fmt.Sprintf("<b>📅 %s</b>\n<i>%s</i>", escapeHTML(title), escapeHTML(subheader)))
+
+	dates, grouped := groupEventsByDay(events, loc)
+	for _, dayKey := range dates {
+		dayEvents := grouped[dayKey]
+		lines := s.formatDayTelegramLines(dayEvents, cfg, now, loc)
+		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
+		sections = append(sections, fmt.Sprintf("<b>🗓️ %s</b>\n%s", escapeHTML(dateHeader), strings.Join(lines, "\n")))
+	}
+
+	return &models.TelegramPayload{
+		Text:                  strings.Join(sections, "\n\n"),
+		ParseMode:             "HTML",
+		DisableNotification:   cfg.TelegramSilentNotification,
+		DisableWebPagePreview: true,
+		HasReleases:           true,
+	}
+}
+
+func (s *Service) formatDayTelegramLines(dayEvents []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) []string {
+	tvShowMap := groupTVShows(dayEvents)
+	var lines []string
+	renderedBulkShows := make(map[string]bool)
+
+	for _, ev := range dayEvents {
+		if ev.IsMovie() {
+			lines = append(lines, s.formatMovieEventTelegram(ev, cfg, now, loc))
+			continue
+		}
+
+		showName, _, _ := parseTVEventSummary(ev.Summary)
+		norm := strings.ToLower(showName)
+		group := tvShowMap[norm]
+
+		if group != nil && len(group.events) > constants.BulkThresholdDiscord {
+			if !renderedBulkShows[norm] {
+				renderedBulkShows[norm] = true
+				lines = append(lines, s.formatBulkTVEventTelegram(group.showName, group.events, cfg, now, loc))
+			}
+			continue
+		}
+
+		lines = append(lines, s.formatTVEventTelegram(ev, cfg, now, loc))
+	}
+	return lines
+}
+
+func (s *Service) formatBulkTVEventTelegram(showName string, group []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	if len(group) == 0 {
+		return ""
+	}
+	first := group[0]
+	timeStr := s.formatEventTimeSimple(first.StartTime, cfg, loc)
+	isPremiere := false
+	for _, ev := range group {
+		if ev.IsPremiere() {
+			isPremiere = true
+			break
+		}
+	}
+
+	line := fmt.Sprintf("• <b>%s</b> (%d episodes)", escapeHTML(showName), len(group))
+	if timeStr != "" {
+		line += fmt.Sprintf(" <code>(%s)</code>", escapeHTML(timeStr))
+	}
+	if isPremiere {
+		line += " 🎉"
+	}
+	return line
+}
+
+func (s *Service) formatTVEventTelegram(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	showName, epNum, epTitle := parseTVEventSummary(ev.Summary)
+	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
+
+	epDetails := ""
+	if epTitle != "" {
+		if epNum != "" {
+			epDetails = fmt.Sprintf(" - %s - <i>%s</i>", escapeHTML(epNum), escapeHTML(epTitle))
+		} else {
+			epDetails = fmt.Sprintf(" - <i>%s</i>", escapeHTML(epTitle))
+		}
+	} else if epNum != "" {
+		epDetails = fmt.Sprintf(" - %s", escapeHTML(epNum))
+	}
+
+	line := fmt.Sprintf("• <b>%s</b>%s", escapeHTML(showName), epDetails)
+	if timeStr != "" {
+		line += fmt.Sprintf(" <code>(%s)</code>", escapeHTML(timeStr))
+	}
+	if ev.IsPremiere() {
+		line += " 🎉"
+	}
+	return line
+}
+
+func (s *Service) formatMovieEventTelegram(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
+	line := fmt.Sprintf("• 🎬 <b>%s</b>", escapeHTML(ev.Summary))
+	if timeStr != "" {
+		line += fmt.Sprintf(" <code>(%s)</code>", escapeHTML(timeStr))
+	}
+	return line
+}
+
+func (s *Service) formatEventTimeSimple(startTime time.Time, cfg *models.Config, loc *time.Location) string {
+	if !cfg.TimeSettings.DisplayTime {
+		return ""
+	}
+	t := startTime.In(loc)
+	if cfg.TimeSettings.Use24Hour {
+		return t.Format(timeFormat24Hour)
+	}
+	return t.Format(timeFormat12Hour)
 }

@@ -68,12 +68,38 @@ func TestFormatterService(t *testing.T) {
 		t.Errorf("Expected SlackMovie payload with blocks")
 	}
 
+	if res.Ntfy == nil || res.Ntfy.Message == "" {
+		t.Errorf("Expected Ntfy payload with message")
+	}
+	if res.NtfyTV == nil || res.NtfyTV.Message == "" {
+		t.Errorf("Expected NtfyTV payload with message")
+	}
+	if res.NtfyMovie == nil || res.NtfyMovie.Message == "" {
+		t.Errorf("Expected NtfyMovie payload with message")
+	}
+
+	if res.Telegram == nil || res.Telegram.Text == "" {
+		t.Errorf("Expected Telegram payload with text")
+	}
+	if res.TelegramTV == nil || res.TelegramTV.Text == "" {
+		t.Errorf("Expected TelegramTV payload with text")
+	}
+	if res.TelegramMovie == nil || res.TelegramMovie.Text == "" {
+		t.Errorf("Expected TelegramMovie payload with text")
+	}
+
 	notifPayloads := res.ToNotificationPayloads()
 	if notifPayloads.DiscordCombined == nil || notifPayloads.DiscordTV == nil || notifPayloads.DiscordMovie == nil {
 		t.Errorf("Expected non-nil Discord payloads in ToNotificationPayloads")
 	}
 	if notifPayloads.SlackCombined == nil || notifPayloads.SlackTV == nil || notifPayloads.SlackMovie == nil {
 		t.Errorf("Expected non-nil Slack payloads in ToNotificationPayloads")
+	}
+	if notifPayloads.NtfyCombined == nil || notifPayloads.NtfyTV == nil || notifPayloads.NtfyMovie == nil {
+		t.Errorf("Expected non-nil Ntfy payloads in ToNotificationPayloads")
+	}
+	if notifPayloads.TelegramCombined == nil || notifPayloads.TelegramTV == nil || notifPayloads.TelegramMovie == nil {
+		t.Errorf("Expected non-nil Telegram payloads in ToNotificationPayloads")
 	}
 
 	if res.Counts["tv_count"] != 1 || res.Counts["movie_count"] != 1 {
@@ -95,6 +121,12 @@ func TestFormatterService(t *testing.T) {
 	}
 	if emptyRes.Slack.Blocks[0].Text.Text == "New Releases" || emptyRes.Slack.Blocks[0].Text.Text == "" {
 		t.Errorf("Expected fallback localized message instead of 'New Releases' in Slack header, got: %s", emptyRes.Slack.Blocks[0].Text.Text)
+	}
+	if emptyRes.Ntfy == nil || emptyRes.Ntfy.Message == "" {
+		t.Errorf("Expected fallback Ntfy message for empty events")
+	}
+	if emptyRes.Telegram == nil || emptyRes.Telegram.Text == "" {
+		t.Errorf("Expected fallback Telegram text for empty events")
 	}
 }
 
@@ -211,5 +243,122 @@ func TestBulkAndPremiereDiscordFormatting(t *testing.T) {
 	}
 	if !strings.Contains(lines[4], "**Double Trouble** - 1x02 - *Episode 2*") {
 		t.Errorf("Line 5 should be individual episode 2: %s", lines[4])
+	}
+}
+
+func TestBulkAndPremiereNtfyFormatting(t *testing.T) {
+	svc := NewService()
+	cfg := models.DefaultConfig()
+	loc := time.UTC
+	cfg.TimezoneLocation = loc
+	cfg.TimeSettings.DisplayTime = false
+
+	refTime := time.Date(2026, time.August, 7, 12, 0, 0, 0, loc)
+
+	events := []*models.Event{
+		// Show with 3 episodes -> bulk grouped
+		{
+			Summary:    "Our Sticky Love - 1x01 - Episode 1",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		{
+			Summary:    "Our Sticky Love - 1x02 - Episode 2",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		{
+			Summary:    "Our Sticky Love - 1x03 - Episode 3",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		// Season premiere
+		{
+			Summary:    "Flex x Cop - 2x01 - Episode 1",
+			StartTime:  refTime.Add(1 * time.Hour),
+			SourceType: constants.EventTypeTV,
+		},
+		// Movie
+		{
+			Summary:    "Dune: Part Two",
+			StartTime:  refTime.Add(2 * time.Hour),
+			SourceType: constants.EventTypeMovie,
+		},
+	}
+
+	res := svc.Format(events, cfg, refTime.Add(-24*time.Hour), refTime.Add(24*time.Hour))
+	if res.Ntfy == nil || res.Ntfy.Message == "" {
+		t.Fatalf("Expected non-empty Ntfy message")
+	}
+
+	msg := res.Ntfy.Message
+	if !strings.Contains(msg, "- **Our Sticky Love** (3 episodes) 🎉") {
+		t.Errorf("Expected bulk Ntfy line with premiere emoji for Our Sticky Love, got:\n%s", msg)
+	}
+	if !strings.Contains(msg, "- **Flex x Cop** - 2x01 - *Episode 1* 🎉") {
+		t.Errorf("Expected TV premiere line for Flex x Cop, got:\n%s", msg)
+	}
+	if !strings.Contains(msg, "- 🎬 **Dune: Part Two**") {
+		t.Errorf("Expected movie line for Dune: Part Two, got:\n%s", msg)
+	}
+}
+
+func TestBulkAndPremiereTelegramFormatting(t *testing.T) {
+	svc := NewService()
+	cfg := models.DefaultConfig()
+	loc := time.UTC
+	cfg.TimezoneLocation = loc
+	cfg.TimeSettings.DisplayTime = false
+
+	refTime := time.Date(2026, time.August, 7, 12, 0, 0, 0, loc)
+
+	events := []*models.Event{
+		// Show with 3 episodes and special characters -> bulk grouped & escaped
+		{
+			Summary:    "Tom & Jerry <Special> - 1x01 - Ep 1",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		{
+			Summary:    "Tom & Jerry <Special> - 1x02 - Ep 2",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		{
+			Summary:    "Tom & Jerry <Special> - 1x03 - Ep 3",
+			StartTime:  refTime,
+			SourceType: constants.EventTypeTV,
+		},
+		// Season premiere
+		{
+			Summary:    "Flex x Cop - 2x01 - Episode 1",
+			StartTime:  refTime.Add(1 * time.Hour),
+			SourceType: constants.EventTypeTV,
+		},
+		// Movie with ampersand
+		{
+			Summary:    "Fast & Furious",
+			StartTime:  refTime.Add(2 * time.Hour),
+			SourceType: constants.EventTypeMovie,
+		},
+	}
+
+	res := svc.Format(events, cfg, refTime.Add(-24*time.Hour), refTime.Add(24*time.Hour))
+	if res.Telegram == nil || res.Telegram.Text == "" {
+		t.Fatalf("Expected non-empty Telegram text")
+	}
+
+	text := res.Telegram.Text
+	if !strings.Contains(text, "• <b>Tom &amp; Jerry &lt;Special&gt;</b> (3 episodes) 🎉") {
+		t.Errorf("Expected bulk Telegram line with HTML escaped characters, got:\n%s", text)
+	}
+	if !strings.Contains(text, "• <b>Flex x Cop</b> - 2x01 - <i>Episode 1</i> 🎉") {
+		t.Errorf("Expected single premiere Telegram line, got:\n%s", text)
+	}
+	if !strings.Contains(text, "• 🎬 <b>Fast &amp; Furious</b>") {
+		t.Errorf("Expected movie line with escaped ampersand, got:\n%s", text)
+	}
+	if res.Telegram.ParseMode != "HTML" {
+		t.Errorf("Expected ParseMode HTML, got: %s", res.Telegram.ParseMode)
 	}
 }
