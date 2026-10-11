@@ -43,6 +43,19 @@ type Config struct {
 	SlackMovieWebhookURL           string           `json:"slack_movie_webhook_url,omitempty"`
 	UseDiscord                     bool             `json:"use_discord"`
 	UseSlack                       bool             `json:"use_slack"`
+	UseNtfy                        bool             `json:"use_ntfy"`
+	NtfyServerURL                  string           `json:"ntfy_server_url,omitempty"`
+	NtfyTopic                      string           `json:"ntfy_topic,omitempty"`
+	NtfyTVTopic                    string           `json:"ntfy_tv_topic,omitempty"`
+	NtfyMovieTopic                 string           `json:"ntfy_movie_topic,omitempty"`
+	NtfyAccessToken                string           `json:"ntfy_access_token,omitempty"`
+	NtfyPriority                   int              `json:"ntfy_priority,omitempty"`
+	UseTelegram                    bool             `json:"use_telegram"`
+	TelegramBotToken               string           `json:"telegram_bot_token,omitempty"`
+	TelegramChatID                 string           `json:"telegram_chat_id,omitempty"`
+	TelegramTVChatID               string           `json:"telegram_tv_chat_id,omitempty"`
+	TelegramMovieChatID            string           `json:"telegram_movie_chat_id,omitempty"`
+	TelegramSilentNotification     bool             `json:"telegram_silent_notification"`
 	ShowDateRange                  bool             `json:"show_date_range"`
 	ShowTimezoneInSubheader        bool             `json:"show_timezone_in_subheader"`
 	DeduplicateEvents              bool             `json:"deduplicate_events"`
@@ -92,11 +105,16 @@ func DefaultConfig() *Config {
 			MaxSizeMB:   constants.DefaultLogMaxSizeMB,
 			DebugMode:   constants.DefaultDebugMode,
 		},
-		Timezone:                  "UTC",
-		HTTPTimeout:               constants.DefaultHTTPTimeout,
-		EnableCustomDiscordFooter: constants.DefaultEnableCustomDiscordFooter,
-		EnableCustomSlackFooter:   constants.DefaultEnableCustomSlackFooter,
-		Language:                  "EN",
+		Timezone:                   "UTC",
+		HTTPTimeout:                constants.DefaultHTTPTimeout,
+		EnableCustomDiscordFooter:  constants.DefaultEnableCustomDiscordFooter,
+		EnableCustomSlackFooter:    constants.DefaultEnableCustomSlackFooter,
+		Language:                   "EN",
+		UseNtfy:                    false,
+		NtfyServerURL:              "https://ntfy.sh",
+		NtfyPriority:               3,
+		UseTelegram:                false,
+		TelegramSilentNotification: false,
 	}
 }
 
@@ -126,6 +144,19 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"SLACK_TV_WEBHOOK_URL":              c.SlackTVWebhookURL,
 		"SLACK_MOVIE_WEBHOOK_URL":           c.SlackMovieWebhookURL,
 		"ENABLE_CUSTOM_SLACK_FOOTER":        c.EnableCustomSlackFooter,
+		"USE_NTFY":                          c.UseNtfy,
+		"NTFY_SERVER_URL":                   c.NtfyServerURL,
+		"NTFY_TOPIC":                        c.NtfyTopic,
+		"NTFY_TV_TOPIC":                     c.NtfyTVTopic,
+		"NTFY_MOVIE_TOPIC":                  c.NtfyMovieTopic,
+		"NTFY_ACCESS_TOKEN":                 c.NtfyAccessToken,
+		"NTFY_PRIORITY":                     c.NtfyPriority,
+		"USE_TELEGRAM":                      c.UseTelegram,
+		"TELEGRAM_BOT_TOKEN":                c.TelegramBotToken,
+		"TELEGRAM_CHAT_ID":                  c.TelegramChatID,
+		"TELEGRAM_TV_CHAT_ID":               c.TelegramTVChatID,
+		"TELEGRAM_MOVIE_CHAT_ID":            c.TelegramMovieChatID,
+		"TELEGRAM_SILENT_NOTIFICATION":      c.TelegramSilentNotification,
 		"CALENDAR_URLS":                     calURLs,
 		"PASSED_EVENT_HANDLING":             c.PassedEventHandling,
 		"DEDUPLICATE_EVENTS":                c.DeduplicateEvents,
@@ -160,6 +191,19 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"slack_tv_webhook_url":              c.SlackTVWebhookURL,
 		"slack_movie_webhook_url":           c.SlackMovieWebhookURL,
 		"enable_custom_slack_footer":        c.EnableCustomSlackFooter,
+		"use_ntfy":                          c.UseNtfy,
+		"ntfy_server_url":                   c.NtfyServerURL,
+		"ntfy_topic":                        c.NtfyTopic,
+		"ntfy_tv_topic":                     c.NtfyTVTopic,
+		"ntfy_movie_topic":                  c.NtfyMovieTopic,
+		"ntfy_access_token":                 c.NtfyAccessToken,
+		"ntfy_priority":                     c.NtfyPriority,
+		"use_telegram":                      c.UseTelegram,
+		"telegram_bot_token":                c.TelegramBotToken,
+		"telegram_chat_id":                  c.TelegramChatID,
+		"telegram_tv_chat_id":               c.TelegramTVChatID,
+		"telegram_movie_chat_id":            c.TelegramMovieChatID,
+		"telegram_silent_notification":      c.TelegramSilentNotification,
 		"calendar_urls":                     calURLs,
 		"passed_event_handling":             c.PassedEventHandling,
 		"deduplicate_events":                c.DeduplicateEvents,
@@ -233,6 +277,33 @@ func (c *Config) applyFlatStringFields(raw map[string]interface{}) {
 	if val, ok := raw["TZ"].(string); ok && val != "" {
 		c.Timezone = val
 	}
+	if val, ok := raw["NTFY_SERVER_URL"].(string); ok && val != "" {
+		c.NtfyServerURL = val
+	}
+	if val, ok := raw["NTFY_TOPIC"].(string); ok {
+		c.NtfyTopic = val
+	}
+	if val, ok := raw["NTFY_TV_TOPIC"].(string); ok {
+		c.NtfyTVTopic = val
+	}
+	if val, ok := raw["NTFY_MOVIE_TOPIC"].(string); ok {
+		c.NtfyMovieTopic = val
+	}
+	if val, ok := raw["NTFY_ACCESS_TOKEN"].(string); ok {
+		c.NtfyAccessToken = val
+	}
+	if val, ok := raw["TELEGRAM_BOT_TOKEN"].(string); ok {
+		c.TelegramBotToken = val
+	}
+	if val, ok := raw["TELEGRAM_CHAT_ID"].(string); ok {
+		c.TelegramChatID = val
+	}
+	if val, ok := raw["TELEGRAM_TV_CHAT_ID"].(string); ok {
+		c.TelegramTVChatID = val
+	}
+	if val, ok := raw["TELEGRAM_MOVIE_CHAT_ID"].(string); ok {
+		c.TelegramMovieChatID = val
+	}
 }
 
 func (c *Config) applyFlatBoolFields(raw map[string]interface{}) {
@@ -250,6 +321,15 @@ func (c *Config) applyFlatBoolFields(raw map[string]interface{}) {
 	}
 	if val, ok := raw["ENABLE_CUSTOM_SLACK_FOOTER"].(bool); ok {
 		c.EnableCustomSlackFooter = val
+	}
+	if val, ok := raw["USE_NTFY"].(bool); ok {
+		c.UseNtfy = val
+	}
+	if val, ok := raw["USE_TELEGRAM"].(bool); ok {
+		c.UseTelegram = val
+	}
+	if val, ok := raw["TELEGRAM_SILENT_NOTIFICATION"].(bool); ok {
+		c.TelegramSilentNotification = val
 	}
 	if val, ok := raw["DEDUPLICATE_EVENTS"].(bool); ok {
 		c.DeduplicateEvents = val
@@ -292,6 +372,9 @@ func (c *Config) applyFlatScheduleAndLoggingFields(raw map[string]interface{}) {
 	}
 	if val, ok := raw["HTTP_TIMEOUT"].(float64); ok {
 		c.HTTPTimeout = int(val)
+	}
+	if val, ok := raw["NTFY_PRIORITY"].(float64); ok {
+		c.NtfyPriority = int(val)
 	}
 	if val, ok := raw["LOG_MAX_SIZE_MB"].(float64); ok {
 		c.LoggingSettings.MaxSizeMB = int(val)
@@ -357,4 +440,46 @@ func (c *Config) GetSlackMovieWebhookURL() string {
 // HasDistinctSlackChannels returns true if dedicated TV or Movie Slack webhooks are configured.
 func (c *Config) HasDistinctSlackChannels() bool {
 	return c.SlackTVWebhookURL != "" || c.SlackMovieWebhookURL != ""
+}
+
+// GetNtfyTVTopic returns the TV-specific NTFY topic, or falls back to NtfyTopic.
+func (c *Config) GetNtfyTVTopic() string {
+	if c.NtfyTVTopic != "" {
+		return c.NtfyTVTopic
+	}
+	return c.NtfyTopic
+}
+
+// GetNtfyMovieTopic returns the movie-specific NTFY topic, or falls back to NtfyTopic.
+func (c *Config) GetNtfyMovieTopic() string {
+	if c.NtfyMovieTopic != "" {
+		return c.NtfyMovieTopic
+	}
+	return c.NtfyTopic
+}
+
+// HasDistinctNtfyTopics returns true if dedicated TV or Movie NTFY topics are configured.
+func (c *Config) HasDistinctNtfyTopics() bool {
+	return c.NtfyTVTopic != "" || c.NtfyMovieTopic != ""
+}
+
+// GetTelegramTVChatID returns the TV-specific Telegram chat ID, or falls back to TelegramChatID.
+func (c *Config) GetTelegramTVChatID() string {
+	if c.TelegramTVChatID != "" {
+		return c.TelegramTVChatID
+	}
+	return c.TelegramChatID
+}
+
+// GetTelegramMovieChatID returns the movie-specific Telegram chat ID, or falls back to TelegramChatID.
+func (c *Config) GetTelegramMovieChatID() string {
+	if c.TelegramMovieChatID != "" {
+		return c.TelegramMovieChatID
+	}
+	return c.TelegramChatID
+}
+
+// HasDistinctTelegramChannels returns true if dedicated TV or Movie Telegram chat IDs are configured.
+func (c *Config) HasDistinctTelegramChannels() bool {
+	return c.TelegramTVChatID != "" || c.TelegramMovieChatID != ""
 }

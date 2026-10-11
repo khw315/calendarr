@@ -175,7 +175,20 @@ func TestConfigWebhookChannels(t *testing.T) {
 			"DISCORD_TV_WEBHOOK_URL": "https://discord.com/custom_tv",
 			"DISCORD_MOVIE_WEBHOOK_URL": "https://discord.com/custom_movie",
 			"SLACK_TV_WEBHOOK_URL": "https://slack.com/custom_tv",
-			"SLACK_MOVIE_WEBHOOK_URL": "https://slack.com/custom_movie"
+			"SLACK_MOVIE_WEBHOOK_URL": "https://slack.com/custom_movie",
+			"USE_NTFY": true,
+			"NTFY_SERVER_URL": "https://ntfy.example.com",
+			"NTFY_TOPIC": "calendarr-default",
+			"NTFY_TV_TOPIC": "calendarr-tv",
+			"NTFY_MOVIE_TOPIC": "calendarr-movies",
+			"NTFY_ACCESS_TOKEN": "tk_12345",
+			"NTFY_PRIORITY": 4,
+			"USE_TELEGRAM": true,
+			"TELEGRAM_BOT_TOKEN": "123456:ABC-DEF",
+			"TELEGRAM_CHAT_ID": "-1001234567890",
+			"TELEGRAM_TV_CHAT_ID": "-1001234567891",
+			"TELEGRAM_MOVIE_CHAT_ID": "-1001234567892",
+			"TELEGRAM_SILENT_NOTIFICATION": true
 		}`
 
 		cfg := DefaultConfig()
@@ -195,6 +208,12 @@ func TestConfigWebhookChannels(t *testing.T) {
 		if cfg.SlackMovieWebhookURL != "https://slack.com/custom_movie" {
 			t.Errorf("Unexpected SlackMovieWebhookURL: %q", cfg.SlackMovieWebhookURL)
 		}
+		if !cfg.UseNtfy || cfg.NtfyServerURL != "https://ntfy.example.com" || cfg.NtfyTopic != "calendarr-default" || cfg.NtfyTVTopic != "calendarr-tv" || cfg.NtfyMovieTopic != "calendarr-movies" || cfg.NtfyAccessToken != "tk_12345" || cfg.NtfyPriority != 4 {
+			t.Errorf("Unexpected NTFY config values: %+v", cfg)
+		}
+		if !cfg.UseTelegram || cfg.TelegramBotToken != "123456:ABC-DEF" || cfg.TelegramChatID != "-1001234567890" || cfg.TelegramTVChatID != "-1001234567891" || cfg.TelegramMovieChatID != "-1001234567892" || !cfg.TelegramSilentNotification {
+			t.Errorf("Unexpected Telegram config values: %+v", cfg)
+		}
 
 		data, err := json.Marshal(cfg)
 		if err != nil {
@@ -202,6 +221,60 @@ func TestConfigWebhookChannels(t *testing.T) {
 		}
 		if len(data) == 0 {
 			t.Errorf("Expected non-empty JSON data")
+		}
+	})
+
+	t.Run("NTFY distinct topics and fallback", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.NtfyTopic = "default-topic"
+
+		if cfg.HasDistinctNtfyTopics() {
+			t.Errorf("Expected HasDistinctNtfyTopics to be false initially")
+		}
+		if got := cfg.GetNtfyTVTopic(); got != "default-topic" {
+			t.Errorf("Expected fallback TV topic, got %q", got)
+		}
+		if got := cfg.GetNtfyMovieTopic(); got != "default-topic" {
+			t.Errorf("Expected fallback Movie topic, got %q", got)
+		}
+
+		cfg.NtfyTVTopic = "tv-topic"
+		cfg.NtfyMovieTopic = "movie-topic"
+		if !cfg.HasDistinctNtfyTopics() {
+			t.Errorf("Expected HasDistinctNtfyTopics to be true")
+		}
+		if got := cfg.GetNtfyTVTopic(); got != "tv-topic" {
+			t.Errorf("Expected TV topic, got %q", got)
+		}
+		if got := cfg.GetNtfyMovieTopic(); got != "movie-topic" {
+			t.Errorf("Expected Movie topic, got %q", got)
+		}
+	})
+
+	t.Run("Telegram distinct channels and fallback", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.TelegramChatID = "-1000"
+
+		if cfg.HasDistinctTelegramChannels() {
+			t.Errorf("Expected HasDistinctTelegramChannels to be false initially")
+		}
+		if got := cfg.GetTelegramTVChatID(); got != "-1000" {
+			t.Errorf("Expected fallback TV chat ID, got %q", got)
+		}
+		if got := cfg.GetTelegramMovieChatID(); got != "-1000" {
+			t.Errorf("Expected fallback Movie chat ID, got %q", got)
+		}
+
+		cfg.TelegramTVChatID = "-2000"
+		cfg.TelegramMovieChatID = "-3000"
+		if !cfg.HasDistinctTelegramChannels() {
+			t.Errorf("Expected HasDistinctTelegramChannels to be true")
+		}
+		if got := cfg.GetTelegramTVChatID(); got != "-2000" {
+			t.Errorf("Expected TV chat ID, got %q", got)
+		}
+		if got := cfg.GetTelegramMovieChatID(); got != "-3000" {
+			t.Errorf("Expected Movie chat ID, got %q", got)
 		}
 	})
 }

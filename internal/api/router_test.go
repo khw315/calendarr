@@ -170,4 +170,40 @@ func TestAPIRoutes(t *testing.T) {
 	if recTestInvalidScheme.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400 on invalid URL scheme, got %d", recTestInvalidScheme.Code)
 	}
+
+	// 11d. Success NTFY (200)
+	testBodyNtfy, _ := json.Marshal(map[string]string{
+		"platform":   "ntfy",
+		"server_url": tsWebhook.URL,
+		"topic":      "alerts",
+	})
+	reqTestNtfy := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodyNtfy))
+	recTestNtfy := httptest.NewRecorder()
+	handler.ServeHTTP(recTestNtfy, reqTestNtfy)
+	if recTestNtfy.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on valid NTFY test, got %d", recTestNtfy.Code)
+	}
+
+	// 11e. Missing NTFY topic/url (400)
+	testBodyNtfyMissing, _ := json.Marshal(map[string]string{
+		"platform": "ntfy",
+	})
+	reqTestNtfyMissing := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodyNtfyMissing))
+	recTestNtfyMissing := httptest.NewRecorder()
+	handler.ServeHTTP(recTestNtfyMissing, reqTestNtfyMissing)
+	if recTestNtfyMissing.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400 on missing NTFY topic, got %d", recTestNtfyMissing.Code)
+	}
+
+	// 11f. Missing Telegram token or chat_id (400)
+	testBodyTgMissing, _ := json.Marshal(map[string]string{
+		"platform": "telegram",
+		"token":    "my-bot-token",
+	})
+	reqTestTgMissing := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodyTgMissing))
+	recTestTgMissing := httptest.NewRecorder()
+	handler.ServeHTTP(recTestTgMissing, reqTestTgMissing)
+	if recTestTgMissing.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400 on missing Telegram chat_id, got %d", recTestTgMissing.Code)
+	}
 }

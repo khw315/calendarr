@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **NTFY Push Notifications Integration**: Native support for NTFY topics (`USE_NTFY`, `NTFY_TOPIC`, `NTFY_SERVER_URL`, `NTFY_ACCESS_TOKEN`, `NTFY_PRIORITY`) with Markdown formatting, automatic tags, bulk TV grouping, and premiere celebrations (`🎉`). Includes dedicated TV vs Movie topic splitting (`NTFY_TV_TOPIC`, `NTFY_MOVIE_TOPIC`) and instant test notification dispatch via Web UI.
+- **Telegram Bot Integration**: Native support for Telegram Bot API notifications (`USE_TELEGRAM`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_SILENT_NOTIFICATION`) with HTML formatting, safe character escaping, bulk TV grouping, and premiere celebrations. Includes dedicated TV vs Movie chat/channel ID routing (`TELEGRAM_TV_CHAT_ID`, `TELEGRAM_MOVIE_CHAT_ID`) and instant test notification dispatch via Web UI.
 - **Interactive Webhook Testing**: Added a `"Test Webhook"` button in the Settings Web UI for Discord and Slack along with a dedicated backend endpoint (`POST /api/webhooks/test`), allowing instant verification of webhook URL configurations with real-time visual feedback.
 - **Movie vs TV Channel Splitting**: Added dedicated TV and Movie webhook URL configurations (`DISCORD_TV_WEBHOOK_URL`, `DISCORD_MOVIE_WEBHOOK_URL`, `SLACK_TV_WEBHOOK_URL`, `SLACK_MOVIE_WEBHOOK_URL`) for Discord and Slack. Media releases are automatically segmented into their respective dedicated channels, with seamless automatic fallback to the primary webhook URL when distinct channels are not configured.
 

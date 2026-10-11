@@ -34,12 +34,22 @@ export default function NotificationSettings({ config, onChange }: NotificationS
   const [testingPlatform, setTestingPlatform] = useState<string | null>(null)
   const [testStatus, setTestStatus] = useState<Record<string, { type: 'success' | 'error'; message: string } | null>>({})
 
-  const handleTestWebhook = async (platform: string, url: string, key = platform) => {
-    if (!url) return
+  const handleTestWebhook = async (
+    platform: string,
+    url: string,
+    key = platform,
+    options?: {
+      server_url?: string
+      topic?: string
+      token?: string
+      priority?: string
+      chat_id?: string
+    }
+  ) => {
     setTestingPlatform(key)
     setTestStatus((prev) => ({ ...prev, [key]: null }))
     try {
-      const res = await apiService.testWebhook(platform, url)
+      const res = await apiService.testWebhook(platform, url, options)
       setTestStatus((prev) => ({
         ...prev,
         [key]: { type: 'success', message: res.message || 'Test notification sent!' }
@@ -419,6 +429,399 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 Enable Custom Slack Footer
               </label>
             </div>
+          </>
+        )}
+      </details>
+
+      {/* NTFY Integration */}
+      <details className="settings-group" name="settings-accordion">
+        <summary>
+          <h3>NTFY Integration</h3>
+          <span className="details-arrow">▼</span>
+        </summary>
+        <div className="form-group checkbox-group">
+          <input
+            type="checkbox"
+            id="set_USE_NTFY"
+            name="USE_NTFY"
+            checked={!!config.USE_NTFY}
+            onChange={onChange}
+          />
+          <label htmlFor="set_USE_NTFY">Enable NTFY Support</label>
+        </div>
+        {config.USE_NTFY && (
+          <>
+            <div className="form-group">
+              <label htmlFor="set_NTFY_SERVER_URL">NTFY Server URL (Optional)</label>
+              <input
+                type="text"
+                id="set_NTFY_SERVER_URL"
+                name="NTFY_SERVER_URL"
+                className="brutal-input"
+                value={config.NTFY_SERVER_URL || ''}
+                onChange={onChange}
+                placeholder="https://ntfy.sh (default)"
+              />
+              <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '4px' }}>
+                Leave empty to use public ntfy.sh or enter your self-hosted server instance URL.
+              </small>
+            </div>
+
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label htmlFor="set_NTFY_TOPIC">Default NTFY Topic</label>
+              <input
+                type="text"
+                id="set_NTFY_TOPIC"
+                name="NTFY_TOPIC"
+                className="brutal-input"
+                value={config.NTFY_TOPIC || ''}
+                onChange={onChange}
+                placeholder="e.g. calendarr_releases"
+              />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="brutal-btn"
+                  style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.NTFY_TOPIC ? 'pointer' : 'not-allowed' }}
+                  disabled={!config.NTFY_TOPIC || testingPlatform === 'ntfy'}
+                  onClick={() => handleTestWebhook('ntfy', '', 'ntfy', {
+                    server_url: config.NTFY_SERVER_URL,
+                    topic: config.NTFY_TOPIC,
+                    token: config.NTFY_ACCESS_TOKEN,
+                    priority: config.NTFY_PRIORITY ? String(config.NTFY_PRIORITY) : undefined
+                  })}
+                >
+                  {testingPlatform === 'ntfy' ? 'Testing...' : 'Test NTFY Topic'}
+                </button>
+                {testStatus['ntfy'] && (
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: testStatus['ntfy'].type === 'success' ? '#16a34a' : '#dc2626'
+                    }}
+                  >
+                    {testStatus['ntfy'].type === 'success' ? '✅ ' : '❌ '}
+                    {testStatus['ntfy'].message}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label htmlFor="set_NTFY_ACCESS_TOKEN">NTFY Access Token (Optional)</label>
+              <input
+                type="password"
+                id="set_NTFY_ACCESS_TOKEN"
+                name="NTFY_ACCESS_TOKEN"
+                className="brutal-input"
+                value={config.NTFY_ACCESS_TOKEN || ''}
+                onChange={onChange}
+                placeholder="tk_... (optional for protected topics)"
+              />
+            </div>
+
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label htmlFor="set_NTFY_PRIORITY">Notification Priority</label>
+              <select
+                id="set_NTFY_PRIORITY"
+                name="NTFY_PRIORITY"
+                className="brutal-input"
+                value={config.NTFY_PRIORITY || 3}
+                onChange={onChange}
+              >
+                <option value={1}>1 - Min (No sound or vibration)</option>
+                <option value={2}>2 - Low (Silent notification)</option>
+                <option value={3}>3 - Default (Standard notification)</option>
+                <option value={4}>4 - High (Prominent alert)</option>
+                <option value={5}>5 - Max (Emergency alert)</option>
+              </select>
+            </div>
+
+            {/* Separate NTFY Topics */}
+            <details
+              style={{ marginTop: '12px', marginBottom: '12px', border: '1px dashed var(--color-border)', borderRadius: '4px', padding: '8px 12px' }}
+              open={!!(config.NTFY_TV_TOPIC || config.NTFY_MOVIE_TOPIC)}
+            >
+              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                📺 🎬 Separate TV and Movie Topics (Optional)
+              </summary>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '6px 0 12px 0' }}>
+                Route TV shows (Sonarr) and movies (Radarr) to dedicated topics. If not specified, notifications fall back to the default topic above.
+              </p>
+              <div className="form-group">
+                <label htmlFor="set_NTFY_TV_TOPIC">NTFY TV Topic</label>
+                <input
+                  type="text"
+                  id="set_NTFY_TV_TOPIC"
+                  name="NTFY_TV_TOPIC"
+                  className="brutal-input"
+                  value={config.NTFY_TV_TOPIC || ''}
+                  onChange={onChange}
+                  placeholder="e.g. calendarr_tv"
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: (config.NTFY_TV_TOPIC || config.NTFY_TOPIC) ? 'pointer' : 'not-allowed' }}
+                    disabled={(!config.NTFY_TV_TOPIC && !config.NTFY_TOPIC) || testingPlatform === 'ntfy_tv'}
+                    onClick={() => handleTestWebhook('ntfy', '', 'ntfy_tv', {
+                      server_url: config.NTFY_SERVER_URL,
+                      topic: config.NTFY_TV_TOPIC || config.NTFY_TOPIC,
+                      token: config.NTFY_ACCESS_TOKEN,
+                      priority: config.NTFY_PRIORITY ? String(config.NTFY_PRIORITY) : undefined
+                    })}
+                  >
+                    {testingPlatform === 'ntfy_tv' ? 'Testing...' : 'Test TV Topic'}
+                  </button>
+                  {testStatus['ntfy_tv'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['ntfy_tv'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['ntfy_tv'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['ntfy_tv'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '8px' }}>
+                <label htmlFor="set_NTFY_MOVIE_TOPIC">NTFY Movie Topic</label>
+                <input
+                  type="text"
+                  id="set_NTFY_MOVIE_TOPIC"
+                  name="NTFY_MOVIE_TOPIC"
+                  className="brutal-input"
+                  value={config.NTFY_MOVIE_TOPIC || ''}
+                  onChange={onChange}
+                  placeholder="e.g. calendarr_movies"
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: (config.NTFY_MOVIE_TOPIC || config.NTFY_TOPIC) ? 'pointer' : 'not-allowed' }}
+                    disabled={(!config.NTFY_MOVIE_TOPIC && !config.NTFY_TOPIC) || testingPlatform === 'ntfy_movie'}
+                    onClick={() => handleTestWebhook('ntfy', '', 'ntfy_movie', {
+                      server_url: config.NTFY_SERVER_URL,
+                      topic: config.NTFY_MOVIE_TOPIC || config.NTFY_TOPIC,
+                      token: config.NTFY_ACCESS_TOKEN,
+                      priority: config.NTFY_PRIORITY ? String(config.NTFY_PRIORITY) : undefined
+                    })}
+                  >
+                    {testingPlatform === 'ntfy_movie' ? 'Testing...' : 'Test Movie Topic'}
+                  </button>
+                  {testStatus['ntfy_movie'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['ntfy_movie'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['ntfy_movie'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['ntfy_movie'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
+          </>
+        )}
+      </details>
+
+      {/* Telegram Integration */}
+      <details className="settings-group" name="settings-accordion">
+        <summary>
+          <h3>Telegram Integration</h3>
+          <span className="details-arrow">▼</span>
+        </summary>
+        <div className="form-group checkbox-group">
+          <input
+            type="checkbox"
+            id="set_USE_TELEGRAM"
+            name="USE_TELEGRAM"
+            checked={!!config.USE_TELEGRAM}
+            onChange={onChange}
+          />
+          <label htmlFor="set_USE_TELEGRAM">Enable Telegram Support</label>
+        </div>
+        {config.USE_TELEGRAM && (
+          <>
+            <div className="form-group">
+              <label htmlFor="set_TELEGRAM_BOT_TOKEN">Telegram Bot Token</label>
+              <input
+                type="password"
+                id="set_TELEGRAM_BOT_TOKEN"
+                name="TELEGRAM_BOT_TOKEN"
+                className="brutal-input"
+                value={config.TELEGRAM_BOT_TOKEN || ''}
+                onChange={onChange}
+                placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+              />
+              <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '4px' }}>
+                Obtain your bot token from @BotFather on Telegram.
+              </small>
+            </div>
+
+            <div className="form-group" style={{ marginTop: '12px' }}>
+              <label htmlFor="set_TELEGRAM_CHAT_ID">Default Telegram Chat ID</label>
+              <input
+                type="text"
+                id="set_TELEGRAM_CHAT_ID"
+                name="TELEGRAM_CHAT_ID"
+                className="brutal-input"
+                value={config.TELEGRAM_CHAT_ID || ''}
+                onChange={onChange}
+                placeholder="e.g. -1001234567890 or @channelname"
+              />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="brutal-btn"
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '0.85rem',
+                    cursor: (config.TELEGRAM_BOT_TOKEN && config.TELEGRAM_CHAT_ID) ? 'pointer' : 'not-allowed'
+                  }}
+                  disabled={!config.TELEGRAM_BOT_TOKEN || !config.TELEGRAM_CHAT_ID || testingPlatform === 'telegram'}
+                  onClick={() => handleTestWebhook('telegram', '', 'telegram', {
+                    token: config.TELEGRAM_BOT_TOKEN,
+                    chat_id: config.TELEGRAM_CHAT_ID
+                  })}
+                >
+                  {testingPlatform === 'telegram' ? 'Testing...' : 'Test Telegram Bot'}
+                </button>
+                {testStatus['telegram'] && (
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: testStatus['telegram'].type === 'success' ? '#16a34a' : '#dc2626'
+                    }}
+                  >
+                    {testStatus['telegram'].type === 'success' ? '✅ ' : '❌ '}
+                    {testStatus['telegram'].message}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="form-group checkbox-group" style={{ marginTop: '12px' }}>
+              <input
+                type="checkbox"
+                id="set_TELEGRAM_SILENT_NOTIFICATION"
+                name="TELEGRAM_SILENT_NOTIFICATION"
+                checked={!!config.TELEGRAM_SILENT_NOTIFICATION}
+                onChange={onChange}
+              />
+              <label htmlFor="set_TELEGRAM_SILENT_NOTIFICATION">
+                Send Silently (Disable notification alert sound/buzz)
+              </label>
+            </div>
+
+            {/* Separate Telegram Chats */}
+            <details
+              style={{ marginTop: '12px', marginBottom: '12px', border: '1px dashed var(--color-border)', borderRadius: '4px', padding: '8px 12px' }}
+              open={!!(config.TELEGRAM_TV_CHAT_ID || config.TELEGRAM_MOVIE_CHAT_ID)}
+            >
+              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                📺 🎬 Separate TV and Movie Chats (Optional)
+              </summary>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '6px 0 12px 0' }}>
+                Route TV shows (Sonarr) and movies (Radarr) to dedicated chats or channels. If not specified, notifications fall back to the default Chat ID above.
+              </p>
+              <div className="form-group">
+                <label htmlFor="set_TELEGRAM_TV_CHAT_ID">Telegram TV Chat ID</label>
+                <input
+                  type="text"
+                  id="set_TELEGRAM_TV_CHAT_ID"
+                  name="TELEGRAM_TV_CHAT_ID"
+                  className="brutal-input"
+                  value={config.TELEGRAM_TV_CHAT_ID || ''}
+                  onChange={onChange}
+                  placeholder="e.g. -1001234567890"
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '0.85rem',
+                      cursor: (config.TELEGRAM_BOT_TOKEN && (config.TELEGRAM_TV_CHAT_ID || config.TELEGRAM_CHAT_ID)) ? 'pointer' : 'not-allowed'
+                    }}
+                    disabled={!config.TELEGRAM_BOT_TOKEN || (!config.TELEGRAM_TV_CHAT_ID && !config.TELEGRAM_CHAT_ID) || testingPlatform === 'telegram_tv'}
+                    onClick={() => handleTestWebhook('telegram', '', 'telegram_tv', {
+                      token: config.TELEGRAM_BOT_TOKEN,
+                      chat_id: config.TELEGRAM_TV_CHAT_ID || config.TELEGRAM_CHAT_ID
+                    })}
+                  >
+                    {testingPlatform === 'telegram_tv' ? 'Testing...' : 'Test TV Chat'}
+                  </button>
+                  {testStatus['telegram_tv'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['telegram_tv'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['telegram_tv'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['telegram_tv'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '8px' }}>
+                <label htmlFor="set_TELEGRAM_MOVIE_CHAT_ID">Telegram Movie Chat ID</label>
+                <input
+                  type="text"
+                  id="set_TELEGRAM_MOVIE_CHAT_ID"
+                  name="TELEGRAM_MOVIE_CHAT_ID"
+                  className="brutal-input"
+                  value={config.TELEGRAM_MOVIE_CHAT_ID || ''}
+                  onChange={onChange}
+                  placeholder="e.g. -1009876543210"
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '0.85rem',
+                      cursor: (config.TELEGRAM_BOT_TOKEN && (config.TELEGRAM_MOVIE_CHAT_ID || config.TELEGRAM_CHAT_ID)) ? 'pointer' : 'not-allowed'
+                    }}
+                    disabled={!config.TELEGRAM_BOT_TOKEN || (!config.TELEGRAM_MOVIE_CHAT_ID && !config.TELEGRAM_CHAT_ID) || testingPlatform === 'telegram_movie'}
+                    onClick={() => handleTestWebhook('telegram', '', 'telegram_movie', {
+                      token: config.TELEGRAM_BOT_TOKEN,
+                      chat_id: config.TELEGRAM_MOVIE_CHAT_ID || config.TELEGRAM_CHAT_ID
+                    })}
+                  >
+                    {testingPlatform === 'telegram_movie' ? 'Testing...' : 'Test Movie Chat'}
+                  </button>
+                  {testStatus['telegram_movie'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['telegram_movie'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['telegram_movie'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['telegram_movie'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
           </>
         )}
       </details>

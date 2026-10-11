@@ -369,10 +369,7 @@ func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
 func (r *Router) handlePostTestWebhook(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set(contentTypeHeader, contentTypeJSON)
 
-	var reqBody struct {
-		Platform   string `json:"platform"`
-		WebhookURL string `json:"webhook_url"`
-	}
+	var reqBody models.TestWebhookRequest
 
 	if err := json.NewDecoder(req.Body).Decode(&reqBody); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -383,10 +380,8 @@ func (r *Router) handlePostTestWebhook(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	platformName := strings.TrimSpace(reqBody.Platform)
-	webhookURL := strings.TrimSpace(reqBody.WebhookURL)
-
-	if platformName == "" || webhookURL == "" {
+	platformName := strings.ToLower(strings.TrimSpace(reqBody.Platform))
+	if platformName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -395,16 +390,16 @@ func (r *Router) handlePostTestWebhook(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if !strings.HasPrefix(webhookURL, "http://") && !strings.HasPrefix(webhookURL, "https://") {
+	if err := r.validateTestWebhookRequest(platformName, reqBody); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"error":   "Invalid webhook URL: must start with http:// or https://",
+			"error":   err.Error(),
 		})
 		return
 	}
 
-	if err := r.platSvc.SendTest(req.Context(), platformName, webhookURL); err != nil {
+	if err := r.platSvc.SendTestWithOptions(req.Context(), reqBody); err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -416,6 +411,36 @@ func (r *Router) handlePostTestWebhook(w http.ResponseWriter, req *http.Request)
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-		"message": fmt.Sprintf("Successfully dispatched test notification to %s", platformName),
+		"message": fmt.Sprintf("Successfully dispatched test notification to %s", reqBody.Platform),
 	})
+}
+
+func (r *Router) validateTestWebhookRequest(platform string, req models.TestWebhookRequest) error {
+	switch platform {
+	case "discord", "slack":
+		url := strings.TrimSpace(req.WebhookURL)
+		if url == "" {
+			return fmt.Errorf("both 'platform' and 'webhook_url' fields are required")
+		}
+		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+			return fmt.Errorf("invalid webhook URL: must start with http:// or https://")
+		}
+	case "ntfy":
+		topic := strings.TrimSpace(req.Topic)
+		hookURL := strings.TrimSpace(req.WebhookURL)
+		if topic == "" && hookURL == "" {
+			return fmt.Errorf("either 'topic' or 'webhook_url' is required for NTFY")
+		}
+		serverURL := strings.TrimSpace(req.ServerURL)
+		if serverURL != "" && !strings.HasPrefix(serverURL, "http://") && !strings.HasPrefix(serverURL, "https://") {
+			return fmt.Errorf("invalid NTFY server URL: must start with http:// or https://")
+		}
+	case "telegram":
+		if strings.TrimSpace(req.Token) == "" || strings.TrimSpace(req.ChatID) == "" {
+			return fmt.Errorf("both 'token' and 'chat_id' are required for Telegram")
+		}
+	default:
+		return fmt.Errorf("unsupported platform for webhook test: %s", platform)
+	}
+	return nil
 }
