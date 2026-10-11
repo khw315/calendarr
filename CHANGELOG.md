@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Interactive Webhook Testing**: Added a `"Test Webhook"` button in the Settings Web UI for Discord and Slack along with a dedicated backend endpoint (`POST /api/webhooks/test`), allowing instant verification of webhook URL configurations with real-time visual feedback.
+
 ## [2.4.2] - 2026-10-10
 
 ### Security

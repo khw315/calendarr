@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/khw315/calendarr/internal/models"
@@ -75,4 +76,61 @@ func (s *Service) postWebhook(ctx context.Context, client *http.Client, platform
 	}
 
 	return nil
+}
+
+// SendTest sends an immediate verification test notification to the specified platform webhook.
+func (s *Service) SendTest(ctx context.Context, platformName, webhookURL string) error {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	normPlatform := strings.ToLower(strings.TrimSpace(platformName))
+	switch normPlatform {
+	case "discord":
+		payload := s.buildDiscordTestPayload()
+		return s.postWebhook(ctx, client, "Discord", webhookURL, payload)
+	case "slack":
+		payload := s.buildSlackTestPayload()
+		return s.postWebhook(ctx, client, "Slack", webhookURL, payload)
+	default:
+		return fmt.Errorf("unsupported platform for webhook test: %s", platformName)
+	}
+}
+
+func (s *Service) buildDiscordTestPayload() *models.DiscordPayload {
+	return &models.DiscordPayload{
+		Embeds: []models.DiscordEmbed{
+			{
+				Title:       "🔔 Calendarr Webhook Test",
+				Description: "This is a test notification from **Calendarr**.\nYour Discord webhook is configured and communicating properly!",
+				Color:       0x5865F2, // Discord Blurple
+				Timestamp:   time.Now().UTC().Format(time.RFC3339),
+				Footer: &models.DiscordFooter{
+					Text: "Calendarr • Webhook Verification",
+				},
+			},
+		},
+	}
+}
+
+func (s *Service) buildSlackTestPayload() *models.SlackPayload {
+	return &models.SlackPayload{
+		Text: "🔔 Calendarr Webhook Test: Your Slack integration is active!",
+		Blocks: []models.SlackBlock{
+			{
+				Type: "header",
+				Text: &models.SlackText{
+					Type: "plain_text",
+					Text: "🔔 Calendarr Webhook Test",
+				},
+			},
+			{
+				Type: "section",
+				Text: &models.SlackText{
+					Type: "mrkdwn",
+					Text: "This is a test notification from *Calendarr*.\nYour Slack webhook integration is active and working properly!",
+				},
+			},
+		},
+	}
 }

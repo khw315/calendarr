@@ -69,6 +69,24 @@ export const apiService = {
     return data
   },
 
+  async testWebhook(platform: string, webhookUrl: string): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch(`${API_BASE}/api/webhooks/test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        platform,
+        webhook_url: webhookUrl
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error(data.error || data.message || `Test failed: ${res.statusText}`)
+    }
+    return data
+  },
+
   async getLanguages(): Promise<string[]> {
     const res = await fetch(`${API_BASE}/api/languages`)
     if (!res.ok) {

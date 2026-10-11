@@ -53,3 +53,47 @@ func TestPlatformServiceDispatchError(t *testing.T) {
 		t.Errorf("Expected dispatch error when webhooks return 500")
 	}
 }
+
+func TestPlatformServiceSendTest(t *testing.T) {
+	tsSuccess := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer tsSuccess.Close()
+
+	tsErr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"message": "Invalid webhook"}`))
+	}))
+	defer tsErr.Close()
+
+	svc := NewService()
+	ctx := context.Background()
+
+	t.Run("Discord Success", func(t *testing.T) {
+		err := svc.SendTest(ctx, "discord", tsSuccess.URL)
+		if err != nil {
+			t.Errorf("Expected successful Discord test send, got: %v", err)
+		}
+	})
+
+	t.Run("Slack Success", func(t *testing.T) {
+		err := svc.SendTest(ctx, "slack", tsSuccess.URL)
+		if err != nil {
+			t.Errorf("Expected successful Slack test send, got: %v", err)
+		}
+	})
+
+	t.Run("Unsupported Platform", func(t *testing.T) {
+		err := svc.SendTest(ctx, "unsupported_platform", tsSuccess.URL)
+		if err == nil {
+			t.Errorf("Expected error for unsupported platform, got nil")
+		}
+	})
+
+	t.Run("Upstream Error", func(t *testing.T) {
+		err := svc.SendTest(ctx, "discord", tsErr.URL)
+		if err == nil {
+			t.Errorf("Expected error on 400 Bad Request response from upstream, got nil")
+		}
+	})
+}
