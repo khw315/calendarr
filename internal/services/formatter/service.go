@@ -551,7 +551,7 @@ func (s *Service) buildNtfyPayload(events []*models.Event, cfg *models.Config, t
 
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
-		lines := s.formatDayNtfyLines(dayEvents, cfg, now, loc)
+		lines := s.formatDayNtfyLines(dayEvents, cfg, loc)
 		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
 		sections = append(sections, fmt.Sprintf("### 🗓️ %s\n%s", dateHeader, strings.Join(lines, "\n")))
 	}
@@ -565,14 +565,14 @@ func (s *Service) buildNtfyPayload(events []*models.Event, cfg *models.Config, t
 	}
 }
 
-func (s *Service) formatDayNtfyLines(dayEvents []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) []string {
+func (s *Service) formatDayNtfyLines(dayEvents []*models.Event, cfg *models.Config, loc *time.Location) []string {
 	tvShowMap := groupTVShows(dayEvents)
 	var lines []string
 	renderedBulkShows := make(map[string]bool)
 
 	for _, ev := range dayEvents {
 		if ev.IsMovie() {
-			lines = append(lines, s.formatMovieEventNtfy(ev, cfg, now, loc))
+			lines = append(lines, s.formatMovieEventNtfy(ev, cfg, loc))
 			continue
 		}
 
@@ -583,17 +583,17 @@ func (s *Service) formatDayNtfyLines(dayEvents []*models.Event, cfg *models.Conf
 		if group != nil && len(group.events) > constants.BulkThresholdDiscord {
 			if !renderedBulkShows[norm] {
 				renderedBulkShows[norm] = true
-				lines = append(lines, s.formatBulkTVEventNtfy(group.showName, group.events, cfg, now, loc))
+				lines = append(lines, s.formatBulkTVEventNtfy(group.showName, group.events, cfg, loc))
 			}
 			continue
 		}
 
-		lines = append(lines, s.formatTVEventNtfy(ev, cfg, now, loc))
+		lines = append(lines, s.formatTVEventNtfy(ev, cfg, loc))
 	}
 	return lines
 }
 
-func (s *Service) formatBulkTVEventNtfy(showName string, group []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatBulkTVEventNtfy(showName string, group []*models.Event, cfg *models.Config, loc *time.Location) string {
 	if len(group) == 0 {
 		return ""
 	}
@@ -617,7 +617,7 @@ func (s *Service) formatBulkTVEventNtfy(showName string, group []*models.Event, 
 	return line
 }
 
-func (s *Service) formatTVEventNtfy(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatTVEventNtfy(ev *models.Event, cfg *models.Config, loc *time.Location) string {
 	showName, epNum, epTitle := parseTVEventSummary(ev.Summary)
 	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
 
@@ -642,7 +642,7 @@ func (s *Service) formatTVEventNtfy(ev *models.Event, cfg *models.Config, now ti
 	return line
 }
 
-func (s *Service) formatMovieEventNtfy(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatMovieEventNtfy(ev *models.Event, cfg *models.Config, loc *time.Location) string {
 	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
 	line := fmt.Sprintf("- 🎬 **%s**", ev.Summary)
 	if timeStr != "" {
@@ -688,7 +688,7 @@ func (s *Service) buildTelegramPayload(events []*models.Event, cfg *models.Confi
 	dates, grouped := groupEventsByDay(events, loc)
 	for _, dayKey := range dates {
 		dayEvents := grouped[dayKey]
-		lines := s.formatDayTelegramLines(dayEvents, cfg, now, loc)
+		lines := s.formatDayTelegramLines(dayEvents, cfg, loc)
 		dateHeader := localization.FormatDateHeader(dayEvents[0].StartTime.In(loc), lang)
 		sections = append(sections, fmt.Sprintf("<b>🗓️ %s</b>\n%s", escapeHTML(dateHeader), strings.Join(lines, "\n")))
 	}
@@ -702,14 +702,14 @@ func (s *Service) buildTelegramPayload(events []*models.Event, cfg *models.Confi
 	}
 }
 
-func (s *Service) formatDayTelegramLines(dayEvents []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) []string {
+func (s *Service) formatDayTelegramLines(dayEvents []*models.Event, cfg *models.Config, loc *time.Location) []string {
 	tvShowMap := groupTVShows(dayEvents)
 	var lines []string
 	renderedBulkShows := make(map[string]bool)
 
 	for _, ev := range dayEvents {
 		if ev.IsMovie() {
-			lines = append(lines, s.formatMovieEventTelegram(ev, cfg, now, loc))
+			lines = append(lines, s.formatMovieEventTelegram(ev, cfg, loc))
 			continue
 		}
 
@@ -720,17 +720,17 @@ func (s *Service) formatDayTelegramLines(dayEvents []*models.Event, cfg *models.
 		if group != nil && len(group.events) > constants.BulkThresholdDiscord {
 			if !renderedBulkShows[norm] {
 				renderedBulkShows[norm] = true
-				lines = append(lines, s.formatBulkTVEventTelegram(group.showName, group.events, cfg, now, loc))
+				lines = append(lines, s.formatBulkTVEventTelegram(group.showName, group.events, cfg, loc))
 			}
 			continue
 		}
 
-		lines = append(lines, s.formatTVEventTelegram(ev, cfg, now, loc))
+		lines = append(lines, s.formatTVEventTelegram(ev, cfg, loc))
 	}
 	return lines
 }
 
-func (s *Service) formatBulkTVEventTelegram(showName string, group []*models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatBulkTVEventTelegram(showName string, group []*models.Event, cfg *models.Config, loc *time.Location) string {
 	if len(group) == 0 {
 		return ""
 	}
@@ -754,7 +754,7 @@ func (s *Service) formatBulkTVEventTelegram(showName string, group []*models.Eve
 	return line
 }
 
-func (s *Service) formatTVEventTelegram(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatTVEventTelegram(ev *models.Event, cfg *models.Config, loc *time.Location) string {
 	showName, epNum, epTitle := parseTVEventSummary(ev.Summary)
 	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
 
@@ -779,7 +779,7 @@ func (s *Service) formatTVEventTelegram(ev *models.Event, cfg *models.Config, no
 	return line
 }
 
-func (s *Service) formatMovieEventTelegram(ev *models.Event, cfg *models.Config, now time.Time, loc *time.Location) string {
+func (s *Service) formatMovieEventTelegram(ev *models.Event, cfg *models.Config, loc *time.Location) string {
 	timeStr := s.formatEventTimeSimple(ev.StartTime, cfg, loc)
 	line := fmt.Sprintf("• 🎬 <b>%s</b>", escapeHTML(ev.Summary))
 	if timeStr != "" {

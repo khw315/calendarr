@@ -14,13 +14,18 @@ import (
 	"github.com/khw315/calendarr/internal/models"
 )
 
+const (
+	defaultNtfyServerURL   = "https://ntfy.sh"
+	defaultTelegramBaseURL = "https://api.telegram.org"
+)
+
 type Service struct {
 	telegramBaseURL string
 }
 
 func NewService() *Service {
 	return &Service{
-		telegramBaseURL: "https://api.telegram.org",
+		telegramBaseURL: defaultTelegramBaseURL,
 	}
 }
 
@@ -28,7 +33,7 @@ func (s *Service) getTelegramBaseURL() string {
 	if s.telegramBaseURL != "" {
 		return strings.TrimRight(s.telegramBaseURL, "/")
 	}
-	return "https://api.telegram.org"
+	return defaultTelegramBaseURL
 }
 
 // Dispatch dispatches notification payloads using legacy/combined arguments.
@@ -245,7 +250,7 @@ func (s *Service) dispatchTargetNtfy(ctx context.Context, client *http.Client, n
 
 	serverURL := cfg.NtfyServerURL
 	if serverURL == "" {
-		serverURL = "https://ntfy.sh"
+		serverURL = defaultNtfyServerURL
 	}
 
 	priorityStr := ""
@@ -374,7 +379,7 @@ func (s *Service) postWebhook(ctx context.Context, client *http.Client, platform
 func (s *Service) postNtfy(ctx context.Context, client *http.Client, serverURL, topic, token, priority string, payload *models.NtfyPayload) error {
 	cleanServer := strings.TrimRight(strings.TrimSpace(serverURL), "/")
 	if cleanServer == "" {
-		cleanServer = "https://ntfy.sh"
+		cleanServer = defaultNtfyServerURL
 	}
 	cleanTopic := strings.TrimLeft(strings.TrimSpace(topic), "/")
 	targetURL := fmt.Sprintf("%s/%s", cleanServer, cleanTopic)
@@ -515,7 +520,7 @@ func (s *Service) resolveNtfyTarget(req models.TestWebhookRequest) (string, stri
 	}
 
 	if serverURL == "" {
-		serverURL = "https://ntfy.sh"
+		serverURL = defaultNtfyServerURL
 	}
 	return serverURL, topic
 }
