@@ -55,6 +55,27 @@ func TestFormatterService(t *testing.T) {
 		t.Errorf("Expected Slack payload with blocks")
 	}
 
+	if res.DiscordTV == nil || len(res.DiscordTV.Embeds) == 0 {
+		t.Errorf("Expected DiscordTV payload with embeds")
+	}
+	if res.DiscordMovie == nil || len(res.DiscordMovie.Embeds) == 0 {
+		t.Errorf("Expected DiscordMovie payload with embeds")
+	}
+	if res.SlackTV == nil || len(res.SlackTV.Blocks) == 0 {
+		t.Errorf("Expected SlackTV payload with blocks")
+	}
+	if res.SlackMovie == nil || len(res.SlackMovie.Blocks) == 0 {
+		t.Errorf("Expected SlackMovie payload with blocks")
+	}
+
+	notifPayloads := res.ToNotificationPayloads()
+	if notifPayloads.DiscordCombined == nil || notifPayloads.DiscordTV == nil || notifPayloads.DiscordMovie == nil {
+		t.Errorf("Expected non-nil Discord payloads in ToNotificationPayloads")
+	}
+	if notifPayloads.SlackCombined == nil || notifPayloads.SlackTV == nil || notifPayloads.SlackMovie == nil {
+		t.Errorf("Expected non-nil Slack payloads in ToNotificationPayloads")
+	}
+
 	if res.Counts["tv_count"] != 1 || res.Counts["movie_count"] != 1 {
 		t.Errorf("Unexpected event counts: %v", res.Counts)
 	}
