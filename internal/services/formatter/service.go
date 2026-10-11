@@ -23,10 +23,25 @@ func NewService() *Service {
 }
 
 type FormattedResult struct {
-	Discord *models.DiscordPayload
-	Slack   *models.SlackPayload
-	Events  []*models.Event
-	Counts  map[string]int
+	Discord      *models.DiscordPayload
+	DiscordTV    *models.DiscordPayload
+	DiscordMovie *models.DiscordPayload
+	Slack        *models.SlackPayload
+	SlackTV      *models.SlackPayload
+	SlackMovie   *models.SlackPayload
+	Events       []*models.Event
+	Counts       map[string]int
+}
+
+func (r *FormattedResult) ToNotificationPayloads() models.NotificationPayloads {
+	return models.NotificationPayloads{
+		DiscordCombined: r.Discord,
+		DiscordTV:       r.DiscordTV,
+		DiscordMovie:    r.DiscordMovie,
+		SlackCombined:   r.Slack,
+		SlackTV:         r.SlackTV,
+		SlackMovie:      r.SlackMovie,
+	}
 }
 
 func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, endDate time.Time) *FormattedResult {
@@ -39,6 +54,8 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 
 	// Filter & count
 	var activeEvents []*models.Event
+	var tvEvents []*models.Event
+	var movieEvents []*models.Event
 	tvCount := 0
 	movieCount := 0
 
@@ -48,8 +65,10 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 		}
 		if ev.IsTV() {
 			tvCount++
+			tvEvents = append(tvEvents, ev)
 		} else if ev.IsMovie() {
 			movieCount++
+			movieEvents = append(movieEvents, ev)
 		}
 		activeEvents = append(activeEvents, ev)
 	}
@@ -61,13 +80,22 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	}
 
 	discordPayload := s.buildDiscordPayload(activeEvents, cfg, tvCount, movieCount, now)
+	discordTVPayload := s.buildDiscordPayload(tvEvents, cfg, tvCount, 0, now)
+	discordMoviePayload := s.buildDiscordPayload(movieEvents, cfg, 0, movieCount, now)
+
 	slackPayload := s.buildSlackPayload(activeEvents, cfg, tvCount, movieCount, now)
+	slackTVPayload := s.buildSlackPayload(tvEvents, cfg, tvCount, 0, now)
+	slackMoviePayload := s.buildSlackPayload(movieEvents, cfg, 0, movieCount, now)
 
 	return &FormattedResult{
-		Discord: discordPayload,
-		Slack:   slackPayload,
-		Events:  activeEvents,
-		Counts:  counts,
+		Discord:      discordPayload,
+		DiscordTV:    discordTVPayload,
+		DiscordMovie: discordMoviePayload,
+		Slack:        slackPayload,
+		SlackTV:      slackTVPayload,
+		SlackMovie:   slackMoviePayload,
+		Events:       activeEvents,
+		Counts:       counts,
 	}
 }
 

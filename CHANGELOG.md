@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Interactive Webhook Testing**: Added a `"Test Webhook"` button in the Settings Web UI for Discord and Slack along with a dedicated backend endpoint (`POST /api/webhooks/test`), allowing instant verification of webhook URL configurations with real-time visual feedback.
+- **Movie vs TV Channel Splitting**: Added dedicated TV and Movie webhook URL configurations (`DISCORD_TV_WEBHOOK_URL`, `DISCORD_MOVIE_WEBHOOK_URL`, `SLACK_TV_WEBHOOK_URL`, `SLACK_MOVIE_WEBHOOK_URL`) for Discord and Slack. Media releases are automatically segmented into their respective dedicated channels, with seamless automatic fallback to the primary webhook URL when distinct channels are not configured.
 
 ## [2.4.2] - 2026-10-10
 

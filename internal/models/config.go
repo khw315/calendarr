@@ -36,7 +36,11 @@ type LoggingSettings struct {
 
 type Config struct {
 	DiscordWebhookURL              string           `json:"discord_webhook_url,omitempty"`
+	DiscordTVWebhookURL            string           `json:"discord_tv_webhook_url,omitempty"`
+	DiscordMovieWebhookURL         string           `json:"discord_movie_webhook_url,omitempty"`
 	SlackWebhookURL                string           `json:"slack_webhook_url,omitempty"`
+	SlackTVWebhookURL              string           `json:"slack_tv_webhook_url,omitempty"`
+	SlackMovieWebhookURL           string           `json:"slack_movie_webhook_url,omitempty"`
 	UseDiscord                     bool             `json:"use_discord"`
 	UseSlack                       bool             `json:"use_slack"`
 	ShowDateRange                  bool             `json:"show_date_range"`
@@ -111,12 +115,16 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"APP_LANGUAGE":                      c.Language,
 		"USE_DISCORD":                       c.UseDiscord,
 		"DISCORD_WEBHOOK_URL":               c.DiscordWebhookURL,
+		"DISCORD_TV_WEBHOOK_URL":            c.DiscordTVWebhookURL,
+		"DISCORD_MOVIE_WEBHOOK_URL":         c.DiscordMovieWebhookURL,
 		"DISCORD_MENTION_ROLE_ID":           c.DiscordMentionRoleID,
 		"DISCORD_HIDE_MENTION_INSTRUCTIONS": c.DiscordHideMentionInstructions,
 		"DISCORD_TIMESTAMP_STYLE":           c.DiscordTimestampStyle,
 		"ENABLE_CUSTOM_DISCORD_FOOTER":      c.EnableCustomDiscordFooter,
 		"USE_SLACK":                         c.UseSlack,
 		"SLACK_WEBHOOK_URL":                 c.SlackWebhookURL,
+		"SLACK_TV_WEBHOOK_URL":              c.SlackTVWebhookURL,
+		"SLACK_MOVIE_WEBHOOK_URL":           c.SlackMovieWebhookURL,
 		"ENABLE_CUSTOM_SLACK_FOOTER":        c.EnableCustomSlackFooter,
 		"CALENDAR_URLS":                     calURLs,
 		"PASSED_EVENT_HANDLING":             c.PassedEventHandling,
@@ -141,12 +149,16 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		"language":                          c.Language,
 		"use_discord":                       c.UseDiscord,
 		"discord_webhook_url":               c.DiscordWebhookURL,
+		"discord_tv_webhook_url":            c.DiscordTVWebhookURL,
+		"discord_movie_webhook_url":         c.DiscordMovieWebhookURL,
 		"discord_mention_role_id":           c.DiscordMentionRoleID,
 		"discord_hide_mention_instructions": c.DiscordHideMentionInstructions,
 		"discord_timestamp_style":           c.DiscordTimestampStyle,
 		"enable_custom_discord_footer":      c.EnableCustomDiscordFooter,
 		"use_slack":                         c.UseSlack,
 		"slack_webhook_url":                 c.SlackWebhookURL,
+		"slack_tv_webhook_url":              c.SlackTVWebhookURL,
+		"slack_movie_webhook_url":           c.SlackMovieWebhookURL,
 		"enable_custom_slack_footer":        c.EnableCustomSlackFooter,
 		"calendar_urls":                     calURLs,
 		"passed_event_handling":             c.PassedEventHandling,
@@ -194,6 +206,12 @@ func (c *Config) applyFlatStringFields(raw map[string]interface{}) {
 	if val, ok := raw["DISCORD_WEBHOOK_URL"].(string); ok {
 		c.DiscordWebhookURL = val
 	}
+	if val, ok := raw["DISCORD_TV_WEBHOOK_URL"].(string); ok {
+		c.DiscordTVWebhookURL = val
+	}
+	if val, ok := raw["DISCORD_MOVIE_WEBHOOK_URL"].(string); ok {
+		c.DiscordMovieWebhookURL = val
+	}
 	if val, ok := raw["DISCORD_MENTION_ROLE_ID"].(string); ok {
 		c.DiscordMentionRoleID = val
 	}
@@ -202,6 +220,12 @@ func (c *Config) applyFlatStringFields(raw map[string]interface{}) {
 	}
 	if val, ok := raw["SLACK_WEBHOOK_URL"].(string); ok {
 		c.SlackWebhookURL = val
+	}
+	if val, ok := raw["SLACK_TV_WEBHOOK_URL"].(string); ok {
+		c.SlackTVWebhookURL = val
+	}
+	if val, ok := raw["SLACK_MOVIE_WEBHOOK_URL"].(string); ok {
+		c.SlackMovieWebhookURL = val
 	}
 	if val, ok := raw["PASSED_EVENT_HANDLING"].(string); ok {
 		c.PassedEventHandling = val
@@ -291,4 +315,46 @@ func (c *Config) applyFlatCalendarURLs(raw map[string]interface{}) {
 		}
 		c.CalendarURLs = urls
 	}
+}
+
+// GetDiscordTVWebhookURL returns the TV-specific Discord webhook URL, or falls back to DiscordWebhookURL.
+func (c *Config) GetDiscordTVWebhookURL() string {
+	if c.DiscordTVWebhookURL != "" {
+		return c.DiscordTVWebhookURL
+	}
+	return c.DiscordWebhookURL
+}
+
+// GetDiscordMovieWebhookURL returns the movie-specific Discord webhook URL, or falls back to DiscordWebhookURL.
+func (c *Config) GetDiscordMovieWebhookURL() string {
+	if c.DiscordMovieWebhookURL != "" {
+		return c.DiscordMovieWebhookURL
+	}
+	return c.DiscordWebhookURL
+}
+
+// HasDistinctDiscordChannels returns true if dedicated TV or Movie Discord webhooks are configured.
+func (c *Config) HasDistinctDiscordChannels() bool {
+	return c.DiscordTVWebhookURL != "" || c.DiscordMovieWebhookURL != ""
+}
+
+// GetSlackTVWebhookURL returns the TV-specific Slack webhook URL, or falls back to SlackWebhookURL.
+func (c *Config) GetSlackTVWebhookURL() string {
+	if c.SlackTVWebhookURL != "" {
+		return c.SlackTVWebhookURL
+	}
+	return c.SlackWebhookURL
+}
+
+// GetSlackMovieWebhookURL returns the movie-specific Slack webhook URL, or falls back to SlackWebhookURL.
+func (c *Config) GetSlackMovieWebhookURL() string {
+	if c.SlackMovieWebhookURL != "" {
+		return c.SlackMovieWebhookURL
+	}
+	return c.SlackWebhookURL
+}
+
+// HasDistinctSlackChannels returns true if dedicated TV or Movie Slack webhooks are configured.
+func (c *Config) HasDistinctSlackChannels() bool {
+	return c.SlackTVWebhookURL != "" || c.SlackMovieWebhookURL != ""
 }

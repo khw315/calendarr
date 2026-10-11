@@ -20,29 +20,31 @@ func NewService() *Service {
 	return &Service{}
 }
 
+// Dispatch dispatches notification payloads using legacy/combined arguments.
 func (s *Service) Dispatch(ctx context.Context, cfg *models.Config, formatted *models.DiscordPayload, slackFormatted *models.SlackPayload) error {
+	return s.DispatchPayloads(ctx, cfg, models.NotificationPayloads{
+		DiscordCombined: formatted,
+		DiscordTV:       formatted,
+		DiscordMovie:    formatted,
+		SlackCombined:   slackFormatted,
+		SlackTV:         slackFormatted,
+		SlackMovie:      slackFormatted,
+	})
+}
+
+// DispatchPayloads dispatches notifications to combined or media-segregated channels.
+func (s *Service) DispatchPayloads(ctx context.Context, cfg *models.Config, payloads models.NotificationPayloads) error {
 	client := &http.Client{
 		Timeout: time.Duration(cfg.HTTPTimeout) * time.Second,
 	}
 
 	var errs []string
-
-	if cfg.UseDiscord && cfg.DiscordWebhookURL != "" {
-		if err := s.postWebhook(ctx, client, "Discord", cfg.DiscordWebhookURL, formatted); err != nil {
-			log.Printf("❌ Failed to send Discord webhook: %v", err)
-			errs = append(errs, fmt.Sprintf("Discord error: %v", err))
-		} else {
-			log.Println("✅ Successfully dispatched notification to Discord webhook")
-		}
+	if discordErrs := s.dispatchDiscord(ctx, client, cfg, payloads); len(discordErrs) > 0 {
+		errs = append(errs, discordErrs...)
 	}
 
-	if cfg.UseSlack && cfg.SlackWebhookURL != "" {
-		if err := s.postWebhook(ctx, client, "Slack", cfg.SlackWebhookURL, slackFormatted); err != nil {
-			log.Printf("❌ Failed to send Slack webhook: %v", err)
-			errs = append(errs, fmt.Sprintf("Slack error: %v", err))
-		} else {
-			log.Println("✅ Successfully dispatched notification to Slack webhook")
-		}
+	if slackErrs := s.dispatchSlack(ctx, client, cfg, payloads); len(slackErrs) > 0 {
+		errs = append(errs, slackErrs...)
 	}
 
 	if len(errs) > 0 {
@@ -50,6 +52,130 @@ func (s *Service) Dispatch(ctx context.Context, cfg *models.Config, formatted *m
 	}
 
 	return nil
+}
+
+func (s *Service) dispatchDiscord(ctx context.Context, client *http.Client, cfg *models.Config, payloads models.NotificationPayloads) []string {
+	if !cfg.UseDiscord {
+		return nil
+	}
+
+	if cfg.HasDistinctDiscordChannels() {
+		return s.dispatchDiscordSegregated(ctx, client, cfg, payloads)
+	}
+
+	if errStr := s.dispatchTarget(ctx, client, "Discord", cfg.DiscordWebhookURL, payloads.DiscordCombined); errStr != "" {
+		return []string{errStr}
+	}
+
+	return nil
+}
+
+func (s *Service) dispatchDiscordSegregated(ctx context.Context, client *http.Client, cfg *models.Config, payloads models.NotificationPayloads) []string {
+	var errs []string
+	hasAny := s.hasDiscordReleases(payloads)
+
+	if s.shouldSendDiscordPayload(payloads.DiscordTV, hasAny) {
+		if errStr := s.dispatchTarget(ctx, client, "Discord TV", cfg.GetDiscordTVWebhookURL(), payloads.DiscordTV); errStr != "" {
+			errs = append(errs, errStr)
+		}
+	}
+
+	if s.shouldSendDiscordPayload(payloads.DiscordMovie, hasAny) {
+		if errStr := s.dispatchTarget(ctx, client, "Discord Movie", cfg.GetDiscordMovieWebhookURL(), payloads.DiscordMovie); errStr != "" {
+			errs = append(errs, errStr)
+		}
+	}
+
+	return errs
+}
+
+func (s *Service) shouldSendDiscordPayload(payload *models.DiscordPayload, hasAnyReleases bool) bool {
+	if payload == nil {
+		return false
+	}
+	return len(payload.Embeds) > 0 || !hasAnyReleases
+}
+
+func (s *Service) hasDiscordReleases(payloads models.NotificationPayloads) bool {
+	if payloads.DiscordCombined != nil && len(payloads.DiscordCombined.Embeds) > 0 {
+		return true
+	}
+	if payloads.DiscordTV != nil && len(payloads.DiscordTV.Embeds) > 0 {
+		return true
+	}
+	if payloads.DiscordMovie != nil && len(payloads.DiscordMovie.Embeds) > 0 {
+		return true
+	}
+	return false
+}
+
+func (s *Service) dispatchSlack(ctx context.Context, client *http.Client, cfg *models.Config, payloads models.NotificationPayloads) []string {
+	if !cfg.UseSlack {
+		return nil
+	}
+
+	if cfg.HasDistinctSlackChannels() {
+		return s.dispatchSlackSegregated(ctx, client, cfg, payloads)
+	}
+
+	if errStr := s.dispatchTarget(ctx, client, "Slack", cfg.SlackWebhookURL, payloads.SlackCombined); errStr != "" {
+		return []string{errStr}
+	}
+
+	return nil
+}
+
+func (s *Service) dispatchSlackSegregated(ctx context.Context, client *http.Client, cfg *models.Config, payloads models.NotificationPayloads) []string {
+	var errs []string
+	hasAny := s.hasSlackReleases(payloads)
+
+	if s.shouldSendSlackPayload(payloads.SlackTV, hasAny) {
+		if errStr := s.dispatchTarget(ctx, client, "Slack TV", cfg.GetSlackTVWebhookURL(), payloads.SlackTV); errStr != "" {
+			errs = append(errs, errStr)
+		}
+	}
+
+	if s.shouldSendSlackPayload(payloads.SlackMovie, hasAny) {
+		if errStr := s.dispatchTarget(ctx, client, "Slack Movie", cfg.GetSlackMovieWebhookURL(), payloads.SlackMovie); errStr != "" {
+			errs = append(errs, errStr)
+		}
+	}
+
+	return errs
+}
+
+func (s *Service) shouldSendSlackPayload(payload *models.SlackPayload, hasAnyReleases bool) bool {
+	if payload == nil {
+		return false
+	}
+	return len(payload.Blocks) > 1 || !hasAnyReleases
+}
+
+func (s *Service) hasSlackReleases(payloads models.NotificationPayloads) bool {
+	if payloads.SlackCombined != nil && len(payloads.SlackCombined.Blocks) > 1 {
+		return true
+	}
+	if payloads.SlackTV != nil && len(payloads.SlackTV.Blocks) > 1 {
+		return true
+	}
+	if payloads.SlackMovie != nil && len(payloads.SlackMovie.Blocks) > 1 {
+		return true
+	}
+	return false
+}
+
+func (s *Service) dispatchTarget(ctx context.Context, client *http.Client, name, url string, payload interface{}) string {
+	if url == "" || payload == nil {
+		return ""
+	}
+
+	if err := s.postWebhook(ctx, client, name, url, payload); err != nil {
+		log.Printf("❌ Failed to send %s webhook: %v", name, err)
+		return fmt.Sprintf("%s error: %v", name, err)
+	}
+
+	log.Printf("✅ Successfully dispatched notification to %s webhook", name)
+	return ""
 }
 
 func (s *Service) postWebhook(ctx context.Context, client *http.Client, platformName, webhookURL string, payload interface{}) error {

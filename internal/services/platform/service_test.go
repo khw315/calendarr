@@ -97,3 +97,182 @@ func TestPlatformServiceSendTest(t *testing.T) {
 		}
 	})
 }
+
+func TestPlatformServiceDispatchPayloads(t *testing.T) {
+	var tvHitCount, movieHitCount, combinedHitCount int
+	tsTV := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tvHitCount++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer tsTV.Close()
+
+	tsMovie := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		movieHitCount++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer tsMovie.Close()
+
+	tsCombined := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		combinedHitCount++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer tsCombined.Close()
+
+	svc := NewService()
+	ctx := context.Background()
+
+	t.Run("Distinct Discord Channels with both TV and Movie payloads", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		cfg := models.DefaultConfig()
+		cfg.UseDiscord = true
+		cfg.DiscordWebhookURL = tsCombined.URL
+		cfg.DiscordTVWebhookURL = tsTV.URL
+		cfg.DiscordMovieWebhookURL = tsMovie.URL
+
+		payloads := models.NotificationPayloads{
+			DiscordCombined: &models.DiscordPayload{Content: "Combined"},
+			DiscordTV:       &models.DiscordPayload{Content: "TV", Embeds: []models.DiscordEmbed{{Title: "TV Show"}}},
+			DiscordMovie:    &models.DiscordPayload{Content: "Movie", Embeds: []models.DiscordEmbed{{Title: "Movie Title"}}},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if tvHitCount != 1 {
+			t.Errorf("Expected tvHitCount 1, got %d", tvHitCount)
+		}
+		if movieHitCount != 1 {
+			t.Errorf("Expected movieHitCount 1, got %d", movieHitCount)
+		}
+		if combinedHitCount != 0 {
+			t.Errorf("Expected combinedHitCount 0, got %d", combinedHitCount)
+		}
+	})
+
+	t.Run("Distinct Discord Channels with only TV events", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		cfg := models.DefaultConfig()
+		cfg.UseDiscord = true
+		cfg.DiscordWebhookURL = tsCombined.URL
+		cfg.DiscordTVWebhookURL = tsTV.URL
+		cfg.DiscordMovieWebhookURL = tsMovie.URL
+
+		payloads := models.NotificationPayloads{
+			DiscordCombined: &models.DiscordPayload{Content: "Combined"},
+			DiscordTV:       &models.DiscordPayload{Content: "TV", Embeds: []models.DiscordEmbed{{Title: "TV Show"}}},
+			DiscordMovie:    &models.DiscordPayload{Content: "Movie", Embeds: []models.DiscordEmbed{}},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if tvHitCount != 1 {
+			t.Errorf("Expected tvHitCount 1, got %d", tvHitCount)
+		}
+		if movieHitCount != 0 {
+			t.Errorf("Expected movieHitCount 0, got %d", movieHitCount)
+		}
+		if combinedHitCount != 0 {
+			t.Errorf("Expected combinedHitCount 0, got %d", combinedHitCount)
+		}
+	})
+
+	t.Run("Distinct Slack Channels with both TV and Movie payloads", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		cfg := models.DefaultConfig()
+		cfg.UseSlack = true
+		cfg.SlackWebhookURL = tsCombined.URL
+		cfg.SlackTVWebhookURL = tsTV.URL
+		cfg.SlackMovieWebhookURL = tsMovie.URL
+
+		payloads := models.NotificationPayloads{
+			SlackCombined: &models.SlackPayload{Text: "Combined"},
+			SlackTV:       &models.SlackPayload{Text: "TV", Blocks: []models.SlackBlock{{Type: "section"}}},
+			SlackMovie:    &models.SlackPayload{Text: "Movie", Blocks: []models.SlackBlock{{Type: "section"}}},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if tvHitCount != 1 {
+			t.Errorf("Expected tvHitCount 1, got %d", tvHitCount)
+		}
+		if movieHitCount != 1 {
+			t.Errorf("Expected movieHitCount 1, got %d", movieHitCount)
+		}
+		if combinedHitCount != 0 {
+			t.Errorf("Expected combinedHitCount 0, got %d", combinedHitCount)
+		}
+	})
+
+	t.Run("Fallback to default webhook when distinct channels are not configured", func(t *testing.T) {
+		tvHitCount, movieHitCount, combinedHitCount = 0, 0, 0
+		cfg := models.DefaultConfig()
+		cfg.UseDiscord = true
+		cfg.DiscordWebhookURL = tsCombined.URL
+		cfg.UseSlack = true
+		cfg.SlackWebhookURL = tsCombined.URL
+
+		payloads := models.NotificationPayloads{
+			DiscordCombined: &models.DiscordPayload{Content: "Combined Discord"},
+			SlackCombined:   &models.SlackPayload{Text: "Combined Slack"},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err != nil {
+			t.Fatalf("DispatchPayloads failed: %v", err)
+		}
+		if combinedHitCount != 2 {
+			t.Errorf("Expected combinedHitCount 2 (1 Discord + 1 Slack), got %d", combinedHitCount)
+		}
+	})
+
+	t.Run("Segregated dispatch error paths", func(t *testing.T) {
+		ts500 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer ts500.Close()
+
+		cfg := models.DefaultConfig()
+		cfg.UseDiscord = true
+		cfg.DiscordTVWebhookURL = ts500.URL
+		cfg.DiscordMovieWebhookURL = ts500.URL
+		cfg.UseSlack = true
+		cfg.SlackTVWebhookURL = ts500.URL
+		cfg.SlackMovieWebhookURL = ts500.URL
+
+		payloads := models.NotificationPayloads{
+			DiscordTV:    &models.DiscordPayload{Content: "TV", Embeds: []models.DiscordEmbed{{Title: "TV"}}},
+			DiscordMovie: &models.DiscordPayload{Content: "Movie", Embeds: []models.DiscordEmbed{{Title: "Movie"}}},
+			SlackTV:      &models.SlackPayload{Text: "TV", Blocks: []models.SlackBlock{{Type: "section"}, {Type: "section"}}},
+			SlackMovie:   &models.SlackPayload{Text: "Movie", Blocks: []models.SlackBlock{{Type: "section"}, {Type: "section"}}},
+		}
+
+		err := svc.DispatchPayloads(ctx, cfg, payloads)
+		if err == nil {
+			t.Errorf("Expected errors during segregated dispatch when endpoints return 500")
+		}
+	})
+
+	t.Run("Helper functions nil and empty edge cases", func(t *testing.T) {
+		if svc.shouldSendDiscordPayload(nil, true) {
+			t.Errorf("Expected shouldSendDiscordPayload to return false for nil payload")
+		}
+		if svc.shouldSendSlackPayload(nil, true) {
+			t.Errorf("Expected shouldSendSlackPayload to return false for nil payload")
+		}
+		if got := svc.dispatchTarget(ctx, http.DefaultClient, "Test", "", nil); got != "" {
+			t.Errorf("Expected empty string for empty url and nil payload, got %q", got)
+		}
+		emptyPayloads := models.NotificationPayloads{}
+		if svc.hasDiscordReleases(emptyPayloads) {
+			t.Errorf("Expected hasDiscordReleases to return false for empty payloads")
+		}
+		if svc.hasSlackReleases(emptyPayloads) {
+			t.Errorf("Expected hasSlackReleases to return false for empty payloads")
+		}
+	})
+}

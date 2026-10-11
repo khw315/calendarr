@@ -34,21 +34,21 @@ export default function NotificationSettings({ config, onChange }: NotificationS
   const [testingPlatform, setTestingPlatform] = useState<string | null>(null)
   const [testStatus, setTestStatus] = useState<Record<string, { type: 'success' | 'error'; message: string } | null>>({})
 
-  const handleTestWebhook = async (platform: string, url: string) => {
+  const handleTestWebhook = async (platform: string, url: string, key = platform) => {
     if (!url) return
-    setTestingPlatform(platform)
-    setTestStatus((prev) => ({ ...prev, [platform]: null }))
+    setTestingPlatform(key)
+    setTestStatus((prev) => ({ ...prev, [key]: null }))
     try {
       const res = await apiService.testWebhook(platform, url)
       setTestStatus((prev) => ({
         ...prev,
-        [platform]: { type: 'success', message: res.message || 'Test notification sent!' }
+        [key]: { type: 'success', message: res.message || 'Test notification sent!' }
       }))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Test failed'
       setTestStatus((prev) => ({
         ...prev,
-        [platform]: { type: 'error', message: msg }
+        [key]: { type: 'error', message: msg }
       }))
     } finally {
       setTestingPlatform(null)
@@ -76,7 +76,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
         {config.USE_DISCORD && (
           <>
             <div className="form-group">
-              <label htmlFor="set_DISCORD_WEBHOOK_URL">Discord Webhook URL</label>
+              <label htmlFor="set_DISCORD_WEBHOOK_URL">Default Discord Webhook URL</label>
               <input
                 type="password"
                 id="set_DISCORD_WEBHOOK_URL"
@@ -84,6 +84,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 className="brutal-input"
                 value={config.DISCORD_WEBHOOK_URL || ''}
                 onChange={onChange}
+                placeholder="https://discord.com/api/webhooks/..."
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
                 <button
@@ -91,7 +92,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                   className="brutal-btn"
                   style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.DISCORD_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
                   disabled={!config.DISCORD_WEBHOOK_URL || testingPlatform === 'discord'}
-                  onClick={() => handleTestWebhook('discord', config.DISCORD_WEBHOOK_URL || '')}
+                  onClick={() => handleTestWebhook('discord', config.DISCORD_WEBHOOK_URL || '', 'discord')}
                 >
                   {testingPlatform === 'discord' ? 'Testing...' : 'Test Discord Webhook'}
                 </button>
@@ -109,6 +110,91 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 )}
               </div>
             </div>
+
+            {/* Separate Discord Channels */}
+            <details
+              style={{ marginTop: '12px', marginBottom: '12px', border: '1px dashed var(--color-border)', borderRadius: '4px', padding: '8px 12px' }}
+              open={!!(config.DISCORD_TV_WEBHOOK_URL || config.DISCORD_MOVIE_WEBHOOK_URL)}
+            >
+              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                📺 🎬 Separate TV and Movie Channels (Optional)
+              </summary>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '6px 0 12px 0' }}>
+                Route TV shows (Sonarr) and movies (Radarr) to dedicated Discord channels. If not specified, notifications fall back to the default webhook above.
+              </p>
+              <div className="form-group">
+                <label htmlFor="set_DISCORD_TV_WEBHOOK_URL">Discord TV Webhook URL</label>
+                <input
+                  type="password"
+                  id="set_DISCORD_TV_WEBHOOK_URL"
+                  name="DISCORD_TV_WEBHOOK_URL"
+                  className="brutal-input"
+                  value={config.DISCORD_TV_WEBHOOK_URL || ''}
+                  onChange={onChange}
+                  placeholder="https://discord.com/api/webhooks/..."
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.DISCORD_TV_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                    disabled={!config.DISCORD_TV_WEBHOOK_URL || testingPlatform === 'discord_tv'}
+                    onClick={() => handleTestWebhook('discord', config.DISCORD_TV_WEBHOOK_URL || '', 'discord_tv')}
+                  >
+                    {testingPlatform === 'discord_tv' ? 'Testing...' : 'Test TV Webhook'}
+                  </button>
+                  {testStatus['discord_tv'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['discord_tv'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['discord_tv'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['discord_tv'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '8px' }}>
+                <label htmlFor="set_DISCORD_MOVIE_WEBHOOK_URL">Discord Movie Webhook URL</label>
+                <input
+                  type="password"
+                  id="set_DISCORD_MOVIE_WEBHOOK_URL"
+                  name="DISCORD_MOVIE_WEBHOOK_URL"
+                  className="brutal-input"
+                  value={config.DISCORD_MOVIE_WEBHOOK_URL || ''}
+                  onChange={onChange}
+                  placeholder="https://discord.com/api/webhooks/..."
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.DISCORD_MOVIE_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                    disabled={!config.DISCORD_MOVIE_WEBHOOK_URL || testingPlatform === 'discord_movie'}
+                    onClick={() => handleTestWebhook('discord', config.DISCORD_MOVIE_WEBHOOK_URL || '', 'discord_movie')}
+                  >
+                    {testingPlatform === 'discord_movie' ? 'Testing...' : 'Test Movie Webhook'}
+                  </button>
+                  {testStatus['discord_movie'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['discord_movie'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['discord_movie'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['discord_movie'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
+
             <div className="form-group">
               <label htmlFor="set_DISCORD_MENTION_ROLE_ID">Discord Mention Role ID</label>
               <input
@@ -202,7 +288,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
         {config.USE_SLACK && (
           <>
             <div className="form-group">
-              <label htmlFor="set_SLACK_WEBHOOK_URL">Slack Webhook URL</label>
+              <label htmlFor="set_SLACK_WEBHOOK_URL">Default Slack Webhook URL</label>
               <input
                 type="password"
                 id="set_SLACK_WEBHOOK_URL"
@@ -210,6 +296,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 className="brutal-input"
                 value={config.SLACK_WEBHOOK_URL || ''}
                 onChange={onChange}
+                placeholder="https://hooks.slack.com/services/..."
               />
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
                 <button
@@ -217,7 +304,7 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                   className="brutal-btn"
                   style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.SLACK_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
                   disabled={!config.SLACK_WEBHOOK_URL || testingPlatform === 'slack'}
-                  onClick={() => handleTestWebhook('slack', config.SLACK_WEBHOOK_URL || '')}
+                  onClick={() => handleTestWebhook('slack', config.SLACK_WEBHOOK_URL || '', 'slack')}
                 >
                   {testingPlatform === 'slack' ? 'Testing...' : 'Test Slack Webhook'}
                 </button>
@@ -235,6 +322,91 @@ export default function NotificationSettings({ config, onChange }: NotificationS
                 )}
               </div>
             </div>
+
+            {/* Separate Slack Channels */}
+            <details
+              style={{ marginTop: '12px', marginBottom: '12px', border: '1px dashed var(--color-border)', borderRadius: '4px', padding: '8px 12px' }}
+              open={!!(config.SLACK_TV_WEBHOOK_URL || config.SLACK_MOVIE_WEBHOOK_URL)}
+            >
+              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                📺 🎬 Separate TV and Movie Channels (Optional)
+              </summary>
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '6px 0 12px 0' }}>
+                Route TV shows (Sonarr) and movies (Radarr) to dedicated Slack channels. If not specified, notifications fall back to the default webhook above.
+              </p>
+              <div className="form-group">
+                <label htmlFor="set_SLACK_TV_WEBHOOK_URL">Slack TV Webhook URL</label>
+                <input
+                  type="password"
+                  id="set_SLACK_TV_WEBHOOK_URL"
+                  name="SLACK_TV_WEBHOOK_URL"
+                  className="brutal-input"
+                  value={config.SLACK_TV_WEBHOOK_URL || ''}
+                  onChange={onChange}
+                  placeholder="https://hooks.slack.com/services/..."
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.SLACK_TV_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                    disabled={!config.SLACK_TV_WEBHOOK_URL || testingPlatform === 'slack_tv'}
+                    onClick={() => handleTestWebhook('slack', config.SLACK_TV_WEBHOOK_URL || '', 'slack_tv')}
+                  >
+                    {testingPlatform === 'slack_tv' ? 'Testing...' : 'Test TV Webhook'}
+                  </button>
+                  {testStatus['slack_tv'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['slack_tv'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['slack_tv'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['slack_tv'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '8px' }}>
+                <label htmlFor="set_SLACK_MOVIE_WEBHOOK_URL">Slack Movie Webhook URL</label>
+                <input
+                  type="password"
+                  id="set_SLACK_MOVIE_WEBHOOK_URL"
+                  name="SLACK_MOVIE_WEBHOOK_URL"
+                  className="brutal-input"
+                  value={config.SLACK_MOVIE_WEBHOOK_URL || ''}
+                  onChange={onChange}
+                  placeholder="https://hooks.slack.com/services/..."
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="brutal-btn"
+                    style={{ padding: '4px 12px', fontSize: '0.85rem', cursor: config.SLACK_MOVIE_WEBHOOK_URL ? 'pointer' : 'not-allowed' }}
+                    disabled={!config.SLACK_MOVIE_WEBHOOK_URL || testingPlatform === 'slack_movie'}
+                    onClick={() => handleTestWebhook('slack', config.SLACK_MOVIE_WEBHOOK_URL || '', 'slack_movie')}
+                  >
+                    {testingPlatform === 'slack_movie' ? 'Testing...' : 'Test Movie Webhook'}
+                  </button>
+                  {testStatus['slack_movie'] && (
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: testStatus['slack_movie'].type === 'success' ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {testStatus['slack_movie'].type === 'success' ? '✅ ' : '❌ '}
+                      {testStatus['slack_movie'].message}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </details>
+
             <div className="form-group checkbox-group">
               <input
                 type="checkbox"
