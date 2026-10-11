@@ -18,6 +18,19 @@ export interface ConfigState {
   SLACK_TV_WEBHOOK_URL?: string
   SLACK_MOVIE_WEBHOOK_URL?: string
   ENABLE_CUSTOM_SLACK_FOOTER?: boolean
+  USE_NTFY?: boolean
+  NTFY_SERVER_URL?: string
+  NTFY_TOPIC?: string
+  NTFY_TV_TOPIC?: string
+  NTFY_MOVIE_TOPIC?: string
+  NTFY_ACCESS_TOKEN?: string
+  NTFY_PRIORITY?: number
+  USE_TELEGRAM?: boolean
+  TELEGRAM_BOT_TOKEN?: string
+  TELEGRAM_CHAT_ID?: string
+  TELEGRAM_TV_CHAT_ID?: string
+  TELEGRAM_MOVIE_CHAT_ID?: string
+  TELEGRAM_SILENT_NOTIFICATION?: boolean
   CALENDAR_URLS?: CalendarUrlItem[]
   PASSED_EVENT_HANDLING?: string
   DEDUPLICATE_EVENTS?: boolean

@@ -69,7 +69,17 @@ export const apiService = {
     return data
   },
 
-  async testWebhook(platform: string, webhookUrl: string): Promise<{ success: boolean; message?: string }> {
+  async testWebhook(
+    platform: string,
+    webhookUrl?: string,
+    options?: {
+      server_url?: string
+      topic?: string
+      token?: string
+      priority?: string
+      chat_id?: string
+    }
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await fetch(`${API_BASE}/api/webhooks/test`, {
       method: 'POST',
       headers: {
@@ -77,7 +87,8 @@ export const apiService = {
       },
       body: JSON.stringify({
         platform,
-        webhook_url: webhookUrl
+        webhook_url: webhookUrl,
+        ...options
       })
     })
     const data = await res.json()
