@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -19,6 +20,7 @@ import (
 	"github.com/khw315/calendarr/internal/localization"
 	"github.com/khw315/calendarr/internal/models"
 	"github.com/khw315/calendarr/internal/services/calendar"
+	"github.com/khw315/calendarr/internal/services/platform"
 	"github.com/khw315/calendarr/internal/services/scheduler"
 	"github.com/khw315/calendarr/internal/tzdata"
 )
@@ -32,14 +34,16 @@ type Router struct {
 	cfgMgr     *config.Manager
 	schedSvc   *scheduler.Service
 	calSvc     *calendar.Service
+	platSvc    *platform.Service
 	embeddedFS embed.FS
 }
 
-func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, calSvc *calendar.Service, embeddedFS embed.FS) *Router {
+func NewRouter(cfgMgr *config.Manager, schedSvc *scheduler.Service, calSvc *calendar.Service, platSvc *platform.Service, embeddedFS embed.FS) *Router {
 	return &Router{
 		cfgMgr:     cfgMgr,
 		schedSvc:   schedSvc,
 		calSvc:     calSvc,
+		platSvc:    platSvc,
 		embeddedFS: embeddedFS,
 	}
 }
@@ -76,6 +80,7 @@ func (r *Router) Setup() http.Handler {
 	apiRouter.Get("/timezones", r.handleGetTimezones)
 	apiRouter.Post("/config", r.handlePostConfig)
 	apiRouter.Post("/trigger", r.handlePostTrigger)
+	apiRouter.Post("/webhooks/test", r.handlePostTestWebhook)
 
 	router.Mount("/api", apiRouter)
 
@@ -358,5 +363,59 @@ func (r *Router) handlePostTrigger(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status":  "triggered",
 		"message": "Manual run triggered successfully in background",
+	})
+}
+
+func (r *Router) handlePostTestWebhook(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set(contentTypeHeader, contentTypeJSON)
+
+	var reqBody struct {
+		Platform   string `json:"platform"`
+		WebhookURL string `json:"webhook_url"`
+	}
+
+	if err := json.NewDecoder(req.Body).Decode(&reqBody); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Invalid JSON request body",
+		})
+		return
+	}
+
+	platformName := strings.TrimSpace(reqBody.Platform)
+	webhookURL := strings.TrimSpace(reqBody.WebhookURL)
+
+	if platformName == "" || webhookURL == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Both 'platform' and 'webhook_url' fields are required",
+		})
+		return
+	}
+
+	if !strings.HasPrefix(webhookURL, "http://") && !strings.HasPrefix(webhookURL, "https://") {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Invalid webhook URL: must start with http:// or https://",
+		})
+		return
+	}
+
+	if err := r.platSvc.SendTest(req.Context(), platformName, webhookURL); err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Successfully dispatched test notification to %s", platformName),
 	})
 }

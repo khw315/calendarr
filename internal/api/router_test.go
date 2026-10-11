@@ -28,7 +28,7 @@ func TestAPIRoutes(t *testing.T) {
 	schedSvc := scheduler.NewService(cfgMgr, calSvc, fmtSvc, platSvc)
 
 	var emptyFS embed.FS
-	router := NewRouter(cfgMgr, schedSvc, calSvc, emptyFS)
+	router := NewRouter(cfgMgr, schedSvc, calSvc, platSvc, emptyFS)
 	handler := router.Setup()
 
 	// 1. GET /api/status
@@ -128,5 +128,46 @@ func TestAPIRoutes(t *testing.T) {
 	handler.ServeHTTP(recTrigger, reqTrigger)
 	if recTrigger.Code != http.StatusOK {
 		t.Errorf("Expected status 200 on POST /api/trigger, got %d", recTrigger.Code)
+	}
+
+	// 11. POST /api/webhooks/test (Webhook Test Endpoint)
+	tsWebhook := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer tsWebhook.Close()
+
+	// 11a. Success Discord
+	testBodySuccess, _ := json.Marshal(map[string]string{
+		"platform":    "discord",
+		"webhook_url": tsWebhook.URL,
+	})
+	reqTestSuccess := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodySuccess))
+	recTestSuccess := httptest.NewRecorder()
+	handler.ServeHTTP(recTestSuccess, reqTestSuccess)
+	if recTestSuccess.Code != http.StatusOK {
+		t.Errorf("Expected status 200 on valid /api/webhooks/test, got %d", recTestSuccess.Code)
+	}
+
+	// 11b. Missing fields (400)
+	testBodyMissing, _ := json.Marshal(map[string]string{
+		"platform": "discord",
+	})
+	reqTestMissing := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodyMissing))
+	recTestMissing := httptest.NewRecorder()
+	handler.ServeHTTP(recTestMissing, reqTestMissing)
+	if recTestMissing.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400 on missing webhook_url, got %d", recTestMissing.Code)
+	}
+
+	// 11c. Invalid URL scheme (400)
+	testBodyInvalidScheme, _ := json.Marshal(map[string]string{
+		"platform":    "discord",
+		"webhook_url": "ftp://invalid-url.com",
+	})
+	reqTestInvalidScheme := httptest.NewRequest(http.MethodPost, "/api/webhooks/test", bytes.NewBuffer(testBodyInvalidScheme))
+	recTestInvalidScheme := httptest.NewRecorder()
+	handler.ServeHTTP(recTestInvalidScheme, reqTestInvalidScheme)
+	if recTestInvalidScheme.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400 on invalid URL scheme, got %d", recTestInvalidScheme.Code)
 	}
 }
