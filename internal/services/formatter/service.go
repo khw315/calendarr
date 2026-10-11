@@ -99,13 +99,13 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	slackTVPayload := s.buildSlackPayload(tvEvents, cfg, tvCount, 0, now)
 	slackMoviePayload := s.buildSlackPayload(movieEvents, cfg, 0, movieCount, now)
 
-	ntfyPayload := s.buildNtfyPayload(activeEvents, cfg, tvCount, movieCount, now)
-	ntfyTVPayload := s.buildNtfyPayload(tvEvents, cfg, tvCount, 0, now)
-	ntfyMoviePayload := s.buildNtfyPayload(movieEvents, cfg, 0, movieCount, now)
+	ntfyPayload := s.buildNtfyPayload(activeEvents, cfg, tvCount, movieCount)
+	ntfyTVPayload := s.buildNtfyPayload(tvEvents, cfg, tvCount, 0)
+	ntfyMoviePayload := s.buildNtfyPayload(movieEvents, cfg, 0, movieCount)
 
-	telegramPayload := s.buildTelegramPayload(activeEvents, cfg, tvCount, movieCount, now)
-	telegramTVPayload := s.buildTelegramPayload(tvEvents, cfg, tvCount, 0, now)
-	telegramMoviePayload := s.buildTelegramPayload(movieEvents, cfg, 0, movieCount, now)
+	telegramPayload := s.buildTelegramPayload(activeEvents, cfg, tvCount, movieCount)
+	telegramTVPayload := s.buildTelegramPayload(tvEvents, cfg, tvCount, 0)
+	telegramMoviePayload := s.buildTelegramPayload(movieEvents, cfg, 0, movieCount)
 
 	return &FormattedResult{
 		Discord:       discordPayload,
@@ -495,7 +495,7 @@ func escapeHTML(s string) string {
 	).Replace(s)
 }
 
-func (s *Service) buildNtfyPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.NtfyPayload {
+func (s *Service) buildNtfyPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int) *models.NtfyPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
@@ -651,7 +651,7 @@ func (s *Service) formatMovieEventNtfy(ev *models.Event, cfg *models.Config, loc
 	return line
 }
 
-func (s *Service) buildTelegramPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.TelegramPayload {
+func (s *Service) buildTelegramPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int) *models.TelegramPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
