@@ -97,27 +97,53 @@ func TestFormatDateHeader(t *testing.T) {
 
 func TestFormatSubheader(t *testing.T) {
 	// 1. Both TV and Movie (plural)
-	if FormatSubheader("EN", 2, 3) == "" {
-		t.Errorf("Expected non-empty subheader")
+	enSub := FormatSubheader("EN", 2, 3, 0)
+	if enSub != "2 all-new episodes and 3 movie releases" {
+		t.Errorf("Unexpected subheader for EN: %s", enSub)
 	}
 
-	// 2. Singular TV & Movie
-	if FormatSubheader("EN", 1, 1) == "" {
-		t.Errorf("Expected non-empty subheader for singular items")
+	// 2. Singular TV & Movie with Premiere (3 items list_join)
+	enAll := FormatSubheader("EN", 1, 1, 1)
+	if enAll != "1 all-new episode, 1 movie release, and 1 season premiere" {
+		t.Errorf("Unexpected subheader for EN with 3 items: %s", enAll)
 	}
 
-	// 3. TV only
-	if FormatSubheader("EN", 5, 0) == "" {
-		t.Errorf("Expected non-empty subheader for TV only")
+	// 3. TV and Premiere only (matches the user's scenario)
+	enTVPremiere := FormatSubheader("EN", 3, 0, 1)
+	if enTVPremiere != "3 all-new episodes and 1 season premiere" {
+		t.Errorf("Unexpected subheader for EN TV+Premiere: %s", enTVPremiere)
 	}
 
-	// 4. Movie only
-	if FormatSubheader("EN", 0, 4) == "" {
-		t.Errorf("Expected non-empty subheader for Movie only")
+	// 4. Korean localization
+	koSub := FormatSubheader("KO", 3, 0, 1)
+	if koSub != "3개의 최신 에피소드 및 1개의 시즌 프리미어" {
+		t.Errorf("Unexpected subheader for KO TV+Premiere: %s", koSub)
 	}
 
-	// 5. Zero items -> fallback random message
-	if FormatSubheader("EN", 0, 0) == "" {
+	// 5. Indonesian localization
+	idSub := FormatSubheader("ID", 3, 0, 1)
+	if idSub != "3 episode terbaru dan 1 perdana musim" {
+		t.Errorf("Unexpected subheader for ID TV+Premiere: %s", idSub)
+	}
+
+	// 6. Japanese localization
+	jaSub := FormatSubheader("JA", 3, 0, 1)
+	if jaSub != "3件の新着エピソードと1件のシーズン初回配信" {
+		t.Errorf("Unexpected subheader for JA TV+Premiere: %s", jaSub)
+	}
+
+	// 7. TV only
+	if FormatSubheader("EN", 5, 0, 0) != "5 all-new episodes" {
+		t.Errorf("Expected '5 all-new episodes', got: %s", FormatSubheader("EN", 5, 0, 0))
+	}
+
+	// 8. Movie only
+	if FormatSubheader("EN", 0, 4, 0) != "4 movie releases" {
+		t.Errorf("Expected '4 movie releases', got: %s", FormatSubheader("EN", 0, 4, 0))
+	}
+
+	// 9. Zero items -> fallback random message
+	if FormatSubheader("EN", 0, 0, 0) == "" {
 		t.Errorf("Expected fallback message when count is 0")
 	}
 }

@@ -234,7 +234,7 @@ func FormatDateHeader(t time.Time, lang string) string {
 	return res
 }
 
-func FormatSubheader(lang string, tvCount, movieCount int) string {
+func FormatSubheader(lang string, tvCount, movieCount, premiereCount int) string {
 	once.Do(initTranslations)
 	lang = NormalizeLanguage(lang)
 	localeData := translations[lang]
@@ -242,19 +242,62 @@ func FormatSubheader(lang string, tvCount, movieCount int) string {
 	var parts []string
 
 	if tvCount > 0 {
-		label := getSubheaderLabel(localeData, "tv", tvCount)
-		parts = append(parts, fmt.Sprintf("%d %s", tvCount, label))
+		parts = append(parts, formatSubheaderSection(localeData, "tv", tvCount))
 	}
 	if movieCount > 0 {
-		label := getSubheaderLabel(localeData, "movie", movieCount)
-		parts = append(parts, fmt.Sprintf("%d %s", movieCount, label))
+		parts = append(parts, formatSubheaderSection(localeData, "movie", movieCount))
+	}
+	if premiereCount > 0 {
+		parts = append(parts, formatSubheaderSection(localeData, "premiere", premiereCount))
 	}
 
 	if len(parts) == 0 {
 		return GetRandomMessage(lang, "no_new_releases")
 	}
 
-	return strings.Join(parts, ", ")
+	return joinWithConjunction(localeData, parts)
+}
+
+func formatSubheaderSection(data map[string]interface{}, category string, count int) string {
+	label := getSubheaderLabel(data, category, count)
+	template := extractNestedString(data, "subheader_templates", category)
+	if template == "" {
+		template = "{count} {label}"
+	}
+	res := strings.ReplaceAll(template, "{count}", fmt.Sprintf("%d", count))
+	res = strings.ReplaceAll(res, "{label}", label)
+	return strings.TrimSpace(res)
+}
+
+func joinWithConjunction(data map[string]interface{}, parts []string) string {
+	if len(parts) == 0 {
+		return ""
+	}
+	if len(parts) == 1 {
+		return parts[0]
+	}
+
+	twoJoin := extractNestedString(data, "list_join", "two")
+	if twoJoin == "" {
+		twoJoin = " and "
+	}
+
+	if len(parts) == 2 {
+		return parts[0] + twoJoin + parts[1]
+	}
+
+	lastJoin := extractNestedString(data, "list_join", "last")
+	if lastJoin == "" {
+		lastJoin = ", and "
+	}
+
+	commaSep := extractString(data, "comma_separator")
+	if commaSep == "" {
+		commaSep = ", "
+	}
+
+	leading := strings.Join(parts[:len(parts)-1], commaSep)
+	return leading + lastJoin + parts[len(parts)-1]
 }
 
 func getSubheaderLabel(data map[string]interface{}, category string, count int) string {
