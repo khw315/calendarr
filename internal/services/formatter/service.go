@@ -58,6 +58,7 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	var movieEvents []*models.Event
 	tvCount := 0
 	movieCount := 0
+	premiereCount := 0
 
 	for _, ev := range events {
 		if ev.IsPast(now) && cfg.PassedEventHandling == constants.PassedEventHide {
@@ -66,6 +67,9 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 		if ev.IsTV() {
 			tvCount++
 			tvEvents = append(tvEvents, ev)
+			if ev.IsPremiere() {
+				premiereCount++
+			}
 		} else if ev.IsMovie() {
 			movieCount++
 			movieEvents = append(movieEvents, ev)
@@ -74,18 +78,19 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	}
 
 	counts := map[string]int{
-		"tv_count":    tvCount,
-		"movie_count": movieCount,
-		"total_count": len(activeEvents),
+		"tv_count":       tvCount,
+		"movie_count":    movieCount,
+		"premiere_count": premiereCount,
+		"total_count":    len(activeEvents),
 	}
 
-	discordPayload := s.buildDiscordPayload(activeEvents, cfg, tvCount, movieCount, now)
-	discordTVPayload := s.buildDiscordPayload(tvEvents, cfg, tvCount, 0, now)
-	discordMoviePayload := s.buildDiscordPayload(movieEvents, cfg, 0, movieCount, now)
+	discordPayload := s.buildDiscordPayload(activeEvents, cfg, tvCount, movieCount, premiereCount, now)
+	discordTVPayload := s.buildDiscordPayload(tvEvents, cfg, tvCount, 0, premiereCount, now)
+	discordMoviePayload := s.buildDiscordPayload(movieEvents, cfg, 0, movieCount, 0, now)
 
-	slackPayload := s.buildSlackPayload(activeEvents, cfg, tvCount, movieCount, now)
-	slackTVPayload := s.buildSlackPayload(tvEvents, cfg, tvCount, 0, now)
-	slackMoviePayload := s.buildSlackPayload(movieEvents, cfg, 0, movieCount, now)
+	slackPayload := s.buildSlackPayload(activeEvents, cfg, tvCount, movieCount, premiereCount, now)
+	slackTVPayload := s.buildSlackPayload(tvEvents, cfg, tvCount, 0, premiereCount, now)
+	slackMoviePayload := s.buildSlackPayload(movieEvents, cfg, 0, movieCount, 0, now)
 
 	return &FormattedResult{
 		Discord:      discordPayload,
@@ -99,14 +104,14 @@ func (s *Service) Format(events []*models.Event, cfg *models.Config, startDate, 
 	}
 }
 
-func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.DiscordPayload {
+func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount, premiereCount int, now time.Time) *models.DiscordPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
 		loc = time.UTC
 	}
 
-	_, content := s.buildDiscordHeaderContent(lang, tvCount, movieCount, cfg)
+	_, content := s.buildDiscordHeaderContent(lang, tvCount, movieCount, premiereCount, cfg)
 
 	if len(events) == 0 {
 		return &models.DiscordPayload{
@@ -123,7 +128,7 @@ func (s *Service) buildDiscordPayload(events []*models.Event, cfg *models.Config
 	}
 }
 
-func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount int, cfg *models.Config) (string, string) {
+func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount, premiereCount int, cfg *models.Config) (string, string) {
 	title := localization.GetText(lang, "header_text")
 	if title == "" {
 		title = localization.GetText(lang, "title")
@@ -138,7 +143,7 @@ func (s *Service) buildDiscordHeaderContent(lang string, tvCount, movieCount int
 		contentParts = append(contentParts, fmt.Sprintf("# %s", emptyMessage))
 	} else {
 		contentParts = append(contentParts, fmt.Sprintf("# %s", title))
-		subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+		subheader := localization.FormatSubheader(lang, tvCount, movieCount, premiereCount)
 		if subheader != "" {
 			contentParts = append(contentParts, fmt.Sprintf("## %s", subheader))
 		}
@@ -251,7 +256,7 @@ func (s *Service) buildDiscordEmbedsByDay(events []*models.Event, cfg *models.Co
 	return embeds
 }
 
-func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount int, now time.Time) *models.SlackPayload {
+func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, tvCount, movieCount, premiereCount int, now time.Time) *models.SlackPayload {
 	lang := cfg.Language
 	loc := cfg.TimezoneLocation
 	if loc == nil {
@@ -280,7 +285,7 @@ func (s *Service) buildSlackPayload(events []*models.Event, cfg *models.Config, 
 		}
 	}
 
-	subheader := localization.FormatSubheader(lang, tvCount, movieCount)
+	subheader := localization.FormatSubheader(lang, tvCount, movieCount, premiereCount)
 	if cfg.ShowTimezoneInSubheader && cfg.Timezone != "" {
 		subheader += fmt.Sprintf(" (%s)", cfg.Timezone)
 	}

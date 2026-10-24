@@ -5,9 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-10-24
+
 ### Added
 - **Interactive Webhook Testing**: Added a `"Test Webhook"` button in the Settings Web UI for Discord and Slack along with a dedicated backend endpoint (`POST /api/webhooks/test`), allowing instant verification of webhook URL configurations with real-time visual feedback.
 - **Movie vs TV Channel Splitting**: Added dedicated TV and Movie webhook URL configurations (`DISCORD_TV_WEBHOOK_URL`, `DISCORD_MOVIE_WEBHOOK_URL`, `SLACK_TV_WEBHOOK_URL`, `SLACK_MOVIE_WEBHOOK_URL`) for Discord and Slack. Media releases are automatically segmented into their respective dedicated channels, with seamless automatic fallback to the primary webhook URL when distinct channels are not configured.
+
+### Fixed
+- **Season Premiere Subheader Phrasing**: Restored premiere count tracking and localized subheader phrasing (e.g. `3 all-new episodes and 1 season premiere` / `3개의 최신 에피소드 및 1개의 시즌 프리미어`) in Discord and Slack notification headers using `list_join` conjunction rules across all supported languages (EN, KO, ID, JA, FR), restoring parity with pre-rewrite behavior.
+
+### Changed
+- **Dependency Updates**: Upgraded Go toolchain to `1.27.3`, `github.com/arran4/golang-ical` to `v0.3.8`, and `github.com/go-chi/chi/v5` to `v5.5.0`.
 
 ## [2.4.2] - 2026-10-10
 
@@ -161,7 +169,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved event countdowns, airing states, and overall UI polish.
 - Optimized Docker image and updated GHCR login configurations.
 
-[Unreleased]: https://github.com/khw315/calendarr/compare/v2.4.2...HEAD
+[Unreleased]: https://github.com/khw315/calendarr/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/khw315/calendarr/compare/v2.4.2...v2.5.0
 [2.4.2]: https://github.com/khw315/calendarr/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/khw315/calendarr/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/khw315/calendarr/compare/v2.3.0...v2.4.0

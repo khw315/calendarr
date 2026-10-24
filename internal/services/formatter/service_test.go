@@ -76,8 +76,12 @@ func TestFormatterService(t *testing.T) {
 		t.Errorf("Expected non-nil Slack payloads in ToNotificationPayloads")
 	}
 
-	if res.Counts["tv_count"] != 1 || res.Counts["movie_count"] != 1 {
+	if res.Counts["tv_count"] != 1 || res.Counts["movie_count"] != 1 || res.Counts["premiere_count"] != 1 {
 		t.Errorf("Unexpected event counts: %v", res.Counts)
+	}
+
+	if !strings.Contains(res.Discord.Content, "season premiere") {
+		t.Errorf("Expected subheader to contain 'season premiere', got: %s", res.Discord.Content)
 	}
 
 	emptyRes := svc.Format([]*models.Event{}, cfg, startDate, endDate)
